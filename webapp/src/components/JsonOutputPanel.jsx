@@ -1,17 +1,27 @@
 import DownloadRow from './DownloadRow';
+import { useEffect, useState } from 'react';
 
-export default function JsonOutputPanel({
-  downloadFiles,
-  outputsOpen,
-  zipFilename,
-  onToggle,
-}) {
+export default function JsonOutputPanel({ downloadFiles, zipFilename }) {
+  const [outputsOpen, setOutputsOpen] = useState(false);
+
+  useEffect(() => {
+    if (downloadFiles.length > 0) {
+      setOutputsOpen(true);
+    } else {
+      setOutputsOpen(false);
+    }
+  }, [downloadFiles]);
+
   return (
     <section className="panel outputs">
       <button
         type="button"
         className="panel-header panel-header-toggle"
-        onClick={onToggle}
+        onClick={() => {
+          if (downloadFiles.length > 0) {
+            setOutputsOpen((open) => !open);
+          }
+        }}
         aria-expanded={outputsOpen}
         disabled={downloadFiles.length === 0}
       >

@@ -1,41 +1,421 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { playPlacementSound, prepareAudioPlayback } from '../audio/noteblockAudio';
 import DragScrollArea from './DragScrollArea';
 import TrackRow from './TrackRow';
 
-export default function VisualizationPanel({
-  visibleTracks,
-  tracksOpen,
-  groupTracksByInstrument,
-  repeaterVisualizationMode,
-  playbackScope,
-  playbackScopes,
-  selectedPlaybackTrackId,
-  isPlaying,
-  playheadTick,
-  trackEvents,
-  timelineUnitCount,
-  playheadDragging,
-  onToggle,
-  onPlaybackScopeChange,
-  onSelectedPlaybackTrackIdChange,
-  onPlay,
-  onStop,
-  onPlayFromStart,
-  onGroupTracksByInstrumentChange,
-  onRepeaterVisualizationModeChange,
-  onPlayheadPointerDown,
-  onPlayheadPointerMove,
-  onPlayheadPointerUp,
-  onPlayheadPointerCancel,
-  trackScrollRef,
-  playheadRef,
-  repeaterVisualizationModes,
-}) {
+const repeaterVisualizationModes = {
+  single: 'single',
+  accurate: 'accurate',
+  synchronous: 'synchronous',
+};
+
+const playbackScopes = {
+  all: 'all',
+  single: 'single',
+};
+
+const redstoneTickDurationMs = 100;
+
+function formatInstrumentName(instrument) {
+  return instrument
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function getRepeaterCount(redstoneTickDelay, repeaterVisualizationMode) {
+  if (redstoneTickDelay <= 0) return 0;
+  if (repeaterVisualizationMode === repeaterVisualizationModes.single) return 1;
+  if (repeaterVisualizationMode === repeaterVisualizationModes.synchronous) return redstoneTickDelay;
+  return Math.max(1, Math.ceil(redstoneTickDelay / 4));
+}
+
+function getTrackVisualUnitCount(notes, repeaterVisualizationMode) {
+  return notes.reduce(
+    (totalUnits, note) => totalUnits + getRepeaterCount(note.redstoneTickDelay, repeaterVisualizationMode) + 1,
+    0
+  );
+}
+
+function getMaxTrackTick(tracks) {
+  return tracks.reduce(
+    (maxTick, track) => Math.max(maxTick, ...track.notes.map((note) => note.startTick ?? 0), 0),
+    0
+  );
+}
+
+function findFirstNoteIndexAtOrAfter(notes, startTick) {
+  let low = 0;
+  let high = notes.length;
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (notes[mid].startTick < startTick) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low;
+}
+
+function eventsToPlacements(events) {
+  let lastTime = 0;
+  let lastTick = 0;
+
+  return events.map((event) => {
+    const redstoneTickDelay = Math.round(Math.max(0, event.time - lastTime) * 10);
+    const startTick = lastTick + redstoneTickDelay;
+    lastTime = event.time;
+    lastTick = startTick;
+
+    return {
+      redstoneTickDelay,
+      startTick,
+      block: event.block,
+      pitch: event.pitch,
+      note: event.note,
+      instrument: event.instrument,
+    };
+  });
+}
+
+function buildVisualizationTracks(trackEvents, groupTracksByInstrument) {
+  if (!groupTracksByInstrument) {
+    return trackEvents.map((track) => ({
+      id: track.id,
+      title: track.title,
+      subtitle: `${track.events.length} notes`,
+      notes: eventsToPlacements(track.events),
+    }));
+  }
+
+  const instrumentTracks = new Map();
+  trackEvents.forEach((track) => {
+    track.events.forEach((event) => {
+      if (!instrumentTracks.has(event.instrument)) instrumentTracks.set(event.instrument, []);
+      instrumentTracks.get(event.instrument).push(event);
+    });
+  });
+
+  const groupedTracks = [];
+  const epsilon = 0.000001;
+
+  instrumentTracks.forEach((events, instrument) => {
+    const sortedEvents = [...events].sort(
+      (left, right) => left.time - right.time || left.endTime - right.endTime || left.note - right.note
+    );
+    const lanes = [];
+
+    sortedEvents.forEach((event) => {
+      let lane = lanes.find((candidate) => event.time + epsilon >= candidate.lastEndTime);
+      if (!lane) {
+        lane = { lastEndTime: -Infinity, events: [] };
+        lanes.push(lane);
+      }
+      lane.events.push(event);
+      lane.lastEndTime = Math.max(lane.lastEndTime, event.endTime);
+    });
+
+    const title = formatInstrumentName(instrument);
+    lanes.forEach((lane, laneIndex) => {
+      groupedTracks.push({
+        id: `instrument-${instrument}-${laneIndex}`,
+        title,
+        subtitle:
+          lanes.length > 1
+            ? `Lane ${laneIndex + 1} · ${lane.events.length} notes`
+            : `${lane.events.length} notes`,
+        notes: eventsToPlacements(lane.events),
+      });
+    });
+  });
+
+  return groupedTracks;
+}
+
+export default function VisualizationPanel({ trackEvents }) {
+  const [tracksOpen, setTracksOpen] = useState(false);
+  const [groupTracksByInstrument, setGroupTracksByInstrument] = useState(false);
+  const [repeaterVisualizationMode, setRepeaterVisualizationMode] = useState(
+    repeaterVisualizationModes.synchronous
+  );
+  const [playbackScope, setPlaybackScope] = useState(playbackScopes.all);
+  const [selectedPlaybackTrackId, setSelectedPlaybackTrackId] = useState('');
+  const [playheadTick, setPlayheadTick] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playheadDragging, setPlayheadDragging] = useState(false);
+  const [trackUnitSize, setTrackUnitSize] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 700 ? 30 : 34
+  );
+
+  const trackScrollRef = useRef(null);
+  const playheadRef = useRef(null);
+  const playheadDragRef = useRef({
+    active: false,
+    pointerId: null,
+    startClientX: 0,
+    startTick: 0,
+  });
+  const playheadTickRef = useRef(0);
+  const playbackNotesRef = useRef([]);
+  const playbackEndTickRef = useRef(0);
+  const playbackCursorRef = useRef(0);
+  const playbackLastStateSyncMsRef = useRef(0);
+  const playbackAnimationFrameRef = useRef(0);
+  const playbackStartMsRef = useRef(0);
+  const playbackStartTickRef = useRef(0);
+
+  const visibleTracks = useMemo(
+    () =>
+      buildVisualizationTracks(trackEvents, groupTracksByInstrument).filter(
+        (track) => track.notes.length > 0
+      ),
+    [trackEvents, groupTracksByInstrument]
+  );
+
+  const playbackTracks = useMemo(() => {
+    if (playbackScope === playbackScopes.single && selectedPlaybackTrackId) {
+      return visibleTracks.filter((track) => track.id === selectedPlaybackTrackId);
+    }
+    return visibleTracks;
+  }, [playbackScope, selectedPlaybackTrackId, visibleTracks]);
+
+  const playbackNotes = useMemo(
+    () =>
+      playbackTracks
+        .flatMap((track) => track.notes)
+        .sort((left, right) => left.startTick - right.startTick || left.note - right.note),
+    [playbackTracks]
+  );
+
+  const maxVisibleTick = useMemo(() => getMaxTrackTick(visibleTracks), [visibleTracks]);
+  const playbackEndTick = useMemo(() => getMaxTrackTick(playbackTracks), [playbackTracks]);
+
+  const timelineUnitCount = useMemo(() => {
+    const visualUnits = visibleTracks.reduce(
+      (maxUnits, track) =>
+        Math.max(maxUnits, getTrackVisualUnitCount(track.notes, repeaterVisualizationMode)),
+      0
+    );
+
+    return Math.max(visualUnits, Math.ceil(maxVisibleTick) + 2, 1);
+  }, [maxVisibleTick, repeaterVisualizationMode, visibleTracks]);
+
+  useEffect(() => {
+    playbackNotesRef.current = playbackNotes;
+    playbackEndTickRef.current = playbackEndTick;
+  }, [playbackEndTick, playbackNotes]);
+
+  function clearPlaybackTimers() {
+    if (playbackAnimationFrameRef.current) {
+      window.cancelAnimationFrame(playbackAnimationFrameRef.current);
+      playbackAnimationFrameRef.current = 0;
+    }
+  }
+
+  function syncViewportToTick(nextTick) {
+    const container = trackScrollRef.current;
+    const playhead = playheadRef.current;
+    if (!container || !playhead) return;
+
+    const contentX = nextTick * trackUnitSize;
+    const anchorX = Math.max(trackUnitSize * 2, container.clientWidth * 0.3);
+    const targetScrollLeft = contentX - anchorX;
+    const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+    const clampedScrollLeft = Math.min(maxScrollLeft, Math.max(0, targetScrollLeft));
+    container.scrollLeft = clampedScrollLeft;
+
+    const playheadX = Math.max(0, Math.min(container.clientWidth, contentX - clampedScrollLeft));
+    playhead.style.left = `${playheadX}px`;
+  }
+
+  function setPlayheadPosition(nextTick, { syncState = false, syncScroll = false } = {}) {
+    const clampedTick = Math.max(0, nextTick);
+    playheadTickRef.current = clampedTick;
+
+    if (syncState) {
+      setPlayheadTick(clampedTick);
+    }
+
+    if (syncScroll) {
+      syncViewportToTick(clampedTick);
+    }
+  }
+
+  function stopPlayback(nextTick) {
+    clearPlaybackTimers();
+    setIsPlaying(false);
+
+    if (typeof nextTick === 'number') {
+      setPlayheadPosition(nextTick, { syncState: true, syncScroll: true });
+      return;
+    }
+
+    setPlayheadTick(playheadTickRef.current);
+  }
+
+  async function startPlayback(startTick = playheadTickRef.current) {
+    if (playbackNotesRef.current.length === 0) return;
+
+    const clampedStartTick = Math.min(Math.max(0, startTick), playbackEndTickRef.current + 1);
+
+    stopPlayback(clampedStartTick);
+    await prepareAudioPlayback();
+
+    playbackStartMsRef.current = performance.now();
+    playbackStartTickRef.current = clampedStartTick;
+    playbackCursorRef.current = findFirstNoteIndexAtOrAfter(
+      playbackNotesRef.current,
+      clampedStartTick
+    );
+    playbackLastStateSyncMsRef.current = 0;
+    setIsPlaying(true);
+
+    const animationStep = () => {
+      const elapsedTicks = (performance.now() - playbackStartMsRef.current) / redstoneTickDurationMs;
+      const nextTick = Math.min(
+        playbackEndTickRef.current + 1,
+        playbackStartTickRef.current + elapsedTicks
+      );
+
+      while (
+        playbackCursorRef.current < playbackNotesRef.current.length &&
+        playbackNotesRef.current[playbackCursorRef.current].startTick <= nextTick + 0.0001
+      ) {
+        void playPlacementSound(playbackNotesRef.current[playbackCursorRef.current]);
+        playbackCursorRef.current += 1;
+      }
+
+      const now = performance.now();
+      const shouldSyncState =
+        now - playbackLastStateSyncMsRef.current > 120 ||
+        nextTick >= playbackEndTickRef.current + 1;
+
+      setPlayheadPosition(nextTick, {
+        syncState: shouldSyncState,
+        syncScroll: true,
+      });
+
+      if (shouldSyncState) {
+        playbackLastStateSyncMsRef.current = now;
+      }
+
+      if (nextTick >= playbackEndTickRef.current + 1) {
+        stopPlayback(playbackEndTickRef.current + 1);
+        return;
+      }
+
+      playbackAnimationFrameRef.current = window.requestAnimationFrame(animationStep);
+    };
+
+    playbackAnimationFrameRef.current = window.requestAnimationFrame(animationStep);
+  }
+
+  function finishPlayheadDrag() {
+    playheadDragRef.current = {
+      active: false,
+      pointerId: null,
+      startClientX: 0,
+      startTick: 0,
+    };
+    setPlayheadDragging(false);
+  }
+
+  const onPlayheadPointerDown = (event) => {
+    if (visibleTracks.length === 0) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    stopPlayback();
+    playheadDragRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startTick: playheadTickRef.current,
+    };
+    setPlayheadDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const onPlayheadPointerMove = (event) => {
+    if (
+      !playheadDragRef.current.active ||
+      playheadDragRef.current.pointerId !== event.pointerId
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    const deltaTicks = (event.clientX - playheadDragRef.current.startClientX) / trackUnitSize;
+    setPlayheadPosition(playheadDragRef.current.startTick + deltaTicks, {
+      syncState: true,
+      syncScroll: true,
+    });
+  };
+
+  const onPlayheadPointerUp = (event) => {
+    if (playheadDragRef.current.pointerId !== event.pointerId) return;
+    finishPlayheadDrag();
+  };
+
+  useEffect(() => {
+    const syncTrackUnitSize = () => {
+      setTrackUnitSize(window.innerWidth <= 700 ? 30 : 34);
+    };
+
+    syncTrackUnitSize();
+    window.addEventListener('resize', syncTrackUnitSize);
+
+    return () => {
+      window.removeEventListener('resize', syncTrackUnitSize);
+      clearPlaybackTimers();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (visibleTracks.length === 0) {
+      setSelectedPlaybackTrackId('');
+      setTracksOpen(false);
+      stopPlayback(0);
+      return;
+    }
+
+    setTracksOpen(true);
+
+    if (!visibleTracks.some((track) => track.id === selectedPlaybackTrackId)) {
+      setSelectedPlaybackTrackId(visibleTracks[0].id);
+    }
+  }, [selectedPlaybackTrackId, visibleTracks]);
+
+  useEffect(() => {
+    setPlayheadPosition(Math.min(playheadTickRef.current, maxVisibleTick + 1), {
+      syncState: true,
+      syncScroll: true,
+    });
+  }, [maxVisibleTick]);
+
+  useEffect(() => {
+    setPlayheadPosition(playheadTickRef.current, { syncState: false, syncScroll: true });
+  }, [timelineUnitCount, trackUnitSize]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      stopPlayback();
+    }
+  }, [playbackNotes]);
+
   return (
     <section className="panel visualization">
       <button
         type="button"
         className="panel-header panel-header-toggle"
-        onClick={onToggle}
+        onClick={() => {
+          if (visibleTracks.length > 0) {
+            setTracksOpen((open) => !open);
+          }
+        }}
         aria-expanded={tracksOpen}
         disabled={visibleTracks.length === 0}
       >
@@ -56,7 +436,7 @@ export default function VisualizationPanel({
             <span>Playback</span>
             <select
               value={playbackScope}
-              onChange={(event) => onPlaybackScopeChange(event.target.value)}
+              onChange={(event) => setPlaybackScope(event.target.value)}
               disabled={visibleTracks.length === 0}
             >
               <option value={playbackScopes.all}>All tracks</option>
@@ -68,7 +448,7 @@ export default function VisualizationPanel({
               <span>Track</span>
               <select
                 value={selectedPlaybackTrackId}
-                onChange={(event) => onSelectedPlaybackTrackIdChange(event.target.value)}
+                onChange={(event) => setSelectedPlaybackTrackId(event.target.value)}
                 disabled={visibleTracks.length === 0}
               >
                 {visibleTracks.map((track) => (
@@ -80,13 +460,13 @@ export default function VisualizationPanel({
             </label>
           ) : null}
           <div className="playback-actions">
-            <button type="button" onClick={onPlay} disabled={visibleTracks.length === 0 || isPlaying}>
+            <button type="button" onClick={() => void startPlayback()} disabled={visibleTracks.length === 0 || isPlaying}>
               Play
             </button>
-            <button type="button" onClick={onStop} disabled={!isPlaying && playheadTick === 0}>
+            <button type="button" onClick={() => stopPlayback()} disabled={!isPlaying && playheadTick === 0}>
               Stop
             </button>
-            <button type="button" onClick={onPlayFromStart} disabled={visibleTracks.length === 0}>
+            <button type="button" onClick={() => void startPlayback(0)} disabled={visibleTracks.length === 0}>
               From Start
             </button>
           </div>
@@ -96,7 +476,7 @@ export default function VisualizationPanel({
           <input
             type="checkbox"
             checked={groupTracksByInstrument}
-            onChange={(event) => onGroupTracksByInstrumentChange(event.target.checked)}
+            onChange={(event) => setGroupTracksByInstrument(event.target.checked)}
             disabled={trackEvents.length === 0}
           />
           <span>Organize visualization by instrument</span>
@@ -105,7 +485,7 @@ export default function VisualizationPanel({
           <span>Repeater visualization</span>
           <select
             value={repeaterVisualizationMode}
-            onChange={(event) => onRepeaterVisualizationModeChange(event.target.value)}
+            onChange={(event) => setRepeaterVisualizationMode(event.target.value)}
             disabled={visibleTracks.length === 0}
           >
             <option value={repeaterVisualizationModes.single}>Single repeater</option>
@@ -131,7 +511,7 @@ export default function VisualizationPanel({
               onPointerDown={onPlayheadPointerDown}
               onPointerMove={onPlayheadPointerMove}
               onPointerUp={onPlayheadPointerUp}
-              onPointerCancel={onPlayheadPointerCancel}
+              onPointerCancel={finishPlayheadDrag}
               aria-label="Drag play position"
             >
               <span className="playhead-line" aria-hidden="true" />
