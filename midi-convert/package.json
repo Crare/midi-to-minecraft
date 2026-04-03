@@ -13,9 +13,9 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "build": "yarn run clean && tsc -p tsconfig.json",
     "dev": "tsx src/index.ts",
-    "preconvert": "npm run build",
+    "preconvert": "yarn run build",
     "convert": "node dist/index.js"
   },
   "prettier": {

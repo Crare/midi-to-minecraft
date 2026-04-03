@@ -1,4 +1,6 @@
 node_modules/
-input/
-output/
-dist/
+midi-convert/node_modules/
+midi-convert/input/
+midi-convert/output/
+midi-convert/dist/
+webapp/dist/
