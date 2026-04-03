@@ -1,9 +1,9 @@
 import { Midi } from '@tonejs/midi';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { playPlacementSound, prepareAudioPlayback } from './audio/noteblockAudio';
-import DragScrollArea from './components/DragScrollArea';
-import DownloadRow from './components/DownloadRow';
-import TrackRow from './components/TrackRow';
+import JsonOutputPanel from './components/JsonOutputPanel';
+import UploadPanel from './components/UploadPanel';
+import VisualizationPanel from './components/VisualizationPanel';
 
 const repeaterVisualizationModes = {
   single: 'single',
@@ -315,7 +315,7 @@ export default function App() {
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
   const [groupTracksByInstrument, setGroupTracksByInstrument] = useState(false);
   const [repeaterVisualizationMode, setRepeaterVisualizationMode] = useState(
-    repeaterVisualizationModes.accurate
+    repeaterVisualizationModes.synchronous
   );
   const [playbackScope, setPlaybackScope] = useState(playbackScopes.all);
   const [selectedPlaybackTrackId, setSelectedPlaybackTrackId] = useState('');
@@ -327,7 +327,12 @@ export default function App() {
   );
   const trackScrollRef = useRef(null);
   const playheadRef = useRef(null);
-  const playheadDragRef = useRef({ active: false, pointerId: null });
+  const playheadDragRef = useRef({
+    active: false,
+    pointerId: null,
+    startClientX: 0,
+    startTick: 0,
+  });
   const playheadTickRef = useRef(0);
   const playbackNotesRef = useRef([]);
   const playbackEndTickRef = useRef(0);
@@ -385,36 +390,35 @@ export default function App() {
     }
   }
 
-  function ensurePlayheadVisible(nextTick) {
+  function syncViewportToTick(nextTick) {
     const container = trackScrollRef.current;
-    if (!container) return;
+    const playhead = playheadRef.current;
+    if (!container || !playhead) return;
 
-    const playheadX = nextTick * trackUnitSize;
-    const padding = trackUnitSize * 2;
-    const minVisible = container.scrollLeft + padding;
-    const maxVisible = container.scrollLeft + container.clientWidth - padding;
+    const contentX = nextTick * trackUnitSize;
+    const anchorX = Math.max(trackUnitSize * 2, container.clientWidth * 0.3);
+    const targetScrollLeft = contentX - anchorX;
+    const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+    const clampedScrollLeft = Math.min(maxScrollLeft, Math.max(0, targetScrollLeft));
+    container.scrollLeft = clampedScrollLeft;
 
-    if (playheadX < minVisible) {
-      container.scrollLeft = Math.max(0, playheadX - padding);
-    } else if (playheadX > maxVisible) {
-      container.scrollLeft = Math.max(0, playheadX - container.clientWidth + padding);
-    }
+    const playheadX = Math.max(
+      0,
+      Math.min(container.clientWidth, contentX - clampedScrollLeft)
+    );
+    playhead.style.left = `${playheadX}px`;
   }
 
-  function setPlayheadPosition(nextTick, { syncState = false, keepVisible = false } = {}) {
+  function setPlayheadPosition(nextTick, { syncState = false, syncScroll = false } = {}) {
     const clampedTick = Math.max(0, nextTick);
     playheadTickRef.current = clampedTick;
-
-    if (playheadRef.current) {
-      playheadRef.current.style.left = `${clampedTick * trackUnitSize}px`;
-    }
 
     if (syncState) {
       setPlayheadTick(clampedTick);
     }
 
-    if (keepVisible) {
-      ensurePlayheadVisible(clampedTick);
+    if (syncScroll) {
+      syncViewportToTick(clampedTick);
     }
   }
 
@@ -423,7 +427,7 @@ export default function App() {
     setIsPlaying(false);
 
     if (typeof nextTick === 'number') {
-      setPlayheadPosition(nextTick, { syncState: true, keepVisible: true });
+      setPlayheadPosition(nextTick, { syncState: true, syncScroll: true });
       return;
     }
 
@@ -473,7 +477,7 @@ export default function App() {
 
       setPlayheadPosition(nextTick, {
         syncState: shouldSyncState,
-        keepVisible: true,
+        syncScroll: true,
       });
 
       if (shouldSyncState) {
@@ -491,21 +495,13 @@ export default function App() {
     playbackAnimationFrameRef.current = window.requestAnimationFrame(animationStep);
   }
 
-  function updatePlayheadFromClientX(clientX) {
-    const container = trackScrollRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const localX = clientX - rect.left + container.scrollLeft;
-    const maxX = timelineUnitCount * trackUnitSize;
-    const clampedX = Math.max(0, Math.min(localX, maxX));
-    const nextTick = clampedX / trackUnitSize;
-
-    setPlayheadPosition(nextTick, { syncState: true, keepVisible: true });
-  }
-
   function finishPlayheadDrag() {
-    playheadDragRef.current = { active: false, pointerId: null };
+    playheadDragRef.current = {
+      active: false,
+      pointerId: null,
+      startClientX: 0,
+      startTick: 0,
+    };
     setPlayheadDragging(false);
   }
 
@@ -515,10 +511,14 @@ export default function App() {
     event.preventDefault();
     event.stopPropagation();
     stopPlayback();
-    playheadDragRef.current = { active: true, pointerId: event.pointerId };
+    playheadDragRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startTick: playheadTickRef.current,
+    };
     setPlayheadDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
-    updatePlayheadFromClientX(event.clientX);
   };
 
   const onPlayheadPointerMove = (event) => {
@@ -530,7 +530,11 @@ export default function App() {
     }
 
     event.preventDefault();
-    updatePlayheadFromClientX(event.clientX);
+    const deltaTicks = (event.clientX - playheadDragRef.current.startClientX) / trackUnitSize;
+    setPlayheadPosition(playheadDragRef.current.startTick + deltaTicks, {
+      syncState: true,
+      syncScroll: true,
+    });
   };
 
   const onPlayheadPointerUp = (event) => {
@@ -606,12 +610,12 @@ export default function App() {
   useEffect(() => {
     setPlayheadPosition(Math.min(playheadTickRef.current, maxVisibleTick + 1), {
       syncState: true,
-      keepVisible: false,
+      syncScroll: true,
     });
   }, [maxVisibleTick]);
 
   useEffect(() => {
-    setPlayheadPosition(playheadTickRef.current, { syncState: false, keepVisible: false });
+    setPlayheadPosition(playheadTickRef.current, { syncState: false, syncScroll: true });
   }, [timelineUnitCount, trackUnitSize]);
 
   useEffect(() => {
@@ -631,239 +635,69 @@ export default function App() {
       </header>
 
       <main>
-        <section className="panel controls">
-          <h2>1) Upload MIDI</h2>
-          <div className="control-row">
-            <input
-              type="file"
-              accept=".mid,.midi,audio/midi,audio/x-midi"
-              onChange={(e) => {
-                const next = e.target.files?.[0] || null;
-                setFile(next);
-                if (next) setStatus(`Selected: ${next.name}`);
-              }}
-            />
-            <input
-              value={outputName}
-              onChange={(e) => setOutputName(e.target.value)}
-              placeholder="output.json"
-              aria-label="output filename"
-            />
-            <button onClick={onConvert} disabled={!file || busy}>
-              {busy ? (
-                <>
-                  <span className="spinner spinner-inline" aria-hidden="true" />
-                  Converting...
-                </>
-              ) : (
-                'Convert'
-              )}
-            </button>
-          </div>
-          <label className="option-row">
-            <input
-              type="checkbox"
-              checked={trimLeadingSilence}
-              onChange={(e) => setTrimLeadingSilence(e.target.checked)}
-            />
-            <span>Remove empty space at the start of the song</span>
-          </label>
-          <p id="status" className={busy ? 'status-busy' : undefined}>
-            {busy ? <span className="spinner" aria-hidden="true" /> : null}
-            <span>{status}</span>
-          </p>
-        </section>
+        <UploadPanel
+          canConvert={Boolean(file)}
+          outputName={outputName}
+          busy={busy}
+          trimLeadingSilence={trimLeadingSilence}
+          status={status}
+          onFileChange={(nextFile) => {
+            setFile(nextFile);
+            if (nextFile) setStatus(`Selected: ${nextFile.name}`);
+          }}
+          onOutputNameChange={setOutputName}
+          onTrimLeadingSilenceChange={setTrimLeadingSilence}
+          onConvert={onConvert}
+        />
 
-        <section className="panel outputs">
-          <button
-            type="button"
-            className="panel-header panel-header-toggle"
-            onClick={() => {
-              if (downloadFiles.length > 0) {
-                setOutputsOpen((open) => !open);
-              }
-            }}
-            aria-expanded={outputsOpen}
-            disabled={downloadFiles.length === 0}
-          >
-            <h2>2) JSON Output</h2>
-            <span className="panel-header-meta">
-              {downloadFiles.length === 0
-                ? 'No output yet'
-                : outputsOpen
-                  ? 'Hide'
-                  : 'Show ZIP'}
-            </span>
-          </button>
-          <div className="panel-body">
-            <p className="hint output-summary">
-              {downloadFiles.length === 0
-                ? 'No output yet.'
-                : `${downloadFiles.length} file(s) packaged into ${zipFilename}.`}
-            </p>
-            {outputsOpen ? (
-              <div className="downloads">
-                <DownloadRow filename={zipFilename} files={downloadFiles} />
-              </div>
-            ) : null}
-          </div>
-        </section>
+        <JsonOutputPanel
+          downloadFiles={downloadFiles}
+          outputsOpen={outputsOpen}
+          zipFilename={zipFilename}
+          onToggle={() => {
+            if (downloadFiles.length > 0) {
+              setOutputsOpen((open) => !open);
+            }
+          }}
+        />
 
-        <section className="panel visualization">
-          <button
-            type="button"
-            className="panel-header panel-header-toggle"
-            onClick={() => {
-              if (visibleTracks.length > 0) {
-                setTracksOpen((open) => !open);
-              }
-            }}
-            aria-expanded={tracksOpen}
-            disabled={visibleTracks.length === 0}
-          >
-            <h2>3) Track Visualization</h2>
-            <span className="panel-header-meta">
-              {visibleTracks.length === 0
-                ? 'No tracks yet'
-                : tracksOpen
-                  ? 'Hide'
-                  : groupTracksByInstrument
-                    ? `Show ${visibleTracks.length} lane(s)`
-                    : `Show ${visibleTracks.length} track(s)`}
-            </span>
-          </button>
-          <div className="panel-body">
-            <div className="playback-controls">
-              <label className="option-row option-row-stacked">
-                <span>Playback</span>
-                <select
-                  value={playbackScope}
-                  onChange={(e) => setPlaybackScope(e.target.value)}
-                  disabled={visibleTracks.length === 0}
-                >
-                  <option value={playbackScopes.all}>All tracks</option>
-                  <option value={playbackScopes.single}>Single track</option>
-                </select>
-              </label>
-              {playbackScope === playbackScopes.single ? (
-                <label className="option-row option-row-stacked">
-                  <span>Track</span>
-                  <select
-                    value={selectedPlaybackTrackId}
-                    onChange={(e) => setSelectedPlaybackTrackId(e.target.value)}
-                    disabled={visibleTracks.length === 0}
-                  >
-                    {visibleTracks.map((track) => (
-                      <option key={track.id} value={track.id}>
-                        {track.title} ({track.subtitle})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
-              <div className="playback-actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void startPlayback();
-                  }}
-                  disabled={visibleTracks.length === 0 || isPlaying}
-                >
-                  Play
-                </button>
-                <button
-                  type="button"
-                  onClick={() => stopPlayback()}
-                  disabled={!isPlaying && playheadTick === 0}
-                >
-                  Stop
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void startPlayback(0);
-                  }}
-                  disabled={visibleTracks.length === 0}
-                >
-                  From Start
-                </button>
-              </div>
-              <div className="playback-meta">
-                Position: {playheadTick.toFixed(1)} ticks
-              </div>
-            </div>
-            <label className="option-row">
-              <input
-                type="checkbox"
-                checked={groupTracksByInstrument}
-                onChange={(e) => setGroupTracksByInstrument(e.target.checked)}
-                disabled={trackEvents.length === 0}
-              />
-              <span>Organize visualization by instrument</span>
-            </label>
-            <label className="option-row option-row-stacked">
-              <span>Repeater visualization</span>
-              <select
-                value={repeaterVisualizationMode}
-                onChange={(e) => setRepeaterVisualizationMode(e.target.value)}
-                disabled={visibleTracks.length === 0}
-              >
-                <option value={repeaterVisualizationModes.single}>Single repeater</option>
-                <option value={repeaterVisualizationModes.accurate}>Accurate amount needed</option>
-                <option value={repeaterVisualizationModes.synchronous}>
-                  Synchronous alignment
-                </option>
-              </select>
-            </label>
-            <p className="hint output-summary">
-              Repeaters are inserted before each note based on redstoneTickDelay.
-              {visibleTracks.length === 0
-                ? ' No tracks to visualize.'
-                : groupTracksByInstrument
-                  ? ` ${visibleTracks.length} instrument lane(s) ready. Scroll horizontally for long tracks.`
-                  : ` ${visibleTracks.length} track(s) ready. Scroll horizontally for long tracks.`}
-            </p>
-            {tracksOpen ? (
-              <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
-                <div
-                  className="track-stage"
-                  style={{ '--timeline-unit-count': timelineUnitCount }}
-                >
-                  <button
-                    ref={playheadRef}
-                    type="button"
-                    className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
-                    style={{ left: `${playheadTick * trackUnitSize}px` }}
-                    onPointerDown={onPlayheadPointerDown}
-                    onPointerMove={onPlayheadPointerMove}
-                    onPointerUp={onPlayheadPointerUp}
-                    onPointerCancel={finishPlayheadDrag}
-                    aria-label="Drag play position"
-                  >
-                    <span className="playhead-line" aria-hidden="true" />
-                    <span className="playhead-head" aria-hidden="true" />
-                  </button>
-                  <div className="track-wrap">
-                    {visibleTracks.map((track) => (
-                      <TrackRow
-                        key={track.id}
-                        title={track.title}
-                        subtitle={track.subtitle}
-                        notes={track.notes}
-                        repeaterVisualizationMode={repeaterVisualizationMode}
-                        isPlaybackDimmed={
-                          playbackScope === playbackScopes.single &&
-                          selectedPlaybackTrackId &&
-                          track.id !== selectedPlaybackTrackId
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
-              </DragScrollArea>
-            ) : null}
-          </div>
-        </section>
+        <VisualizationPanel
+          visibleTracks={visibleTracks}
+          tracksOpen={tracksOpen}
+          groupTracksByInstrument={groupTracksByInstrument}
+          repeaterVisualizationMode={repeaterVisualizationMode}
+          playbackScope={playbackScope}
+          playbackScopes={playbackScopes}
+          selectedPlaybackTrackId={selectedPlaybackTrackId}
+          isPlaying={isPlaying}
+          playheadTick={playheadTick}
+          trackEvents={trackEvents}
+          timelineUnitCount={timelineUnitCount}
+          playheadDragging={playheadDragging}
+          onToggle={() => {
+            if (visibleTracks.length > 0) {
+              setTracksOpen((open) => !open);
+            }
+          }}
+          onPlaybackScopeChange={setPlaybackScope}
+          onSelectedPlaybackTrackIdChange={setSelectedPlaybackTrackId}
+          onPlay={() => {
+            void startPlayback();
+          }}
+          onStop={() => stopPlayback()}
+          onPlayFromStart={() => {
+            void startPlayback(0);
+          }}
+          onGroupTracksByInstrumentChange={setGroupTracksByInstrument}
+          onRepeaterVisualizationModeChange={setRepeaterVisualizationMode}
+          onPlayheadPointerDown={onPlayheadPointerDown}
+          onPlayheadPointerMove={onPlayheadPointerMove}
+          onPlayheadPointerUp={onPlayheadPointerUp}
+          onPlayheadPointerCancel={finishPlayheadDrag}
+          trackScrollRef={trackScrollRef}
+          playheadRef={playheadRef}
+          repeaterVisualizationModes={repeaterVisualizationModes}
+        />
       </main>
 
       <footer className="site-footer">
