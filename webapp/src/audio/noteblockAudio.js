@@ -126,6 +126,16 @@ function getAudioContext() {
   return audioContext;
 }
 
+export async function prepareAudioPlayback() {
+  const context = getAudioContext();
+
+  if (context.state === 'suspended') {
+    await context.resume();
+  }
+
+  return context;
+}
+
 function getNoiseBuffer(context) {
   if (noiseBuffer) return noiseBuffer;
 
@@ -286,10 +296,7 @@ function playPercussionSound(context, instrument) {
 export async function playPlacementSound(placement) {
   if (!placement) return;
 
-  const context = getAudioContext();
-  if (context.state === 'suspended') {
-    await context.resume();
-  }
+  const context = await prepareAudioPlayback();
 
   if (placement.pitch === undefined) {
     playPercussionSound(context, placement.instrument);

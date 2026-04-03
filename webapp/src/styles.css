@@ -174,6 +174,26 @@ main {
   color: var(--ink);
 }
 
+.playback-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.playback-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.playback-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding-bottom: 0.15rem;
+}
+
 input[type='file'] {
   flex: 1;
   min-width: 220px;
@@ -284,18 +304,23 @@ button:disabled {
 .track-wrap {
   display: grid;
   gap: 0.35rem;
-  min-width: 0;
-  width: max-content;
   min-width: 100%;
 }
 
 .track-scroll-wrap {
+  position: relative;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 0.4rem;
+}
+
+.track-stage {
+  position: relative;
+  width: max-content;
+  min-width: max(100%, calc(var(--timeline-unit-count, 1) * var(--track-unit-size)));
 }
 
 .drag-scroll-area {
@@ -318,6 +343,60 @@ button:disabled {
   background: rgba(219, 233, 194, 0.34);
   padding: 0.35rem 0.45rem;
   width: max-content;
+  transition: opacity 140ms ease, filter 140ms ease;
+}
+
+.track-row-dimmed {
+  opacity: 0.45;
+  filter: saturate(0.78);
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  transform: translateX(-50%);
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  z-index: 15;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.playhead-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: #f4f2e9;
+  box-shadow: 0 0 0 1px rgba(61, 95, 34, 0.8);
+}
+
+.playhead-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -15%);
+  border-radius: 50%;
+  background: #f4f2e9;
+  border: 2px solid rgba(61, 95, 34, 0.9);
+}
+
+.playhead:focus-visible,
+.playhead-dragging {
+  outline: none;
+}
+
+.playhead:focus-visible .playhead-line,
+.playhead-dragging .playhead-line {
+  background: #fffbe6;
 }
 
 .track-title {
@@ -488,6 +567,10 @@ button:disabled {
 @media (max-width: 700px) {
   :root {
     --track-unit-size: 30px;
+  }
+
+  .playback-controls {
+    align-items: stretch;
   }
 
   .track-row {

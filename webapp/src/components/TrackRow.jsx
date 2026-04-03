@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, memo } from 'react';
 import { playPlacementSound } from '../audio/noteblockAudio';
 
 const supportColorByBlock = {
@@ -48,15 +48,29 @@ function getRepeaterCount(redstoneTickDelay, repeaterVisualizationMode) {
   return Math.max(1, Math.ceil(redstoneTickDelay / 4));
 }
 
-function getRepeaterTooltip(placement, repeaterVisualizationMode) {
-  const modeLabel =
-    repeaterVisualizationMode === 'single'
-      ? 'Single repeater'
-      : repeaterVisualizationMode === 'synchronous'
-        ? 'Synchronous alignment'
-        : 'Accurate amount needed';
+function getRepeaterSettings(redstoneTickDelay, repeaterVisualizationMode) {
+  if (redstoneTickDelay <= 0) return [];
 
-  return `${modeLabel}\nDelay: ${placement.redstoneTickDelay} redstone ticks`;
+  if (repeaterVisualizationMode === 'single') return [1];
+  if (repeaterVisualizationMode === 'synchronous') {
+    return Array.from({ length: redstoneTickDelay }, () => 1);
+  }
+
+  const settings = [];
+  let remainingTicks = redstoneTickDelay;
+
+  while (remainingTicks > 0) {
+    const setting = Math.min(4, remainingTicks);
+    settings.push(setting);
+    remainingTicks -= setting;
+  }
+
+  return settings;
+}
+
+function formatRepeaterStates(repeaterSettings) {
+  if (repeaterSettings.length === 0) return 'none';
+  return repeaterSettings.join(', ');
 }
 
 function getNoteblockTooltip(placement) {
@@ -68,34 +82,53 @@ function getNoteblockTooltip(placement) {
   ].join('\n');
 }
 
-export default function TrackRow({ title, subtitle, notes, repeaterVisualizationMode }) {
-  const repeaterImg = `${import.meta.env.BASE_URL}assets/repeater.svg`;
+function TrackRow({
+  title,
+  subtitle,
+  notes,
+  repeaterVisualizationMode,
+  isPlaybackDimmed = false,
+}) {
+  const repeaterImages = {
+    1: `${import.meta.env.BASE_URL}assets/repeater-1.svg`,
+    2: `${import.meta.env.BASE_URL}assets/repeater-2.svg`,
+    3: `${import.meta.env.BASE_URL}assets/repeater-3.svg`,
+    4: `${import.meta.env.BASE_URL}assets/repeater-4.svg`,
+  };
   const noteblockImg = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
   const isEmpty = notes.length === 0;
+  const rowClassName = [
+    'track-row',
+    isEmpty ? 'track-row-empty' : '',
+    isPlaybackDimmed ? 'track-row-dimmed' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <div className={isEmpty ? 'track-row track-row-empty' : 'track-row'}>
+    <div className={rowClassName}>
       <div className="track-title">
         <span className="track-index">{title}</span>
         <span className="track-count">{subtitle || `${notes.length} notes`}</span>
       </div>
       <div className="track-line">
         {notes.map((placement, noteIndex) => {
-          const repeaterCount = getRepeaterCount(
+          const repeaterSettings = getRepeaterSettings(
             placement.redstoneTickDelay,
             repeaterVisualizationMode
           );
           const units = [];
 
-          for (let i = 0; i < repeaterCount; i += 1) {
+          for (let i = 0; i < repeaterSettings.length; i += 1) {
+            const setting = repeaterSettings[i];
             units.push(
               <div
                 className="repeater repeater-with-tooltip"
                 key={`rep-${noteIndex}-${i}`}
                 tabIndex={0}
-                title={getRepeaterTooltip(placement, repeaterVisualizationMode)}
+                aria-label={`Repeater state ${setting}, delay ${placement.redstoneTickDelay} ticks, ${repeaterSettings.length} repeater(s) total`}
               >
-                <img src={repeaterImg} alt="repeater" />
+                <img src={repeaterImages[setting] || repeaterImages[1]} alt={`repeater setting ${setting}`} />
                 {i === 0 ? (
                   <div className="delay-label">{placement.redstoneTickDelay}</div>
                 ) : null}
@@ -103,6 +136,12 @@ export default function TrackRow({ title, subtitle, notes, repeaterVisualization
                   Mode: {repeaterVisualizationMode}
                   <br />
                   Delay: {placement.redstoneTickDelay} ticks
+                  <br />
+                  Repeaters: {repeaterSettings.length}
+                  <br />
+                  States: {formatRepeaterStates(repeaterSettings)}
+                  <br />
+                  This: state {setting}
                 </span>
               </div>
             );
@@ -153,3 +192,5 @@ export default function TrackRow({ title, subtitle, notes, repeaterVisualization
     </div>
   );
 }
+
+export default memo(TrackRow);

@@ -1,5 +1,6 @@
 import { Midi } from '@tonejs/midi';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { playPlacementSound, prepareAudioPlayback } from './audio/noteblockAudio';
 import DragScrollArea from './components/DragScrollArea';
 import DownloadRow from './components/DownloadRow';
 import TrackRow from './components/TrackRow';
@@ -9,6 +10,13 @@ const repeaterVisualizationModes = {
   accurate: 'accurate',
   synchronous: 'synchronous',
 };
+
+const playbackScopes = {
+  all: 'all',
+  single: 'single',
+};
+
+const redstoneTickDurationMs = 100;
 
 const defaultInstrumentBlock = 'minecraft:dirt';
 const defaultPercussiveBlock = 'minecraft:sand';
@@ -135,6 +143,48 @@ function formatInstrumentName(instrument) {
     .join(' ');
 }
 
+function getRepeaterCount(redstoneTickDelay, repeaterVisualizationMode) {
+  if (redstoneTickDelay <= 0) return 0;
+
+  if (repeaterVisualizationMode === repeaterVisualizationModes.single) return 1;
+  if (repeaterVisualizationMode === repeaterVisualizationModes.synchronous) {
+    return redstoneTickDelay;
+  }
+
+  return Math.max(1, Math.ceil(redstoneTickDelay / 4));
+}
+
+function getTrackVisualUnitCount(notes, repeaterVisualizationMode) {
+  return notes.reduce(
+    (totalUnits, note) => totalUnits + getRepeaterCount(note.redstoneTickDelay, repeaterVisualizationMode) + 1,
+    0
+  );
+}
+
+function getMaxTrackTick(tracks) {
+  return tracks.reduce(
+    (maxTick, track) =>
+      Math.max(maxTick, ...track.notes.map((note) => note.startTick ?? 0), 0),
+    0
+  );
+}
+
+function findFirstNoteIndexAtOrAfter(notes, startTick) {
+  let low = 0;
+  let high = notes.length;
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (notes[mid].startTick < startTick) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low;
+}
+
 function buildTrackEvents(midi, { trimLeadingSilence = false } = {}) {
   const songStartTime = trimLeadingSilence ? getSongStartTime(midi) : 0;
 
@@ -173,13 +223,17 @@ function buildTrackEvents(midi, { trimLeadingSilence = false } = {}) {
 
 function eventsToPlacements(events) {
   let lastTime = 0;
+  let lastTick = 0;
 
   return events.map((event) => {
     const redstoneTickDelay = Math.round(Math.max(0, event.time - lastTime) * 10);
+    const startTick = lastTick + redstoneTickDelay;
     lastTime = event.time;
+    lastTick = startTick;
 
     return {
       redstoneTickDelay,
+      startTick,
       block: event.block,
       pitch: event.pitch,
       note: event.note,
@@ -263,6 +317,25 @@ export default function App() {
   const [repeaterVisualizationMode, setRepeaterVisualizationMode] = useState(
     repeaterVisualizationModes.accurate
   );
+  const [playbackScope, setPlaybackScope] = useState(playbackScopes.all);
+  const [selectedPlaybackTrackId, setSelectedPlaybackTrackId] = useState('');
+  const [playheadTick, setPlayheadTick] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playheadDragging, setPlayheadDragging] = useState(false);
+  const [trackUnitSize, setTrackUnitSize] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 700 ? 30 : 34
+  );
+  const trackScrollRef = useRef(null);
+  const playheadRef = useRef(null);
+  const playheadDragRef = useRef({ active: false, pointerId: null });
+  const playheadTickRef = useRef(0);
+  const playbackNotesRef = useRef([]);
+  const playbackEndTickRef = useRef(0);
+  const playbackCursorRef = useRef(0);
+  const playbackLastStateSyncMsRef = useRef(0);
+  const playbackAnimationFrameRef = useRef(0);
+  const playbackStartMsRef = useRef(0);
+  const playbackStartTickRef = useRef(0);
   const zipFilename = useMemo(
     () => getZipFilename(outputName, file?.name || 'song.mid'),
     [file?.name, outputName]
@@ -274,6 +347,196 @@ export default function App() {
       ),
     [trackEvents, groupTracksByInstrument]
   );
+  const playbackTracks = useMemo(() => {
+    if (playbackScope === playbackScopes.single && selectedPlaybackTrackId) {
+      return visibleTracks.filter((track) => track.id === selectedPlaybackTrackId);
+    }
+
+    return visibleTracks;
+  }, [playbackScope, selectedPlaybackTrackId, visibleTracks]);
+  const playbackNotes = useMemo(
+    () =>
+      playbackTracks
+        .flatMap((track) => track.notes)
+        .sort((left, right) => left.startTick - right.startTick || left.note - right.note),
+    [playbackTracks]
+  );
+  const maxVisibleTick = useMemo(() => getMaxTrackTick(visibleTracks), [visibleTracks]);
+  const playbackEndTick = useMemo(() => getMaxTrackTick(playbackTracks), [playbackTracks]);
+  const timelineUnitCount = useMemo(() => {
+    const visualUnits = visibleTracks.reduce(
+      (maxUnits, track) =>
+        Math.max(maxUnits, getTrackVisualUnitCount(track.notes, repeaterVisualizationMode)),
+      0
+    );
+
+    return Math.max(visualUnits, Math.ceil(maxVisibleTick) + 2, 1);
+  }, [maxVisibleTick, repeaterVisualizationMode, visibleTracks]);
+
+  useEffect(() => {
+    playbackNotesRef.current = playbackNotes;
+    playbackEndTickRef.current = playbackEndTick;
+  }, [playbackEndTick, playbackNotes]);
+
+  function clearPlaybackTimers() {
+    if (playbackAnimationFrameRef.current) {
+      window.cancelAnimationFrame(playbackAnimationFrameRef.current);
+      playbackAnimationFrameRef.current = 0;
+    }
+  }
+
+  function ensurePlayheadVisible(nextTick) {
+    const container = trackScrollRef.current;
+    if (!container) return;
+
+    const playheadX = nextTick * trackUnitSize;
+    const padding = trackUnitSize * 2;
+    const minVisible = container.scrollLeft + padding;
+    const maxVisible = container.scrollLeft + container.clientWidth - padding;
+
+    if (playheadX < minVisible) {
+      container.scrollLeft = Math.max(0, playheadX - padding);
+    } else if (playheadX > maxVisible) {
+      container.scrollLeft = Math.max(0, playheadX - container.clientWidth + padding);
+    }
+  }
+
+  function setPlayheadPosition(nextTick, { syncState = false, keepVisible = false } = {}) {
+    const clampedTick = Math.max(0, nextTick);
+    playheadTickRef.current = clampedTick;
+
+    if (playheadRef.current) {
+      playheadRef.current.style.left = `${clampedTick * trackUnitSize}px`;
+    }
+
+    if (syncState) {
+      setPlayheadTick(clampedTick);
+    }
+
+    if (keepVisible) {
+      ensurePlayheadVisible(clampedTick);
+    }
+  }
+
+  function stopPlayback(nextTick) {
+    clearPlaybackTimers();
+    setIsPlaying(false);
+
+    if (typeof nextTick === 'number') {
+      setPlayheadPosition(nextTick, { syncState: true, keepVisible: true });
+      return;
+    }
+
+    setPlayheadTick(playheadTickRef.current);
+  }
+
+  async function startPlayback(startTick = playheadTickRef.current) {
+    if (playbackNotesRef.current.length === 0) return;
+
+    const clampedStartTick = Math.min(
+      Math.max(0, startTick),
+      playbackEndTickRef.current + 1
+    );
+
+    stopPlayback(clampedStartTick);
+    await prepareAudioPlayback();
+
+    playbackStartMsRef.current = performance.now();
+    playbackStartTickRef.current = clampedStartTick;
+    playbackCursorRef.current = findFirstNoteIndexAtOrAfter(
+      playbackNotesRef.current,
+      clampedStartTick
+    );
+    playbackLastStateSyncMsRef.current = 0;
+    setIsPlaying(true);
+
+    const animationStep = () => {
+      const elapsedTicks =
+        (performance.now() - playbackStartMsRef.current) / redstoneTickDurationMs;
+      const nextTick = Math.min(
+        playbackEndTickRef.current + 1,
+        playbackStartTickRef.current + elapsedTicks
+      );
+
+      while (
+        playbackCursorRef.current < playbackNotesRef.current.length &&
+        playbackNotesRef.current[playbackCursorRef.current].startTick <= nextTick + 0.0001
+      ) {
+        void playPlacementSound(playbackNotesRef.current[playbackCursorRef.current]);
+        playbackCursorRef.current += 1;
+      }
+
+      const now = performance.now();
+      const shouldSyncState =
+        now - playbackLastStateSyncMsRef.current > 120 ||
+        nextTick >= playbackEndTickRef.current + 1;
+
+      setPlayheadPosition(nextTick, {
+        syncState: shouldSyncState,
+        keepVisible: true,
+      });
+
+      if (shouldSyncState) {
+        playbackLastStateSyncMsRef.current = now;
+      }
+
+      if (nextTick >= playbackEndTickRef.current + 1) {
+        stopPlayback(playbackEndTickRef.current + 1);
+        return;
+      }
+
+      playbackAnimationFrameRef.current = window.requestAnimationFrame(animationStep);
+    };
+
+    playbackAnimationFrameRef.current = window.requestAnimationFrame(animationStep);
+  }
+
+  function updatePlayheadFromClientX(clientX) {
+    const container = trackScrollRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const localX = clientX - rect.left + container.scrollLeft;
+    const maxX = timelineUnitCount * trackUnitSize;
+    const clampedX = Math.max(0, Math.min(localX, maxX));
+    const nextTick = clampedX / trackUnitSize;
+
+    setPlayheadPosition(nextTick, { syncState: true, keepVisible: true });
+  }
+
+  function finishPlayheadDrag() {
+    playheadDragRef.current = { active: false, pointerId: null };
+    setPlayheadDragging(false);
+  }
+
+  const onPlayheadPointerDown = (event) => {
+    if (visibleTracks.length === 0) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    stopPlayback();
+    playheadDragRef.current = { active: true, pointerId: event.pointerId };
+    setPlayheadDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    updatePlayheadFromClientX(event.clientX);
+  };
+
+  const onPlayheadPointerMove = (event) => {
+    if (
+      !playheadDragRef.current.active ||
+      playheadDragRef.current.pointerId !== event.pointerId
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    updatePlayheadFromClientX(event.clientX);
+  };
+
+  const onPlayheadPointerUp = (event) => {
+    if (playheadDragRef.current.pointerId !== event.pointerId) return;
+    finishPlayheadDrag();
+  };
 
   const onConvert = async () => {
     if (!file || busy) return;
@@ -313,6 +576,49 @@ export default function App() {
       setBusy(false);
     }
   };
+
+  useEffect(() => {
+    const syncTrackUnitSize = () => {
+      setTrackUnitSize(window.innerWidth <= 700 ? 30 : 34);
+    };
+
+    syncTrackUnitSize();
+    window.addEventListener('resize', syncTrackUnitSize);
+
+    return () => {
+      window.removeEventListener('resize', syncTrackUnitSize);
+      clearPlaybackTimers();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (visibleTracks.length === 0) {
+      setSelectedPlaybackTrackId('');
+      stopPlayback(0);
+      return;
+    }
+
+    if (!visibleTracks.some((track) => track.id === selectedPlaybackTrackId)) {
+      setSelectedPlaybackTrackId(visibleTracks[0].id);
+    }
+  }, [selectedPlaybackTrackId, visibleTracks]);
+
+  useEffect(() => {
+    setPlayheadPosition(Math.min(playheadTickRef.current, maxVisibleTick + 1), {
+      syncState: true,
+      keepVisible: false,
+    });
+  }, [maxVisibleTick]);
+
+  useEffect(() => {
+    setPlayheadPosition(playheadTickRef.current, { syncState: false, keepVisible: false });
+  }, [timelineUnitCount, trackUnitSize]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      stopPlayback();
+    }
+  }, [playbackNotes]);
 
   return (
     <>
@@ -427,6 +733,65 @@ export default function App() {
             </span>
           </button>
           <div className="panel-body">
+            <div className="playback-controls">
+              <label className="option-row option-row-stacked">
+                <span>Playback</span>
+                <select
+                  value={playbackScope}
+                  onChange={(e) => setPlaybackScope(e.target.value)}
+                  disabled={visibleTracks.length === 0}
+                >
+                  <option value={playbackScopes.all}>All tracks</option>
+                  <option value={playbackScopes.single}>Single track</option>
+                </select>
+              </label>
+              {playbackScope === playbackScopes.single ? (
+                <label className="option-row option-row-stacked">
+                  <span>Track</span>
+                  <select
+                    value={selectedPlaybackTrackId}
+                    onChange={(e) => setSelectedPlaybackTrackId(e.target.value)}
+                    disabled={visibleTracks.length === 0}
+                  >
+                    {visibleTracks.map((track) => (
+                      <option key={track.id} value={track.id}>
+                        {track.title} ({track.subtitle})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              <div className="playback-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void startPlayback();
+                  }}
+                  disabled={visibleTracks.length === 0 || isPlaying}
+                >
+                  Play
+                </button>
+                <button
+                  type="button"
+                  onClick={() => stopPlayback()}
+                  disabled={!isPlaying && playheadTick === 0}
+                >
+                  Stop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void startPlayback(0);
+                  }}
+                  disabled={visibleTracks.length === 0}
+                >
+                  From Start
+                </button>
+              </div>
+              <div className="playback-meta">
+                Position: {playheadTick.toFixed(1)} ticks
+              </div>
+            </div>
             <label className="option-row">
               <input
                 type="checkbox"
@@ -459,17 +824,41 @@ export default function App() {
                   : ` ${visibleTracks.length} track(s) ready. Scroll horizontally for long tracks.`}
             </p>
             {tracksOpen ? (
-              <DragScrollArea className="track-scroll-wrap">
-                <div className="track-wrap">
-                  {visibleTracks.map((track) => (
-                    <TrackRow
-                      key={track.id}
-                      title={track.title}
-                      subtitle={track.subtitle}
-                      notes={track.notes}
-                      repeaterVisualizationMode={repeaterVisualizationMode}
-                    />
-                  ))}
+              <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
+                <div
+                  className="track-stage"
+                  style={{ '--timeline-unit-count': timelineUnitCount }}
+                >
+                  <button
+                    ref={playheadRef}
+                    type="button"
+                    className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
+                    style={{ left: `${playheadTick * trackUnitSize}px` }}
+                    onPointerDown={onPlayheadPointerDown}
+                    onPointerMove={onPlayheadPointerMove}
+                    onPointerUp={onPlayheadPointerUp}
+                    onPointerCancel={finishPlayheadDrag}
+                    aria-label="Drag play position"
+                  >
+                    <span className="playhead-line" aria-hidden="true" />
+                    <span className="playhead-head" aria-hidden="true" />
+                  </button>
+                  <div className="track-wrap">
+                    {visibleTracks.map((track) => (
+                      <TrackRow
+                        key={track.id}
+                        title={track.title}
+                        subtitle={track.subtitle}
+                        notes={track.notes}
+                        repeaterVisualizationMode={repeaterVisualizationMode}
+                        isPlaybackDimmed={
+                          playbackScope === playbackScopes.single &&
+                          selectedPlaybackTrackId &&
+                          track.id !== selectedPlaybackTrackId
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
               </DragScrollArea>
             ) : null}

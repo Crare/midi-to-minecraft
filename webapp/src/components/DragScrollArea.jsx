@@ -1,9 +1,21 @@
 import { useRef, useState } from 'react';
 
-export default function DragScrollArea({ className = '', children }) {
+export default function DragScrollArea({ className = '', children, containerRef: externalRef }) {
   const containerRef = useRef(null);
   const dragRef = useRef({ active: false, pointerId: null, lastClientX: 0 });
   const [dragging, setDragging] = useState(false);
+
+  const setContainerRef = (node) => {
+    containerRef.current = node;
+
+    if (!externalRef) return;
+    if (typeof externalRef === 'function') {
+      externalRef(node);
+      return;
+    }
+
+    externalRef.current = node;
+  };
 
   const finishDrag = () => {
     dragRef.current = { active: false, pointerId: null, lastClientX: 0 };
@@ -48,7 +60,7 @@ export default function DragScrollArea({ className = '', children }) {
 
   return (
     <div
-      ref={containerRef}
+      ref={setContainerRef}
       className={classes}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
