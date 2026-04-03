@@ -39,7 +39,36 @@ function supportSpriteForBlock(blockId) {
   return uri;
 }
 
-export default function TrackRow({ title, subtitle, notes }) {
+function getRepeaterCount(redstoneTickDelay, repeaterVisualizationMode) {
+  if (redstoneTickDelay <= 0) return 0;
+
+  if (repeaterVisualizationMode === 'single') return 1;
+  if (repeaterVisualizationMode === 'synchronous') return redstoneTickDelay;
+
+  return Math.max(1, Math.ceil(redstoneTickDelay / 4));
+}
+
+function getRepeaterTooltip(placement, repeaterVisualizationMode) {
+  const modeLabel =
+    repeaterVisualizationMode === 'single'
+      ? 'Single repeater'
+      : repeaterVisualizationMode === 'synchronous'
+        ? 'Synchronous alignment'
+        : 'Accurate amount needed';
+
+  return `${modeLabel}\nDelay: ${placement.redstoneTickDelay} redstone ticks`;
+}
+
+function getNoteblockTooltip(placement) {
+  return [
+    `Instrument: ${placement.instrument}`,
+    `Pitch: ${placement.pitch || 'drum'}`,
+    `Note: ${placement.note}`,
+    `Block: ${placement.block}`,
+  ].join('\n');
+}
+
+export default function TrackRow({ title, subtitle, notes, repeaterVisualizationMode }) {
   const repeaterImg = `${import.meta.env.BASE_URL}assets/repeater.svg`;
   const noteblockImg = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
   const isEmpty = notes.length === 0;
@@ -52,19 +81,29 @@ export default function TrackRow({ title, subtitle, notes }) {
       </div>
       <div className="track-line">
         {notes.map((placement, noteIndex) => {
-          const repeaterCount =
-            placement.redstoneTickDelay > 0
-              ? Math.max(1, Math.ceil(placement.redstoneTickDelay / 4))
-              : 0;
+          const repeaterCount = getRepeaterCount(
+            placement.redstoneTickDelay,
+            repeaterVisualizationMode
+          );
           const units = [];
 
           for (let i = 0; i < repeaterCount; i += 1) {
             units.push(
-              <div className="repeater" key={`rep-${noteIndex}-${i}`}>
+              <div
+                className="repeater repeater-with-tooltip"
+                key={`rep-${noteIndex}-${i}`}
+                tabIndex={0}
+                title={getRepeaterTooltip(placement, repeaterVisualizationMode)}
+              >
                 <img src={repeaterImg} alt="repeater" />
                 {i === 0 ? (
                   <div className="delay-label">{placement.redstoneTickDelay}</div>
                 ) : null}
+                <span className="cell-tooltip" role="tooltip">
+                  Mode: {repeaterVisualizationMode}
+                  <br />
+                  Delay: {placement.redstoneTickDelay} ticks
+                </span>
               </div>
             );
           }
@@ -75,7 +114,7 @@ export default function TrackRow({ title, subtitle, notes }) {
               key={`note-${noteIndex}`}
               role="button"
               tabIndex={0}
-              title={`Play ${placement.instrument} ${placement.pitch || 'drum'} ${placement.note}`}
+              title={getNoteblockTooltip(placement)}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => {
                 void playPlacementSound(placement);
@@ -98,6 +137,13 @@ export default function TrackRow({ title, subtitle, notes }) {
                 <br />
                 {placement.pitch || 'drum'} {placement.note}
               </div>
+              <span className="cell-tooltip" role="tooltip">
+                {placement.instrument}
+                <br />
+                {placement.pitch || 'drum'} {placement.note}
+                <br />
+                {placement.block}
+              </span>
             </div>
           );
 

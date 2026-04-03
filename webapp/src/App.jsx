@@ -4,6 +4,12 @@ import DragScrollArea from './components/DragScrollArea';
 import DownloadRow from './components/DownloadRow';
 import TrackRow from './components/TrackRow';
 
+const repeaterVisualizationModes = {
+  single: 'single',
+  accurate: 'accurate',
+  synchronous: 'synchronous',
+};
+
 const defaultInstrumentBlock = 'minecraft:dirt';
 const defaultPercussiveBlock = 'minecraft:sand';
 
@@ -103,6 +109,11 @@ function splitOutputTarget(inputName, outputName) {
   const stem = dot > 0 ? base.slice(0, dot) : base;
   const ext = dot > 0 ? base.slice(dot) : '.json';
   return { dir, stem, ext };
+}
+
+function getZipFilename(outputName, inputName) {
+  const target = splitOutputTarget(inputName, outputName);
+  return `${target.stem}.zip`;
 }
 
 function getSongStartTime(midi) {
@@ -249,6 +260,13 @@ export default function App() {
   const [tracksOpen, setTracksOpen] = useState(false);
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
   const [groupTracksByInstrument, setGroupTracksByInstrument] = useState(false);
+  const [repeaterVisualizationMode, setRepeaterVisualizationMode] = useState(
+    repeaterVisualizationModes.accurate
+  );
+  const zipFilename = useMemo(
+    () => getZipFilename(outputName, file?.name || 'song.mid'),
+    [file?.name, outputName]
+  );
   const visibleTracks = useMemo(
     () =>
       buildVisualizationTracks(trackEvents, groupTracksByInstrument).filter(
@@ -351,84 +369,123 @@ export default function App() {
         </section>
 
         <section className="panel outputs">
-          <div className="panel-header">
+          <button
+            type="button"
+            className="panel-header panel-header-toggle"
+            onClick={() => {
+              if (downloadFiles.length > 0) {
+                setOutputsOpen((open) => !open);
+              }
+            }}
+            aria-expanded={outputsOpen}
+            disabled={downloadFiles.length === 0}
+          >
             <h2>2) JSON Output</h2>
-            {downloadFiles.length > 0 ? (
-              <button
-                type="button"
-                className="panel-toggle"
-                onClick={() => setOutputsOpen((open) => !open)}
-                aria-expanded={outputsOpen}
-              >
-                {outputsOpen ? 'Hide' : 'Show'}
-              </button>
+            <span className="panel-header-meta">
+              {downloadFiles.length === 0
+                ? 'No output yet'
+                : outputsOpen
+                  ? 'Hide'
+                  : 'Show ZIP'}
+            </span>
+          </button>
+          <div className="panel-body">
+            <p className="hint output-summary">
+              {downloadFiles.length === 0
+                ? 'No output yet.'
+                : `${downloadFiles.length} file(s) packaged into ${zipFilename}.`}
+            </p>
+            {outputsOpen ? (
+              <div className="downloads">
+                <DownloadRow filename={zipFilename} files={downloadFiles} />
+              </div>
             ) : null}
           </div>
-          <p className="hint output-summary">
-            {downloadFiles.length === 0
-              ? 'No output yet.'
-              : `${downloadFiles.length} file(s) ready for download.`}
-          </p>
-          {outputsOpen ? (
-            <div className="downloads">
-              {downloadFiles.map((entry) => (
-                <DownloadRow
-                  key={entry.name}
-                  filename={entry.name.replace(/^.*\//, '')}
-                  data={entry.data}
-                />
-              ))}
-            </div>
-          ) : null}
         </section>
 
         <section className="panel visualization">
-          <div className="panel-header">
+          <button
+            type="button"
+            className="panel-header panel-header-toggle"
+            onClick={() => {
+              if (visibleTracks.length > 0) {
+                setTracksOpen((open) => !open);
+              }
+            }}
+            aria-expanded={tracksOpen}
+            disabled={visibleTracks.length === 0}
+          >
             <h2>3) Track Visualization</h2>
-            {visibleTracks.length > 0 ? (
-              <button
-                type="button"
-                className="panel-toggle"
-                onClick={() => setTracksOpen((open) => !open)}
-                aria-expanded={tracksOpen}
+            <span className="panel-header-meta">
+              {visibleTracks.length === 0
+                ? 'No tracks yet'
+                : tracksOpen
+                  ? 'Hide'
+                  : groupTracksByInstrument
+                    ? `Show ${visibleTracks.length} lane(s)`
+                    : `Show ${visibleTracks.length} track(s)`}
+            </span>
+          </button>
+          <div className="panel-body">
+            <label className="option-row">
+              <input
+                type="checkbox"
+                checked={groupTracksByInstrument}
+                onChange={(e) => setGroupTracksByInstrument(e.target.checked)}
+                disabled={trackEvents.length === 0}
+              />
+              <span>Organize visualization by instrument</span>
+            </label>
+            <label className="option-row option-row-stacked">
+              <span>Repeater visualization</span>
+              <select
+                value={repeaterVisualizationMode}
+                onChange={(e) => setRepeaterVisualizationMode(e.target.value)}
+                disabled={visibleTracks.length === 0}
               >
-                {tracksOpen ? 'Hide' : 'Show'}
-              </button>
+                <option value={repeaterVisualizationModes.single}>Single repeater</option>
+                <option value={repeaterVisualizationModes.accurate}>Accurate amount needed</option>
+                <option value={repeaterVisualizationModes.synchronous}>
+                  Synchronous alignment
+                </option>
+              </select>
+            </label>
+            <p className="hint output-summary">
+              Repeaters are inserted before each note based on redstoneTickDelay.
+              {visibleTracks.length === 0
+                ? ' No tracks to visualize.'
+                : groupTracksByInstrument
+                  ? ` ${visibleTracks.length} instrument lane(s) ready. Scroll horizontally for long tracks.`
+                  : ` ${visibleTracks.length} track(s) ready. Scroll horizontally for long tracks.`}
+            </p>
+            {tracksOpen ? (
+              <DragScrollArea className="track-scroll-wrap">
+                <div className="track-wrap">
+                  {visibleTracks.map((track) => (
+                    <TrackRow
+                      key={track.id}
+                      title={track.title}
+                      subtitle={track.subtitle}
+                      notes={track.notes}
+                      repeaterVisualizationMode={repeaterVisualizationMode}
+                    />
+                  ))}
+                </div>
+              </DragScrollArea>
             ) : null}
           </div>
-          <label className="option-row">
-            <input
-              type="checkbox"
-              checked={groupTracksByInstrument}
-              onChange={(e) => setGroupTracksByInstrument(e.target.checked)}
-              disabled={trackEvents.length === 0}
-            />
-            <span>Organize visualization by instrument</span>
-          </label>
-          <p className="hint output-summary">
-            Repeaters are inserted before each note based on redstoneTickDelay.
-            {visibleTracks.length === 0
-              ? ' No tracks to visualize.'
-              : groupTracksByInstrument
-                ? ` ${visibleTracks.length} instrument lane(s) ready. Scroll horizontally for long tracks.`
-                : ` ${visibleTracks.length} track(s) ready. Scroll horizontally for long tracks.`}
-          </p>
-          {tracksOpen ? (
-            <DragScrollArea className="track-scroll-wrap">
-              <div className="track-wrap">
-                {visibleTracks.map((track) => (
-                  <TrackRow
-                    key={track.id}
-                    title={track.title}
-                    subtitle={track.subtitle}
-                    notes={track.notes}
-                  />
-                ))}
-              </div>
-            </DragScrollArea>
-          ) : null}
         </section>
       </main>
+
+      <footer className="site-footer">
+        <p>
+          Inspired by the <a href="https://github.com/colinthesealion" target="_blank" rel="noreferrer">MIDI to Minecraft project by colinthesealion</a>. Website created by{' '}
+          <a href="https://crare.github.io" target="_blank" rel="noreferrer">
+            Crare
+          </a>
+          .
+        </p>
+      </footer>
     </>
   );
 }
