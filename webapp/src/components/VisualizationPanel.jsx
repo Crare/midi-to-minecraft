@@ -151,6 +151,8 @@ export default function VisualizationPanel({ trackEvents }) {
   );
 
   const trackScrollRef = useRef(null);
+  const topScrollRef = useRef(null);
+  const isSyncingScrollRef = useRef(false);
   const playheadRef = useRef(null);
   const playheadDragRef = useRef({
     active: false,
@@ -227,8 +229,7 @@ export default function VisualizationPanel({ trackEvents }) {
     const clampedScrollLeft = Math.min(maxScrollLeft, Math.max(0, targetScrollLeft));
     container.scrollLeft = clampedScrollLeft;
 
-    const playheadX = Math.max(0, Math.min(container.clientWidth, contentX - clampedScrollLeft));
-    playhead.style.left = `${playheadX}px`;
+    playhead.style.left = `${Math.max(0, contentX)}px`;
   }
 
   function setPlayheadPosition(nextTick, { syncState = false, syncScroll = false } = {}) {
@@ -406,6 +407,33 @@ export default function VisualizationPanel({ trackEvents }) {
     }
   }, [playbackNotes]);
 
+  useEffect(() => {
+    if (!tracksOpen) return;
+    const main = trackScrollRef.current;
+    const proxy = topScrollRef.current;
+    if (!main || !proxy) return;
+
+    const syncToProxy = () => {
+      if (isSyncingScrollRef.current) return;
+      isSyncingScrollRef.current = true;
+      proxy.scrollLeft = main.scrollLeft;
+      isSyncingScrollRef.current = false;
+    };
+    const syncToMain = () => {
+      if (isSyncingScrollRef.current) return;
+      isSyncingScrollRef.current = true;
+      main.scrollLeft = proxy.scrollLeft;
+      isSyncingScrollRef.current = false;
+    };
+
+    main.addEventListener('scroll', syncToProxy, { passive: true });
+    proxy.addEventListener('scroll', syncToMain, { passive: true });
+    return () => {
+      main.removeEventListener('scroll', syncToProxy);
+      proxy.removeEventListener('scroll', syncToMain);
+    };
+  }, [tracksOpen]);
+
   return (
     <section className="panel visualization">
       <button
@@ -460,14 +488,20 @@ export default function VisualizationPanel({ trackEvents }) {
             </label>
           ) : null}
           <div className="playback-actions">
-            <button type="button" onClick={() => void startPlayback()} disabled={visibleTracks.length === 0 || isPlaying}>
-              Play
+            <button type="button" className="icon-btn" title="Play" onClick={() => void startPlayback()} disabled={visibleTracks.length === 0 || isPlaying} aria-label="Play">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><polygon points="3,1 15,8 3,15" /></svg>
             </button>
-            <button type="button" onClick={() => stopPlayback()} disabled={!isPlaying && playheadTick === 0}>
-              Stop
+            <button type="button" className="icon-btn" title="Stop" onClick={() => stopPlayback()} disabled={!isPlaying && playheadTick === 0} aria-label="Stop">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="1" width="4" height="14" /><rect x="10" y="1" width="4" height="14" /></svg>
             </button>
-            <button type="button" onClick={() => void startPlayback(0)} disabled={visibleTracks.length === 0}>
-              From Start
+            <button type="button" className="icon-btn" title="Go to start" onClick={() => {
+              if (isPlaying) {
+                void startPlayback(0);
+              } else {
+                setPlayheadPosition(0, { syncState: true, syncScroll: true });
+              }
+            }} disabled={visibleTracks.length === 0} aria-label="Go to start">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1" ry="1" /></svg>
             </button>
           </div>
           <div className="playback-meta">Position: {playheadTick.toFixed(1)} ticks</div>
@@ -502,7 +536,11 @@ export default function VisualizationPanel({ trackEvents }) {
               : ` ${visibleTracks.length} track(s) ready. Scroll horizontally for long tracks.`}
         </p>
         {tracksOpen ? (
-          <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
+          <>
+            <div className="track-scroll-proxy-top" ref={topScrollRef}>
+              <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
+            </div>
+            <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
             <button
               ref={playheadRef}
               type="button"
@@ -536,6 +574,7 @@ export default function VisualizationPanel({ trackEvents }) {
               </div>
             </div>
           </DragScrollArea>
+          </>
         ) : null}
       </div>
     </section>

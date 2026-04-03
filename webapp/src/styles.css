@@ -188,6 +188,24 @@ main {
   gap: 0.45rem;
 }
 
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  min-width: unset;
+  border-radius: 4px;
+}
+
+.icon-btn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+  display: block;
+}
+
 .playback-meta {
   font-size: 0.85rem;
   color: var(--muted);
@@ -307,6 +325,16 @@ button:disabled {
   min-width: 100%;
 }
 
+.track-scroll-proxy-top {
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+
+.track-scroll-spacer {
+  height: 1px;
+  pointer-events: none;
+}
+
 .track-scroll-wrap {
   position: relative;
   width: 100%;
@@ -337,7 +365,7 @@ button:disabled {
   display: grid;
   grid-template-columns: 116px max-content;
   align-items: start;
-  gap: 0.45rem;
+  column-gap: 0;
   border: 1px solid rgba(66, 97, 38, 0.65);
   border-radius: 4px;
   background: rgba(219, 233, 194, 0.34);
@@ -404,6 +432,14 @@ button:disabled {
   gap: 0.15rem;
   font-weight: 700;
   padding-top: 0.15rem;
+  padding-right: 0.55rem;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: #9dc378;
+  border-right: 1px solid rgba(66, 97, 38, 0.45);
+  align-self: stretch;
+  padding-bottom: 0.15rem;
 }
 
 .track-index {
