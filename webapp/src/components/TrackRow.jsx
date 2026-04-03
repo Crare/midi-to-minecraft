@@ -137,6 +137,8 @@ function TrackRow({
   repeaterVisualizationMode,
   noteTooltipDirection = 'top',
   isPlaybackDimmed = false,
+  isMuted = false,
+  onToggleMute,
 }) {
   const repeaterImages = {
     1: `${import.meta.env.BASE_URL}assets/repeater-1.svg`,
@@ -159,6 +161,27 @@ function TrackRow({
       <div className="track-title">
         <span className="track-index">{title}</span>
         <span className="track-count">{subtitle || `${notes.length} notes`}</span>
+        {onToggleMute ? (
+          <button
+            type="button"
+            className="icon-btn track-mute-btn"
+            title={isMuted ? 'Unmute' : 'Mute'}
+            onClick={(e) => { e.stopPropagation(); onToggleMute(); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            aria-label={isMuted ? 'Unmute track' : 'Mute track'}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              {isMuted ? (
+                <path d="M 3 3 L 13 13 M 13 3 L 3 13" stroke="currentColor" strokeWidth="2" fill="none" />
+              ) : (
+                <>
+                  <path d="M 3 5 L 8 2 L 8 14 L 3 11 Z" fill="currentColor" />
+                  <path d="M 10 4 Q 12 6 12 8 Q 12 10 10 12" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                </>
+              )}
+            </svg>
+          </button>
+        ) : null}
       </div>
       <div className="track-line">
         {notes.map((placement, noteIndex) => {

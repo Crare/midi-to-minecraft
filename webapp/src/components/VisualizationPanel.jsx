@@ -146,6 +146,7 @@ export default function VisualizationPanel({ trackEvents }) {
   const [playheadTick, setPlayheadTick] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playheadDragging, setPlayheadDragging] = useState(false);
+  const [mutedTracks, setMutedTracks] = useState(new Set());
   const [trackUnitSize, setTrackUnitSize] = useState(() =>
     typeof window !== 'undefined' && window.innerWidth <= 700 ? 30 : 34
   );
@@ -495,11 +496,7 @@ export default function VisualizationPanel({ trackEvents }) {
               <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="1" width="4" height="14" /><rect x="10" y="1" width="4" height="14" /></svg>
             </button>
             <button type="button" className="icon-btn" title="Go to start" onClick={() => {
-              if (isPlaying) {
-                void startPlayback(0);
-              } else {
-                setPlayheadPosition(0, { syncState: true, syncScroll: true });
-              }
+              stopPlayback(0);
             }} disabled={visibleTracks.length === 0} aria-label="Go to start">
               <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1" ry="1" /></svg>
             </button>
@@ -541,40 +538,50 @@ export default function VisualizationPanel({ trackEvents }) {
               <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
             </div>
             <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
-            <button
-              ref={playheadRef}
-              type="button"
-              className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
-              style={{ left: '0px' }}
-              onPointerDown={onPlayheadPointerDown}
-              onPointerMove={onPlayheadPointerMove}
-              onPointerUp={onPlayheadPointerUp}
-              onPointerCancel={finishPlayheadDrag}
-              aria-label="Drag play position"
-            >
-              <span className="playhead-line" aria-hidden="true" />
-              <span className="playhead-head" aria-hidden="true" />
-            </button>
-            <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
-              <div className="track-wrap">
-                {visibleTracks.map((track, trackIndex) => (
-                  <TrackRow
-                    key={track.id}
-                    title={track.title}
-                    subtitle={track.subtitle}
-                    notes={track.notes}
-                    repeaterVisualizationMode={repeaterVisualizationMode}
-                    noteTooltipDirection={trackIndex === 0 ? 'bottom' : 'top'}
-                    isPlaybackDimmed={
-                      playbackScope === playbackScopes.single &&
-                      selectedPlaybackTrackId &&
-                      track.id !== selectedPlaybackTrackId
-                    }
-                  />
-                ))}
+              <button
+                ref={playheadRef}
+                type="button"
+                className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
+                style={{ left: '0px' }}
+                onPointerDown={onPlayheadPointerDown}
+                onPointerMove={onPlayheadPointerMove}
+                onPointerUp={onPlayheadPointerUp}
+                onPointerCancel={finishPlayheadDrag}
+                aria-label="Drag play position"
+              >
+                <span className="playhead-line" aria-hidden="true" />
+                <span className="playhead-head" aria-hidden="true" />
+              </button>
+              <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
+                <div className="track-wrap">
+                  {visibleTracks.map((track, trackIndex) => (
+                    <TrackRow
+                      key={track.id}
+                      title={track.title}
+                      subtitle={track.subtitle}
+                      notes={track.notes}
+                      repeaterVisualizationMode={repeaterVisualizationMode}
+                      noteTooltipDirection={trackIndex === 0 ? 'bottom' : 'top'}
+                      isMuted={mutedTracks.has(track.id)}
+                      onToggleMute={() => {
+                        const newMuted = new Set(mutedTracks);
+                        if (newMuted.has(track.id)) {
+                          newMuted.delete(track.id);
+                        } else {
+                          newMuted.add(track.id);
+                        }
+                        setMutedTracks(newMuted);
+                      }}
+                      isPlaybackDimmed={
+                        playbackScope === playbackScopes.single &&
+                        selectedPlaybackTrackId &&
+                        track.id !== selectedPlaybackTrackId
+                      }
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          </DragScrollArea>
+            </DragScrollArea>
           </>
         ) : null}
       </div>

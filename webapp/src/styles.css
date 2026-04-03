@@ -363,9 +363,8 @@ button:disabled {
 
 .track-row {
   display: grid;
-  grid-template-columns: 116px max-content;
+  grid-template-columns: 130px max-content;
   align-items: start;
-  column-gap: 0;
   border: 1px solid rgba(66, 97, 38, 0.65);
   border-radius: 4px;
   background: rgba(219, 233, 194, 0.34);
@@ -428,18 +427,19 @@ button:disabled {
 }
 
 .track-title {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   gap: 0.15rem;
   font-weight: 700;
-  padding-top: 0.15rem;
-  padding-right: 0.55rem;
+  padding: 0.15rem 0.4rem 0.15rem 0;
   position: sticky;
   left: 0;
   z-index: 5;
   background: #9dc378;
   border-right: 1px solid rgba(66, 97, 38, 0.45);
   align-self: stretch;
-  padding-bottom: 0.15rem;
+  min-width: 0;
 }
 
 .track-index {
@@ -471,6 +471,14 @@ button:disabled {
 
 .track-row-empty .track-title {
   padding-top: 0;
+}
+
+.track-mute-btn {
+  width: 1.4rem;
+  height: 1.4rem;
+  min-width: unset;
+  margin-top: auto;
+  align-self: flex-end;
 }
 
 .repeater {
