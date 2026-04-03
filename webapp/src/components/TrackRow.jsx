@@ -1,6 +1,36 @@
 import { Fragment, memo } from 'react';
 import { playPlacementSound } from '../audio/noteblockAudio';
 
+const notePitchNames = [
+  'F#/Gb',
+  'G',
+  'G#/Ab',
+  'A',
+  'A#/Bb',
+  'B',
+  'C',
+  'C#/Db',
+  'D',
+  'D#/Eb',
+  'E',
+  'F',
+];
+
+const noteColorByStep = [
+  '#77D700',
+  '#95C000',
+  '#B2A500',
+  '#CC8600',
+  '#E26500',
+  '#F34100',
+  '#FC1E00',
+  '#FE000F',
+  '#F70033',
+  '#E8005A',
+  '#CF0083',
+  '#AE00A9',
+];
+
 const supportColorByBlock = {
   acacia_log: '#8b5a2b',
   sand: '#d4be7d',
@@ -73,13 +103,31 @@ function formatRepeaterStates(repeaterSettings) {
   return repeaterSettings.join(', ');
 }
 
+function getMinecraftTuningInfo(useCount) {
+  const normalizedUseCount = ((useCount % 24) + 24) % 24;
+  const noteStep = normalizedUseCount % 12;
+  return {
+    useCount: normalizedUseCount,
+    pitchName: notePitchNames[noteStep],
+    playsoundPitch: 2 ** ((normalizedUseCount - 12) / 12),
+    color: noteColorByStep[noteStep],
+  };
+}
+
 function getNoteblockTooltip(placement) {
+  const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
   return [
     `Instrument: ${placement.instrument}`,
     `Pitch: ${placement.pitch || 'drum'}`,
     `Note: ${placement.note}`,
+    tuningInfo ? `Use count: ${tuningInfo.useCount}` : null,
+    tuningInfo ? `Minecraft pitch: ${tuningInfo.pitchName}` : null,
+    tuningInfo ? `Playsound pitch: ${tuningInfo.playsoundPitch.toFixed(6)}` : null,
+    tuningInfo ? `Color: ${tuningInfo.color}` : null,
     `Block: ${placement.block}`,
-  ].join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
 function TrackRow({
@@ -87,6 +135,7 @@ function TrackRow({
   subtitle,
   notes,
   repeaterVisualizationMode,
+  noteTooltipDirection = 'top',
   isPlaybackDimmed = false,
 }) {
   const repeaterImages = {
@@ -113,6 +162,8 @@ function TrackRow({
       </div>
       <div className="track-line">
         {notes.map((placement, noteIndex) => {
+          const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
+          const tooltipLines = getNoteblockTooltip(placement).split('\n');
           const repeaterSettings = getRepeaterSettings(
             placement.redstoneTickDelay,
             repeaterVisualizationMode
@@ -153,7 +204,7 @@ function TrackRow({
               key={`note-${noteIndex}`}
               role="button"
               tabIndex={0}
-              title={getNoteblockTooltip(placement)}
+              aria-label={getNoteblockTooltip(placement).replace(/\n/g, ', ')}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => {
                 void playPlacementSound(placement);
@@ -165,6 +216,18 @@ function TrackRow({
                 }
               }}
             >
+              {tuningInfo ? (
+                <span
+                  className="note-corner-color"
+                  style={{ backgroundColor: tuningInfo.color }}
+                  aria-hidden="true"
+                />
+              ) : null}
+              {tuningInfo ? (
+                <span className="note-use-count" aria-hidden="true">
+                  {tuningInfo.useCount}
+                </span>
+              ) : null}
               <img className="note-img" src={noteblockImg} alt="noteblock" />
               <img
                 className="support-img"
@@ -176,12 +239,20 @@ function TrackRow({
                 <br />
                 {placement.pitch || 'drum'} {placement.note}
               </div>
-              <span className="cell-tooltip" role="tooltip">
-                {placement.instrument}
-                <br />
-                {placement.pitch || 'drum'} {placement.note}
-                <br />
-                {placement.block}
+              <span
+                className={
+                  noteTooltipDirection === 'bottom'
+                    ? 'cell-tooltip cell-tooltip-below'
+                    : 'cell-tooltip'
+                }
+                role="tooltip"
+              >
+                {tooltipLines.map((line, lineIndex) => (
+                  <Fragment key={`${noteIndex}-tooltip-${lineIndex}`}>
+                    {lineIndex > 0 ? <br /> : null}
+                    {line}
+                  </Fragment>
+                ))}
               </span>
             </div>
           );

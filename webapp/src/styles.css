@@ -514,6 +514,35 @@ button:disabled {
   position: relative;
 }
 
+.note-corner-color {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgba(22, 33, 14, 0.8);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28);
+  z-index: 2;
+}
+
+.note-use-count {
+  position: absolute;
+  top: 4px;
+  left: 3px;
+  min-width: 14px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: rgba(26, 33, 14, 0.82);
+  color: #f7f3dd;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
 .note-unit-button:hover {
   background: rgba(255, 255, 255, 0.14);
 }
@@ -548,6 +577,11 @@ button:disabled {
   z-index: 20;
 }
 
+.cell-tooltip-below {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+
 .cell-tooltip::after {
   content: '';
   position: absolute;
@@ -556,6 +590,13 @@ button:disabled {
   transform: translateX(-50%);
   border: 5px solid transparent;
   border-top-color: rgba(26, 33, 14, 0.96);
+}
+
+.cell-tooltip-below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: rgba(26, 33, 14, 0.96);
 }
 
 .note-unit-button:hover .cell-tooltip,

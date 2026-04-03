@@ -557,13 +557,14 @@ export default function VisualizationPanel({ trackEvents }) {
             </button>
             <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
               <div className="track-wrap">
-                {visibleTracks.map((track) => (
+                {visibleTracks.map((track, trackIndex) => (
                   <TrackRow
                     key={track.id}
                     title={track.title}
                     subtitle={track.subtitle}
                     notes={track.notes}
                     repeaterVisualizationMode={repeaterVisualizationMode}
+                    noteTooltipDirection={trackIndex === 0 ? 'bottom' : 'top'}
                     isPlaybackDimmed={
                       playbackScope === playbackScopes.single &&
                       selectedPlaybackTrackId &&

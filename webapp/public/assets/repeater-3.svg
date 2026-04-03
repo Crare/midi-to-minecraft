@@ -1,12 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
-  <rect width="64" height="64" fill="#b9b3a8"/>
-  <rect x="3" y="3" width="58" height="58" fill="#ddd7ca"/>
-  <rect x="8" y="30" width="48" height="6" fill="#b94141"/>
-  <rect x="10" y="22" width="10" height="10" fill="#d63737"/>
-  <rect x="44" y="22" width="10" height="10" fill="#d63737"/>
-  <rect x="24" y="22" width="6" height="18" fill="#615f5c"/>
-  <rect x="34" y="22" width="6" height="18" fill="#615f5c"/>
-  <rect x="24" y="52" width="6" height="6" fill="#e8d580"/>
-  <rect x="34" y="52" width="6" height="6" fill="#e8d580"/>
-  <rect x="4" y="52" width="12" height="8" fill="#afbe5d"/>
+  <rect name="base" width="64" height="64" fill="#b9b3a8"/>
+  <rect name="background" x="3" y="3" width="58" height="58" fill="#ddd7ca"/>
+  <rect name="red_line" x="8" y="40" width="48" height="6" fill="#b94141"/>
+
+  <rect name="red1" x="24" y="14" width="10" height="10" fill="#d63737"/>
+  <rect name="gray1" x="26" y="24" width="6" height="18" fill="#615f5c"/>
+  <rect name="yellow1" x="26" y="16" width="6" height="6" fill="#e8d580"/>
+
+  <rect name="red2" x="48" y="14" width="10" height="10" fill="#d63737"/>
+  <rect name="gray2" x="50" y="24" width="6" height="18" fill="#615f5c"/>
+  <rect name="yellow2" x="50" y="16" width="6" height="6" fill="#e8d580"/>
 </svg>
