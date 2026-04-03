@@ -7,7 +7,7 @@
   <rect name="gray1" x="38" y="24" width="6" height="18" fill="#615f5c"/>
   <rect name="yellow1" x="38" y="16" width="6" height="6" fill="#e8d580"/>
 
-  <rect name="red2" x="48" y="14" width="10" height="10" fill="#d63737"/>
-  <rect name="gray2" x="50" y="24" width="6" height="18" fill="#615f5c"/>
-  <rect name="yellow2" x="50" y="16" width="6" height="6" fill="#e8d580"/>
+  <rect name="red2" x="46" y="14" width="10" height="10" fill="#d63737"/>
+  <rect name="gray2" x="48" y="24" width="6" height="18" fill="#615f5c"/>
+  <rect name="yellow2" x="48" y="16" width="6" height="6" fill="#e8d580"/>
 </svg>
