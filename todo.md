@@ -38,3 +38,7 @@ add visualization: compact mode, use less tracks as possible. only use multiple 
 optimize the app
 
 try prod build
+
+add analytics with goatcounter
+
+play happy plim plom tune when conversion finishes successfully.
