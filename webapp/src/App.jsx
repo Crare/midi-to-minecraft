@@ -1,5 +1,8 @@
 import { Midi } from '@tonejs/midi';
 import { useMemo, useState } from 'react';
+import DragScrollArea from './components/DragScrollArea';
+import DownloadRow from './components/DownloadRow';
+import TrackRow from './components/TrackRow';
 
 const defaultInstrumentBlock = 'minecraft:dirt';
 const defaultPercussiveBlock = 'minecraft:sand';
@@ -74,27 +77,6 @@ const blockByPercussiveNote = {
   56: 'minecraft:soul_sand',
 };
 
-const supportColorByBlock = {
-  acacia_log: '#8b5a2b',
-  sand: '#d4be7d',
-  glass: '#8cd9e9',
-  stone: '#8f9497',
-  gold_block: '#f3cf3f',
-  clay: '#b9a6a2',
-  packed_ice: '#bce8ff',
-  white_wool: '#f4f2e9',
-  bone_block: '#e3dcc2',
-  iron_block: '#c4cbd0',
-  soul_sand: '#6f5b45',
-  pumpkin: '#d27720',
-  emerald_block: '#3cc76f',
-  hay_block: '#d6c66a',
-  glowstone: '#f2cb6c',
-  dirt: '#7f5a34',
-};
-
-const supportSpriteCache = new Map();
-
 function midiToPitchClass(noteNumber) {
   const scale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   return scale[noteNumber % 12];
@@ -123,125 +105,137 @@ function splitOutputTarget(inputName, outputName) {
   return { dir, stem, ext };
 }
 
-function toPlacementsByTrack(midi) {
-  return midi.tracks.map((track) => {
+function getSongStartTime(midi) {
+  let earliestTime = Infinity;
+
+  midi.tracks.forEach((track) => {
+    track.notes.forEach((note) => {
+      if (note.time < earliestTime) earliestTime = note.time;
+    });
+  });
+
+  return Number.isFinite(earliestTime) ? earliestTime : 0;
+}
+
+function formatInstrumentName(instrument) {
+  return instrument
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function buildTrackEvents(midi, { trimLeadingSilence = false } = {}) {
+  const songStartTime = trimLeadingSilence ? getSongStartTime(midi) : 0;
+
+  return midi.tracks.map((track, index) => {
     const notes = [...track.notes].sort((a, b) => a.time - b.time);
     const channel = typeof track.channel === 'number' ? track.channel : 0;
     const patch = track.instrument?.number ?? 0;
     const defaultTrackBlock = blockByPatchId[patch] || defaultInstrumentBlock;
 
-    let lastTime = 0;
-    return notes.map((note) => {
-      const deltaSeconds = Math.max(0, note.time - lastTime);
-      lastTime = note.time;
-      const redstoneTickDelay = Math.round(deltaSeconds * 10);
-      const isDrum = channel === 9;
-      const block = isDrum
-        ? (blockByPercussiveNote[note.midi] || defaultPercussiveBlock)
-        : defaultTrackBlock;
-      const pitch = isDrum ? undefined : midiToPitchClass(note.midi);
-      const mcNote = isDrum ? 0 : midiToMinecraftNote(note.midi);
+    return {
+      id: `track-${index}`,
+      title: `Track ${index + 1}`,
+      events: notes.map((note) => {
+        const startTime = Math.max(0, note.time - songStartTime);
+        const duration = Math.max(note.duration ?? 0.05, 0.05);
+        const endTime = startTime + duration;
+        const isDrum = channel === 9;
+        const block = isDrum
+          ? (blockByPercussiveNote[note.midi] || defaultPercussiveBlock)
+          : defaultTrackBlock;
+        const pitch = isDrum ? undefined : midiToPitchClass(note.midi);
+        const mcNote = isDrum ? 0 : midiToMinecraftNote(note.midi);
 
-      return {
-        redstoneTickDelay,
-        block,
-        pitch,
-        note: mcNote,
-        instrument: instrumentByBlock[block] || 'harp',
-      };
-    });
+        return {
+          time: startTime,
+          endTime,
+          block,
+          pitch,
+          note: mcNote,
+          instrument: instrumentByBlock[block] || 'harp',
+        };
+      }),
+    };
   });
 }
 
-function supportSpriteForBlock(blockId) {
-  if (supportSpriteCache.has(blockId)) return supportSpriteCache.get(blockId);
+function eventsToPlacements(events) {
+  let lastTime = 0;
 
-  const blockName = (blockId || 'minecraft:dirt').replace('minecraft:', '');
-  const color = supportColorByBlock[blockName] || '#8a8a8a';
-  const dark = '#4c4c4c';
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' shape-rendering='crispEdges'>
-    <rect width='64' height='64' fill='${color}'/>
-    <rect x='2' y='2' width='60' height='10' fill='rgba(255,255,255,0.25)'/>
-    <rect x='2' y='54' width='60' height='8' fill='rgba(0,0,0,0.2)'/>
-    <rect x='0' y='0' width='64' height='64' fill='none' stroke='${dark}' stroke-width='2'/>
-  </svg>`;
-  const uri = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-  supportSpriteCache.set(blockId, uri);
-  return uri;
+  return events.map((event) => {
+    const redstoneTickDelay = Math.round(Math.max(0, event.time - lastTime) * 10);
+    lastTime = event.time;
+
+    return {
+      redstoneTickDelay,
+      block: event.block,
+      pitch: event.pitch,
+      note: event.note,
+      instrument: event.instrument,
+    };
+  });
 }
 
-function DownloadRow({ filename, data }) {
-  const href = useMemo(() => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json',
+function buildVisualizationTracks(trackEvents, groupTracksByInstrument) {
+  if (!groupTracksByInstrument) {
+    return trackEvents.map((track) => ({
+      id: track.id,
+      title: track.title,
+      subtitle: `${track.events.length} notes`,
+      notes: eventsToPlacements(track.events),
+    }));
+  }
+
+  const instrumentTracks = new Map();
+
+  trackEvents.forEach((track) => {
+    track.events.forEach((event) => {
+      if (!instrumentTracks.has(event.instrument)) {
+        instrumentTracks.set(event.instrument, []);
+      }
+
+      instrumentTracks.get(event.instrument).push(event);
     });
-    return URL.createObjectURL(blob);
-  }, [data]);
+  });
 
-  return (
-    <div className="download-row">
-      <div>
-        <div>{filename}</div>
-        <div className="meta">{data.length} notes</div>
-      </div>
-      <a className="button-link" href={href} download={filename}>
-        Download
-      </a>
-    </div>
-  );
-}
+  const groupedTracks = [];
+  const epsilon = 0.000001;
 
-function TrackRow({ index, notes }) {
-  const repeaterImg = `${import.meta.env.BASE_URL}assets/repeater.svg`;
-  const noteblockImg = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
+  instrumentTracks.forEach((events, instrument) => {
+    const sortedEvents = [...events].sort(
+      (left, right) => left.time - right.time || left.endTime - right.endTime || left.note - right.note
+    );
+    const lanes = [];
 
-  return (
-    <div className="track-row">
-      <div className="track-title">
-        Track {index + 1} ({notes.length} notes)
-      </div>
-      <div className="track-scroll">
-        <div className="track-line">
-          {notes.map((placement, noteIndex) => {
-            const repeaterCount =
-              placement.redstoneTickDelay > 0
-                ? Math.max(1, Math.ceil(placement.redstoneTickDelay / 4))
-                : 0;
-            const units = [];
+    sortedEvents.forEach((event) => {
+      let lane = lanes.find((candidate) => event.time + epsilon >= candidate.lastEndTime);
 
-            for (let i = 0; i < repeaterCount; i += 1) {
-              units.push(
-                <div className="repeater" key={`rep-${noteIndex}-${i}`}>
-                  <img src={repeaterImg} alt="repeater" />
-                  {i === 0 ? (
-                    <div className="delay-label">{placement.redstoneTickDelay}</div>
-                  ) : null}
-                </div>
-              );
-            }
+      if (!lane) {
+        lane = { lastEndTime: -Infinity, events: [] };
+        lanes.push(lane);
+      }
 
-            units.push(
-              <div className="note-unit" key={`note-${noteIndex}`}>
-                <img className="note-img" src={noteblockImg} alt="noteblock" />
-                <img
-                  className="support-img"
-                  src={supportSpriteForBlock(placement.block)}
-                  alt={placement.block}
-                />
-                <div className="note-meta">
-                  {placement.instrument}
-                  <br />
-                  {placement.pitch || 'drum'} {placement.note}
-                </div>
-              </div>
-            );
+      lane.events.push(event);
+      lane.lastEndTime = Math.max(lane.lastEndTime, event.endTime);
+    });
 
-            return <React.Fragment key={`frag-${noteIndex}`}>{units}</React.Fragment>;
-          })}
-        </div>
-      </div>
-    </div>
-  );
+    const title = formatInstrumentName(instrument);
+
+    lanes.forEach((lane, laneIndex) => {
+      groupedTracks.push({
+        id: `instrument-${instrument}-${laneIndex}`,
+        title,
+        subtitle:
+          lanes.length > 1
+            ? `Lane ${laneIndex + 1} · ${lane.events.length} notes`
+            : `${lane.events.length} notes`,
+        notes: eventsToPlacements(lane.events),
+      });
+    });
+  });
+
+  return groupedTracks;
 }
 
 export default function App() {
@@ -249,8 +243,19 @@ export default function App() {
   const [outputName, setOutputName] = useState('output.json');
   const [status, setStatus] = useState('Choose a MIDI file to begin.');
   const [busy, setBusy] = useState(false);
-  const [tracks, setTracks] = useState([]);
+  const [trackEvents, setTrackEvents] = useState([]);
   const [downloadFiles, setDownloadFiles] = useState([]);
+  const [outputsOpen, setOutputsOpen] = useState(false);
+  const [tracksOpen, setTracksOpen] = useState(false);
+  const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
+  const [groupTracksByInstrument, setGroupTracksByInstrument] = useState(false);
+  const visibleTracks = useMemo(
+    () =>
+      buildVisualizationTracks(trackEvents, groupTracksByInstrument).filter(
+        (track) => track.notes.length > 0
+      ),
+    [trackEvents, groupTracksByInstrument]
+  );
 
   const onConvert = async () => {
     if (!file || busy) return;
@@ -260,8 +265,10 @@ export default function App() {
       setStatus('Reading MIDI file...');
       const buffer = await file.arrayBuffer();
       const midi = new Midi(buffer);
-      const sequences = toPlacementsByTrack(midi);
-      setTracks(sequences);
+      const nextTrackEvents = buildTrackEvents(midi, { trimLeadingSilence });
+      const sequences = nextTrackEvents.map((track) => eventsToPlacements(track.events));
+      setTrackEvents(nextTrackEvents);
+      setTracksOpen(nextTrackEvents.some((track) => track.events.length > 0));
 
       const target = splitOutputTarget(file.name, outputName);
       const files =
@@ -278,6 +285,7 @@ export default function App() {
             }));
 
       setDownloadFiles(files);
+      setOutputsOpen(files.length > 0);
       const totalNotes = sequences.reduce((sum, track) => sum + track.length, 0);
       setStatus(`Converted ${sequences.length} track(s), ${totalNotes} notes total.`);
     } catch (error) {
@@ -318,42 +326,107 @@ export default function App() {
               aria-label="output filename"
             />
             <button onClick={onConvert} disabled={!file || busy}>
-              {busy ? 'Converting...' : 'Convert'}
+              {busy ? (
+                <>
+                  <span className="spinner spinner-inline" aria-hidden="true" />
+                  Converting...
+                </>
+              ) : (
+                'Convert'
+              )}
             </button>
           </div>
-          <p id="status">{status}</p>
+          <label className="option-row">
+            <input
+              type="checkbox"
+              checked={trimLeadingSilence}
+              onChange={(e) => setTrimLeadingSilence(e.target.checked)}
+            />
+            <span>Remove empty space at the start of the song</span>
+          </label>
+          <p id="status" className={busy ? 'status-busy' : undefined}>
+            {busy ? <span className="spinner" aria-hidden="true" /> : null}
+            <span>{status}</span>
+          </p>
         </section>
 
         <section className="panel outputs">
-          <h2>2) JSON Output</h2>
-          <div className="downloads">
-            {downloadFiles.length === 0 ? (
-              <div className="meta">No output yet.</div>
+          <div className="panel-header">
+            <h2>2) JSON Output</h2>
+            {downloadFiles.length > 0 ? (
+              <button
+                type="button"
+                className="panel-toggle"
+                onClick={() => setOutputsOpen((open) => !open)}
+                aria-expanded={outputsOpen}
+              >
+                {outputsOpen ? 'Hide' : 'Show'}
+              </button>
             ) : null}
-            {downloadFiles.map((entry) => (
-              <DownloadRow
-                key={entry.name}
-                filename={entry.name.replace(/^.*\//, '')}
-                data={entry.data}
-              />
-            ))}
           </div>
+          <p className="hint output-summary">
+            {downloadFiles.length === 0
+              ? 'No output yet.'
+              : `${downloadFiles.length} file(s) ready for download.`}
+          </p>
+          {outputsOpen ? (
+            <div className="downloads">
+              {downloadFiles.map((entry) => (
+                <DownloadRow
+                  key={entry.name}
+                  filename={entry.name.replace(/^.*\//, '')}
+                  data={entry.data}
+                />
+              ))}
+            </div>
+          ) : null}
         </section>
 
         <section className="panel visualization">
-          <h2>3) Track Visualization</h2>
-          <p className="hint">
-            Repeaters are inserted before each note based on redstoneTickDelay.
-            Scroll horizontally for long tracks.
-          </p>
-          <div className="track-wrap">
-            {tracks.length === 0 ? (
-              <div className="meta">No tracks to visualize.</div>
+          <div className="panel-header">
+            <h2>3) Track Visualization</h2>
+            {visibleTracks.length > 0 ? (
+              <button
+                type="button"
+                className="panel-toggle"
+                onClick={() => setTracksOpen((open) => !open)}
+                aria-expanded={tracksOpen}
+              >
+                {tracksOpen ? 'Hide' : 'Show'}
+              </button>
             ) : null}
-            {tracks.map((track, idx) => (
-              <TrackRow key={`track-${idx}`} index={idx} notes={track} />
-            ))}
           </div>
+          <label className="option-row">
+            <input
+              type="checkbox"
+              checked={groupTracksByInstrument}
+              onChange={(e) => setGroupTracksByInstrument(e.target.checked)}
+              disabled={trackEvents.length === 0}
+            />
+            <span>Organize visualization by instrument</span>
+          </label>
+          <p className="hint output-summary">
+            Repeaters are inserted before each note based on redstoneTickDelay.
+            {visibleTracks.length === 0
+              ? ' No tracks to visualize.'
+              : groupTracksByInstrument
+                ? ` ${visibleTracks.length} instrument lane(s) ready. Scroll horizontally for long tracks.`
+                : ` ${visibleTracks.length} track(s) ready. Scroll horizontally for long tracks.`}
+          </p>
+          {tracksOpen ? (
+            <DragScrollArea className="track-scroll-wrap">
+              <div className="track-wrap">
+                {visibleTracks.map((track) => (
+                  <TrackRow
+                    key={track.id}
+                    title={track.title}
+                    subtitle={track.subtitle}
+                    notes={track.notes}
+                  />
+                ))}
+              </div>
+            </DragScrollArea>
+          ) : null}
         </section>
       </main>
     </>
