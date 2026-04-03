@@ -1,0 +1,39 @@
+{
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "preconvert": "npm run build",
+    "convert": "node dist/index.js"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "midi-to-minecraft",
+  "author": "colin.barringer@icloud.com",
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@tonejs/midi": "^2.0.28",
+    "commander": "^14.0.1",
+    "midifile-ts": "^1.5.2"
+  }
+}
