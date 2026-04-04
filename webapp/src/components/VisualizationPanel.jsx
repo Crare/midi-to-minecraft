@@ -587,51 +587,85 @@ export default function VisualizationPanel({ trackEvents }) {
               : ` ${visibleTracks.length} track(s) ready. Scroll horizontally for long tracks.`}
         </p>
         {tracksOpen ? (
-          <>
-            <div className="track-scroll-proxy-top" ref={topScrollRef}>
-              <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
-            </div>
-            <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
-              <button
-                ref={playheadRef}
-                type="button"
-                className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
-                style={{ left: '0px' }}
-                onPointerDown={onPlayheadPointerDown}
-                onPointerMove={onPlayheadPointerMove}
-                onPointerUp={onPlayheadPointerUp}
-                onPointerCancel={finishPlayheadDrag}
-                aria-label="Drag play position"
-              >
-                <span className="playhead-line" aria-hidden="true" />
-                <span className="playhead-head" aria-hidden="true" />
-              </button>
-              <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
-                <div className="track-wrap">
-                  {visibleTracks.map((track, trackIndex) => (
-                    <TrackRow
-                      key={track.id}
-                      title={track.title}
-                      subtitle={track.subtitle}
-                      notes={track.notes}
-                      repeaterVisualizationMode={repeaterVisualizationMode}
-                      noteTooltipDirection={trackIndex === 0 ? 'bottom' : 'top'}
-                      isMuted={mutedTracks.has(track.id)}
-                      onToggleMute={toggleMuteCallbacks.get(track.id)}
-                      isPlaybackDimmed={
-                        playbackScope === playbackScopes.single &&
-                        selectedPlaybackTrackId &&
-                        track.id !== selectedPlaybackTrackId
-                      }
-                      unitSize={trackUnitSize}
-                      scrollLeft={scrollLeft}
-                      containerWidth={scrollContainerWidth}
-                    />
-                  ))}
+          <div className="track-area">
+            <div className="track-labels">
+              {visibleTracks.map((track) => (
+                <div
+                  key={track.id}
+                  className={
+                    playbackScope === playbackScopes.single &&
+                    selectedPlaybackTrackId &&
+                    track.id !== selectedPlaybackTrackId
+                      ? 'track-label track-row-dimmed'
+                      : 'track-label'
+                  }
+                >
+                  <span className="track-index">{track.title}</span>
+                  <span className="track-count">{track.subtitle}</span>
+                  <button
+                    type="button"
+                    className="icon-btn track-mute-btn"
+                    title={mutedTracks.has(track.id) ? 'Unmute' : 'Mute'}
+                    onClick={(e) => { e.stopPropagation(); toggleMuteCallbacks.get(track.id)?.(); }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    aria-label={mutedTracks.has(track.id) ? 'Unmute track' : 'Mute track'}
+                  >
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      {mutedTracks.has(track.id) ? (
+                        <path d="M 3 3 L 13 13 M 13 3 L 3 13" stroke="currentColor" strokeWidth="2" fill="none" />
+                      ) : (
+                        <>
+                          <path d="M 3 5 L 8 2 L 8 14 L 3 11 Z" fill="currentColor" />
+                          <path d="M 10 4 Q 12 6 12 8 Q 12 10 10 12" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                        </>
+                      )}
+                    </svg>
+                  </button>
                 </div>
+              ))}
+            </div>
+            <div className="track-scroll-column">
+              <div className="track-scroll-proxy-top" ref={topScrollRef}>
+                <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
               </div>
-            </DragScrollArea>
-          </>
+              <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
+                <button
+                  ref={playheadRef}
+                  type="button"
+                  className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
+                  style={{ left: '0px' }}
+                  onPointerDown={onPlayheadPointerDown}
+                  onPointerMove={onPlayheadPointerMove}
+                  onPointerUp={onPlayheadPointerUp}
+                  onPointerCancel={finishPlayheadDrag}
+                  aria-label="Drag play position"
+                >
+                  <span className="playhead-line" aria-hidden="true" />
+                  <span className="playhead-head" aria-hidden="true" />
+                </button>
+                <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
+                  <div className="track-wrap">
+                    {visibleTracks.map((track, trackIndex) => (
+                      <TrackRow
+                        key={track.id}
+                        notes={track.notes}
+                        repeaterVisualizationMode={repeaterVisualizationMode}
+                        noteTooltipDirection={trackIndex === 0 ? 'bottom' : 'top'}
+                        isPlaybackDimmed={
+                          playbackScope === playbackScopes.single &&
+                          selectedPlaybackTrackId &&
+                          track.id !== selectedPlaybackTrackId
+                        }
+                        unitSize={trackUnitSize}
+                        scrollLeft={scrollLeft}
+                        containerWidth={scrollContainerWidth}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </DragScrollArea>
+            </div>
+          </div>
         ) : null}
       </div>
     </section>

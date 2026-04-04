@@ -361,14 +361,45 @@ button:disabled {
   user-select: none;
 }
 
-.track-row {
-  display: grid;
-  grid-template-columns: 130px max-content;
-  align-items: start;
+.track-area {
+  display: flex;
+  align-items: flex-start;
+}
+
+.track-labels {
+  flex: 0 0 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.track-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.15rem;
+  font-weight: 700;
+  padding: 0.35rem 0.4rem;
+  background: #9dc378;
   border: 1px solid rgba(66, 97, 38, 0.65);
-  border-radius: 4px;
+  border-right: 1px solid rgba(66, 97, 38, 0.45);
+  border-radius: 4px 0 0 4px;
+  min-height: calc(120px + 0.7rem + 2px);
+  transition: opacity 140ms ease, filter 140ms ease;
+  box-sizing: border-box;
+}
+
+.track-scroll-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.track-row {
+  border: 1px solid rgba(66, 97, 38, 0.65);
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
   background: rgba(219, 233, 194, 0.34);
-  padding: 0.35rem 0.45rem;
+  padding: 0.35rem 0.45rem 0.35rem 0.45rem;
   width: max-content;
   transition: opacity 140ms ease, filter 140ms ease;
 }
@@ -426,21 +457,7 @@ button:disabled {
   background: #fffbe6;
 }
 
-.track-title {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.15rem;
-  font-weight: 700;
-  padding: 0.15rem 0.4rem 0.15rem 0;
-  position: sticky;
-  left: 0;
-  z-index: 5;
-  background: #9dc378;
-  border-right: 1px solid rgba(66, 97, 38, 0.45);
-  align-self: stretch;
-  min-width: 0;
-}
+/* .track-title removed — labels now live in .track-label outside the scroll area */
 
 .track-index {
   font-size: 0.88rem;
@@ -459,18 +476,8 @@ button:disabled {
   white-space: nowrap;
 }
 
-.track-row-empty {
-  align-items: center;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-}
-
 .track-row-empty .track-line {
   min-height: 20px;
-}
-
-.track-row-empty .track-title {
-  padding-top: 0;
 }
 
 .track-mute-btn {
