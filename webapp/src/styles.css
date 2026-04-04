@@ -656,6 +656,151 @@ button:disabled {
   }
 }
 
+/* ─── Schematic Panel ─────────────────────────────────────────────────────── */
+
+.schematic-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.schematic-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.85rem;
+  margin: 0.5rem 0 0.65rem;
+}
+
+.schematic-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.schematic-legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(42, 70, 22, 0.45);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.schematic-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 0.4rem;
+  cursor: grab;
+}
+
+.schematic-scroll:active {
+  cursor: grabbing;
+}
+
+.schematic-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: max-content;
+  padding: 4px 0;
+}
+
+.schematic-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.schematic-connector {
+  flex-shrink: 0;
+}
+
+.schematic-content {
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+}
+
+.schematic-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  transform: translateX(-50%);
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  z-index: 15;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.schematic-indicator-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: #f0c040;
+  box-shadow: 0 0 0 1px rgba(140, 90, 0, 0.8);
+}
+
+.schematic-indicator-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -10%);
+  border-radius: 50%;
+  background: #f0c040;
+  border: 2px solid rgba(140, 90, 0, 0.9);
+}
+
+.schematic-indicator:focus-visible .schematic-indicator-line {
+  background: #fffbe6;
+}
+
+.schematic-group-separator {
+  height: 8px;
+}
+
+.schematic-group-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 2px 4px;
+  margin-bottom: 1px;
+}
+
+.schematic-cell {
+  flex-shrink: 0;
+  position: relative;
+  image-rendering: pixelated;
+}
+
+.schematic-cell-tip {
+  cursor: pointer;
+  outline: none;
+}
+
+.schematic-cell-tip:hover .cell-tooltip,
+.schematic-cell-tip:focus-visible .cell-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.schematic-cell svg {
+  display: block;
+  image-rendering: pixelated;
+}
+
 @media (max-width: 700px) {
   :root {
     --track-unit-size: 30px;

@@ -1,6 +1,7 @@
 import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
 import JsonOutputPanel from './components/JsonOutputPanel';
+import SchematicPanel from './components/SchematicPanel';
 import UploadPanel from './components/UploadPanel';
 import VisualizationPanel from './components/VisualizationPanel';
 import { playSuccessJingle } from './audio/noteblockAudio';
@@ -247,6 +248,8 @@ export default function App() {
         <JsonOutputPanel downloadFiles={downloadFiles} zipFilename={zipFilename} />
 
         <VisualizationPanel trackEvents={trackEvents} />
+
+        <SchematicPanel trackEvents={trackEvents} />
       </main>
 
       <footer className="site-footer">

@@ -19,4 +19,12 @@
 
 - add analytics with goatcounter
 
-- show build schematic, topdown with the noteblocks instrument-block shown(dirt, stone, sand, etc.) with either tracks in separate lanes or combined to one. make own panel for this. it should prefer to go in straight line.
+- if noteblocks are back to back. it needs one tick repeater in between. or if it is playing multiplte notes on one track same time, it needs to split it to multiple tracks or rows. it is trying to play harmonics. in the visualization show harmonics noteblocks on top of each other, instead of in one line, because they should be played same time. visualization should represent the timeline of the track being played.
+
+- schematic should take into account the delay at start when the track should start compared to track that starts first.
+
+- schematic should visualize all the repeaters. like how many it needs minimum with what settings. there should be also option to use repeaters and redstone so that the tracks align in actual time horizontally.
+
+- schematic showing harmonics should use vertical redstone lines to connect the noteblocks together on the left side of the harmonic.
+
+- maybe instead of looking at tracks and notes. convert the tracks to single list of notes, with each note having delay from start counted by checking the previous note and adding its own delay on top of that. order the list by delay starting from smallest. then we can know when individual notes should be played and we can split the notes to track based on instruments and play them in timeline better. then use that notes list to visualize the tracks and do the schematic.
