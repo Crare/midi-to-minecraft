@@ -885,6 +885,46 @@ button:disabled {
   visibility: visible;
 }
 
+/* Portal tooltip — renders into document.body as position:fixed to escape     */
+/* the scroll container's overflow clip (overflow-x:auto coerces overflow-y).  */
+.cell-tooltip-portal {
+  position: fixed;
+  transform: translateX(-50%) translateY(-100%);
+  min-width: max-content;
+  max-width: 180px;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid rgba(34, 44, 21, 0.9);
+  border-radius: 4px;
+  background: rgba(26, 33, 14, 0.96);
+  color: #f7f3dd;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.cell-tooltip-portal::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(26, 33, 14, 0.96);
+}
+
+.cell-tooltip-portal-below {
+  transform: translateX(-50%);
+}
+
+.cell-tooltip-portal-below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: rgba(26, 33, 14, 0.96);
+}
+
 .schematic-cell svg {
   display: block;
   image-rendering: pixelated;

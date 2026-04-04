@@ -1,7 +1,55 @@
-import { Fragment } from 'react';
+import { Fragment, useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { playPlacementSound } from '../../audio/noteblockAudio';
 import { blockLabel, getUseCount } from './schematicData';
 import { NoteCell, RepeaterCell, DustCell, SplitPassCell, SplitBranchCell, CELL } from './SchematicCells';
+
+// ── Portal tooltip hook ───────────────────────────────────────────────────────
+// overflow-x:auto on the scroll container coerces overflow-y:visible → auto,
+// which clips absolutely-positioned children. Portaling into document.body
+// with position:fixed escapes the clip.
+function usePortalTooltip() {
+  const ref = useRef(null);
+  const [pos, setPos] = useState(null);
+
+  const hide = useCallback(() => setPos(null), []);
+  const show = useCallback(() => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    // Show below if there's less than 80px above (near viewport top).
+    const below = r.top < 80;
+    setPos({ x: r.left + r.width / 2, y: below ? r.bottom : r.top, below });
+  }, []);
+
+  // Dismiss if the viewport scrolls or resizes (keeps fixed pos from going stale).
+  useEffect(() => {
+    if (!pos) return;
+    window.addEventListener('scroll', hide, { passive: true, capture: true });
+    window.addEventListener('resize', hide, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', hide, { capture: true });
+      window.removeEventListener('resize', hide);
+    };
+  }, [pos, hide]);
+
+  return { ref, pos, show, hide };
+}
+
+function TooltipPortal({ pos, children }) {
+  return createPortal(
+    <div
+      className={`cell-tooltip-portal${pos.below ? ' cell-tooltip-portal-below' : ''}`}
+      style={{
+        left: `${pos.x}px`,
+        top: pos.below ? `${pos.y + 8}px` : `${pos.y - 8}px`,
+      }}
+      role="tooltip"
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}
 
 // ── CSS grid column template ──────────────────────────────────────────────────
 // Layout: [connector cs] then for each anchor: [segment auto] [anchor cs]
@@ -15,8 +63,66 @@ function makeGridTemplate(anchorCount, cs) {
   return parts.join(' ');
 }
 
+// ── Segment repeater cell with portal tooltip ─────────────────────────────────
+function SegRepCell({ cell, cs }) {
+  const { ref, pos, show, hide } = usePortalTooltip();
+  return (
+    <div
+      ref={ref}
+      className="schematic-cell schematic-cell-tip"
+      tabIndex={0}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+    >
+      <RepeaterCell ticks={cell.ticks} size={cs} />
+      {pos && <TooltipPortal pos={pos}>Repeater: {cell.ticks} tick{cell.ticks !== 1 ? 's' : ''}</TooltipPortal>}
+    </div>
+  );
+}
+
+// ── Note block anchor cell with portal tooltip ────────────────────────────────
+function NoteBlockCell({ cell, cs, instrument, block }) {
+  const { ref, pos, show, hide } = usePortalTooltip();
+  const note = cell.note;
+  const useCount = getUseCount(note.note);
+  const noteBlock = note.block ?? block;
+  return (
+    <div
+      ref={ref}
+      className="schematic-cell schematic-cell-tip"
+      tabIndex={0}
+      role="button"
+      aria-label={`${note.instrument ?? instrument} - ${note.pitch || 'drum'}`}
+      onPointerDown={(e) => e.stopPropagation()}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+      onClick={() => void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch })}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch });
+        }
+      }}
+    >
+      <NoteCell block={noteBlock} instrument={note.instrument ?? instrument} useCount={useCount} size={cs} />
+      {pos && (
+        <TooltipPortal pos={pos}>
+          {note.instrument ?? instrument}<br />
+          {note.pitch || 'drum'}<br />
+          Use count: {useCount}<br />
+          {blockLabel(noteBlock)}
+        </TooltipPortal>
+      )}
+    </div>
+  );
+}
+
 // ── Anchor cell ───────────────────────────────────────────────────────────────
-function AnchorCell({ anchor, cell, cs, isFirstRow, instrument, block }) {
+function AnchorCell({ anchor, cell, cs, instrument, block }) {
   if (!cell || cell.kind === 'inactive') {
     return <div style={{ width: cs, height: cs }} aria-hidden="true" />;
   }
@@ -30,33 +136,7 @@ function AnchorCell({ anchor, cell, cs, isFirstRow, instrument, block }) {
     if (!cell.note) {
       return <div style={{ width: cs, height: cs }} aria-hidden="true" />;
     }
-    const note = cell.note;
-    const useCount = getUseCount(note.note);
-    const noteBlock = note.block ?? block;
-    return (
-      <div
-        className="schematic-cell schematic-cell-tip"
-        tabIndex={0}
-        role="button"
-        aria-label={`${note.instrument ?? instrument} - ${note.pitch || 'drum'}`}
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch })}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch });
-          }
-        }}
-      >
-        <NoteCell block={noteBlock} instrument={note.instrument ?? instrument} useCount={useCount} size={cs} />
-        <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-          {note.instrument ?? instrument}<br />
-          {note.pitch || 'drum'}<br />
-          Use count: {useCount}<br />
-          {blockLabel(noteBlock)}
-        </span>
-      </div>
-    );
+    return <NoteBlockCell cell={cell} cs={cs} instrument={instrument} block={block} />;
   }
   return null;
 }
@@ -77,70 +157,58 @@ export default function SchematicGrid({ grid, cellSize }) {
       className="schematic-grid"
       style={{ display: 'grid', gridTemplateColumns: gridTemplate, alignItems: 'center' }}
     >
-      {instruments.map((inst, instIndex) => {
-        const isFirstInst = instIndex === 0;
-        return (
-          <div key={inst.id} style={{ display: 'contents' }}>
-            {/* Group separator — spans all columns */}
-            {!isFirstInst && (
-              <div
-                className="schematic-group-separator"
-                style={{ gridColumn: `1 / ${totalCols + 1}` }}
-              />
-            )}
-            {/* Group label — spans all columns */}
+      {instruments.map((inst, instIndex) => (
+        <div key={inst.id} style={{ display: 'contents' }}>
+          {/* Group separator — spans all columns */}
+          {instIndex > 0 && (
             <div
-              className="schematic-group-label"
+              className="schematic-group-separator"
               style={{ gridColumn: `1 / ${totalCols + 1}` }}
-            >
-              <span className="schematic-group-title">
-                {inst.label} — {blockLabel(inst.block)}
-              </span>
-            </div>
-
-            {/* Instrument rows */}
-            {inst.rows.map((row, rowIndex) => {
-              const isFirstRow = isFirstInst && rowIndex === 0;
-              return (
-                <div key={row.id} style={{ display: 'contents' }}>
-                  {/* Connector dust — always column 1 */}
-                  <div className="schematic-connector" style={{ width: cs, height: cs }}>
-                    <DustCell size={cs} />
-                  </div>
-
-                  {anchors.map((anchor, ai) => {
-                    const seg = row.segments[ai] ?? [];
-                    return (
-                      <Fragment key={ai}>
-                        {/* Segment cell */}
-                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                          {seg.map((cell, ri) => (
-                            <div key={ri} className="schematic-cell schematic-cell-tip" tabIndex={0}>
-                              <RepeaterCell ticks={cell.ticks} size={cs} />
-                              <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-                                Repeater: {cell.ticks} tick{cell.ticks !== 1 ? 's' : ''}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        {/* Anchor cell */}
-                        <AnchorCell
-                          anchor={anchor}
-                          cell={row.anchorCells[ai]}
-                          cs={cs}
-                          isFirstRow={isFirstRow}
-                          instrument={inst.label}
-                          block={inst.block}
-                        />
-                      </Fragment>
-                    );
-                  })}
-                </div>
-              );
-            })}
+            />
+          )}
+          {/* Group label — spans all columns */}
+          <div
+            className="schematic-group-label"
+            style={{ gridColumn: `1 / ${totalCols + 1}` }}
+          >
+            <span className="schematic-group-title">
+              {inst.label} — {blockLabel(inst.block)}
+            </span>
           </div>
-        );
-      })}
+
+          {/* Instrument rows */}
+          {inst.rows.map((row) => (
+            <div key={row.id} style={{ display: 'contents' }}>
+              {/* Connector dust — always column 1 */}
+              <div className="schematic-connector" style={{ width: cs, height: cs }}>
+                <DustCell size={cs} />
+              </div>
+
+              {anchors.map((anchor, ai) => {
+                const seg = row.segments[ai] ?? [];
+                return (
+                  <Fragment key={ai}>
+                    {/* Segment cell */}
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                      {seg.map((cell, ri) => (
+                        <SegRepCell key={ri} cell={cell} cs={cs} />
+                      ))}
+                    </div>
+                    {/* Anchor cell */}
+                    <AnchorCell
+                      anchor={anchor}
+                      cell={row.anchorCells[ai]}
+                      cs={cs}
+                      instrument={inst.label}
+                      block={inst.block}
+                    />
+                  </Fragment>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
