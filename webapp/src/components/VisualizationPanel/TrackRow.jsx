@@ -1,5 +1,5 @@
 import { Fragment, memo, useMemo } from 'react';
-import { playPlacementSound } from '../audio/noteblockAudio';
+import { playPlacementSound } from '../../audio/noteblockAudio';
 
 const notePitchNames = [
   'F#/Gb',
@@ -72,8 +72,6 @@ function supportSpriteForBlock(blockId) {
   supportSpriteCache.set(blockId, uri);
   return uri;
 }
-
-
 
 function getMinecraftTuningInfo(useCount) {
   const normalizedUseCount = ((useCount % 24) + 24) % 24;
