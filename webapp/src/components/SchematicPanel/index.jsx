@@ -1,7 +1,7 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
 import DragScrollArea from '../DragScrollArea';
 import SchematicGrid from './SchematicGrid';
-import { blockColor, blockColorFor, blockLabel, buildLaneGroups, computeGroupBlockCounts, computeRawResources, getGroupSupportBlock } from './schematicData';
+import { blockColor, blockColorFor, blockLabel, buildTickGrid, computeTickGridBlockCounts, computeRawResources } from './schematicData';
 import { MiniNoteBlock, MiniRepeater, MiniDust, MiniBlock } from './SchematicCells';
 
 function stackLabel(n) {
@@ -33,31 +33,21 @@ export default function SchematicPanel({ trackEvents }) {
   const contentRef = useRef(null);
   const indicatorDragRef = useRef({ active: false, startClientX: 0, startX: 0 });
 
-  const groups = useMemo(
-    () => buildLaneGroups(trackEvents),
+  const grid = useMemo(
+    () => buildTickGrid(trackEvents),
     [trackEvents],
   );
   const totalNotes = useMemo(
-    () => groups.reduce((s, g) => s + g.sublanes.reduce((ss, sl) => ss + sl.notes.length, 0), 0),
-    [groups],
+    () => grid.instruments.reduce((s, inst) => s + inst.rows.reduce((rs, row) => rs + row.cells.filter((c) => c.kind === 'note' && c.note).length, 0), 0),
+    [grid],
   );
-  const totalRows = useMemo(() => groups.reduce((s, g) => s + g.sublanes.length, 0), [groups]);
+  const totalRows = useMemo(() => grid.instruments.reduce((s, inst) => s + inst.rows.length, 0), [grid]);
 
   const totalBlockCounts = useMemo(() => {
-    const totals = { noteblocks: 0, repeaters: 0, dust: 0, supportBlocks: 0 };
-    const supportMap = new Map(); // blockId → count
-    groups.forEach((g) => {
-      const c = computeGroupBlockCounts(g);
-      totals.noteblocks += c.noteblocks;
-      totals.repeaters += c.repeaters;
-      totals.dust += c.dust;
-      totals.supportBlocks += c.supportBlocks;
-      const bid = getGroupSupportBlock(g);
-      supportMap.set(bid, (supportMap.get(bid) ?? 0) + c.noteblocks);
-    });
-    const raw = computeRawResources(totals);
-    return { ...totals, raw, supportMap };
-  }, [groups]);
+    const c = computeTickGridBlockCounts(grid);
+    const raw = computeRawResources(c);
+    return { ...c, raw };
+  }, [grid]);
   const hasData = trackEvents.length > 0;
 
   useEffect(() => {
@@ -134,7 +124,7 @@ export default function SchematicPanel({ trackEvents }) {
           </div>
 
           {/* Block totals and raw resource summary */}
-          {groups.length > 0 && (() => {
+          {grid.instruments.length > 0 && (() => {
             const { noteblocks, repeaters, dust, raw, supportMap } = totalBlockCounts;
             const supportEntries = [...supportMap.entries()];
             return (
@@ -169,7 +159,7 @@ export default function SchematicPanel({ trackEvents }) {
 
           <DragScrollArea className="schematic-scroll">
             <div ref={contentRef} className="schematic-content">
-              {groups.length > 0 && (
+              {grid.instruments.length > 0 && (
                 <button
                   type="button"
                   className="schematic-indicator"
@@ -184,11 +174,11 @@ export default function SchematicPanel({ trackEvents }) {
                   <span className="schematic-indicator-head" aria-hidden="true" />
                 </button>
               )}
-              {groups.length === 0 ? (
+              {grid.instruments.length === 0 ? (
                 <p className="hint">No notes to display.</p>
               ) : (
                 <SchematicGrid
-                  groups={groups}
+                  grid={grid}
                   cellSize={cellSize}
                 />
               )}

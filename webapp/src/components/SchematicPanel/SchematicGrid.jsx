@@ -1,137 +1,114 @@
 import { playPlacementSound } from '../../audio/noteblockAudio';
-import { buildCells, blockLabel, decomposeDelay, computeGroupBlockCounts, getGroupSupportBlock } from './schematicData';
-import { NoteCell, RepeaterCell, DustCell, BranchStartCell, BranchTapCell, CELL } from './SchematicCells';
-import HarmonicRail from './HarmonicRail';
+import { blockLabel, getUseCount } from './schematicData';
+import { NoteCell, RepeaterCell, DustCell, SplitPassCell, SplitBranchCell, CELL } from './SchematicCells';
 
-export default function SchematicGrid({ groups, cellSize }) {
+// Render one cell for a row, given the column kind and the row's cell data.
+function RowCell({ col, cell, cs, isFirstRow, instrument, block }) {
+  if (cell.kind === 'spacer' || cell.kind === 'inactive') {
+    return <div style={{ width: cs, height: cs, flexShrink: 0 }} aria-hidden="true" />;
+  }
+  if (cell.kind === 'repeater') {
+    return (
+      <div className="schematic-cell schematic-cell-tip" tabIndex={0}>
+        <RepeaterCell ticks={cell.ticks} size={cs} />
+        <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
+          Repeater: {cell.ticks} tick{cell.ticks !== 1 ? 's' : ''}
+        </span>
+      </div>
+    );
+  }
+  if (cell.kind === 'split-pass') {
+    return (
+      <div className="schematic-cell" aria-hidden="true">
+        <SplitPassCell size={cs} />
+      </div>
+    );
+  }
+  if (cell.kind === 'split-branch') {
+    return (
+      <div className="schematic-cell" aria-hidden="true">
+        <SplitBranchCell size={cs} />
+      </div>
+    );
+  }
+  if (cell.kind === 'note') {
+    if (!cell.note) {
+      // This instrument/row doesn't play at this tick — empty alignment cell.
+      return <div style={{ width: cs, height: cs, flexShrink: 0 }} aria-hidden="true" />;
+    }
+    const note = cell.note;
+    const useCount = getUseCount(note.note);
+    const noteBlock = note.block ?? block;
+    return (
+      <div
+        className="schematic-cell schematic-cell-tip"
+        tabIndex={0}
+        role="button"
+        aria-label={`${note.instrument ?? instrument} - ${note.pitch || 'drum'}`}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch })}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch });
+          }
+        }}
+      >
+        <NoteCell block={noteBlock} instrument={note.instrument ?? instrument} useCount={useCount} size={cs} />
+        <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
+          {note.instrument ?? instrument}<br />
+          {note.pitch || 'drum'}<br />
+          Use count: {useCount}<br />
+          {blockLabel(noteBlock)}
+        </span>
+      </div>
+    );
+  }
+  return null;
+}
+
+export default function SchematicGrid({ grid, cellSize }) {
   const cs = cellSize ?? CELL;
-  if (groups.length === 0) return null;
+  if (!grid || grid.instruments.length === 0) return null;
 
-  const multipleGroups = groups.length > 1;
+  const { instruments, columns } = grid;
 
   return (
     <div className="schematic-grid">
-      {groups.map((group, groupIndex) => {
-        const isHarmonic = group.sublanes.length > 1;
-        const isFirstGroup = groupIndex === 0;
+      {instruments.map((inst, instIndex) => {
+        const isFirstInst = instIndex === 0;
+        const hasSubs = inst.rows.length > 1;
 
         return (
-          <div key={group.id} className="schematic-group">
-            {!isFirstGroup && <div className="schematic-group-separator" />}
-            {(() => {
-              const supportBlock = getGroupSupportBlock(group);
-              const counts = computeGroupBlockCounts(group);
-              return (
-                <div className="schematic-group-label">
-                  <span className="schematic-group-title">
-                    {group.label} — {blockLabel(supportBlock)}
-                  </span>
-                  <span className="schematic-group-counts">
-                    {counts.noteblocks} note blocks &middot; {counts.repeaters} repeaters &middot; {counts.dust} redstone &middot; {counts.supportBlocks} {blockLabel(supportBlock)}
-                  </span>
-                </div>
-              );
-            })()}
-            {/* Sublanes wrapper — relative so the HarmonicRail SVG can be absolutely positioned */}
-            <div
-              className={isHarmonic ? 'schematic-sublanes' : undefined}
-              style={isHarmonic ? { position: 'relative' } : undefined}
-            >
-              {isHarmonic && <HarmonicRail count={group.sublanes.length} cs={cs} />}
-              {group.sublanes.map((sublane, sublaneIndex) => {
-                const isFirstRow = isFirstGroup && sublaneIndex === 0;
-                const branchInfo = sublane.branchFrom
-                  ? { sourceId: sublane.branchFrom.sourceId, savedTicks: sublane.branchFrom.savedTicks, savedCellCount: sublane.branchFrom.savedCellCount }
-                  : null;
-                const branchTaps = sublane.branchTaps || [];
-                const cells = buildCells(sublane.notes, { branchInfo, branchTaps });
+          <div key={inst.id} className="schematic-group">
+            {!isFirstInst && <div className="schematic-group-separator" />}
+            <div className="schematic-group-label">
+              <span className="schematic-group-title">
+                {inst.label} — {blockLabel(inst.block)}
+              </span>
+            </div>
 
+            <div className={hasSubs ? 'schematic-sublanes' : undefined} style={hasSubs ? { position: 'relative' } : undefined}>
+              {inst.rows.map((row, rowIndex) => {
+                const isFirstRow = isFirstInst && rowIndex === 0;
                 return (
-                  <div key={sublane.id} className="schematic-row">
-                    {/* Connector column — always redstone dust */}
+                  <div key={row.id} className="schematic-row">
+                    {/* Connector dust cell at the start of every row */}
                     <div className="schematic-connector" style={{ width: cs, height: cs, flexShrink: 0 }}>
                       <DustCell size={cs} />
                     </div>
-                    {/* Branch column (harmonic only) — dust with HarmonicRail SVG overlaid */}
-                    {isHarmonic && (
-                      <div style={{ width: cs, height: cs, flexShrink: 0 }}>
-                        <DustCell size={cs} />
-                      </div>
-                    )}
-                    {cells.map((cell) => {
-                      if (cell.type === 'note') {
-                        return (
-                          <div
-                            key={cell.key}
-                            className="schematic-cell schematic-cell-tip"
-                            tabIndex={0}
-                            role="button"
-                            aria-label={`${cell.instrument} - ${cell.pitch || 'drum'}`}
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onClick={() => void playPlacementSound({ instrument: cell.instrument, note: cell.note, pitch: cell.pitch })}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                void playPlacementSound({ instrument: cell.instrument, note: cell.note, pitch: cell.pitch });
-                              }
-                            }}
-                          >
-                            <NoteCell block={cell.block} instrument={cell.instrument} useCount={cell.useCount} size={cs} />
-                            <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-                              {cell.instrument}<br />
-                              {cell.pitch || 'drum'}<br />
-                              Use count: {cell.useCount}<br />
-                              {blockLabel(cell.block)}
-                            </span>
-                          </div>
-                        );
-                      }
-                      if (cell.type === 'repeater') {
-                        return (
-                          <div key={cell.key} className="schematic-cell schematic-cell-tip" tabIndex={0}>
-                            <RepeaterCell ticks={cell.ticks} size={cs} />
-                            <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-                              Repeater: {cell.ticks} tick{cell.ticks !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        );
-                      }
-                      if (cell.type === 'dust') {
-                        return (
-                          <div key={cell.key} className="schematic-cell">
-                            <DustCell size={cs} />
-                          </div>
-                        );
-                      }
-                      if (cell.type === 'spacer') {
-                        return (
-                          <div key={cell.key} style={{ width: cell.count * cs + (cell.count - 1) * 2, flexShrink: 0 }} aria-hidden="true" />
-                        );
-                      }
-                      if (cell.type === 'branch-tap') {
-                        return (
-                          <div key={cell.key} className="schematic-cell schematic-cell-tip" tabIndex={0}>
-                            <BranchTapCell size={cs} />
-                            <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-                              T-junction: child lane branches here
-                            </span>
-                          </div>
-                        );
-                      }
-                      if (cell.type === 'branch-start') {
-                        return (
-                          <div key={cell.key} className="schematic-cell schematic-cell-tip" tabIndex={0}>
-                            <BranchStartCell sourceId={cell.sourceId} savedTicks={cell.savedTicks} size={cs} />
-                            <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-                              T-junction: branch from {cell.sourceId}<br />
-                              Saves {cell.savedTicks} ticks<br />
-                              (~{decomposeDelay(cell.savedTicks).length} fewer repeater{decomposeDelay(cell.savedTicks).length !== 1 ? 's' : ''})
-                            </span>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })}
+                    {/* Render cells aligned to the global column list */}
+                    {columns.map((col, ci) => (
+                      <RowCell
+                        key={ci}
+                        col={col}
+                        cell={row.cells[ci]}
+                        cs={cs}
+                        isFirstRow={isFirstRow}
+                        instrument={inst.label}
+                        block={inst.block}
+                      />
+                    ))}
                   </div>
                 );
               })}
