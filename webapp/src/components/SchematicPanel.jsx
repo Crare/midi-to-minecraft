@@ -38,19 +38,26 @@ function getUseCount(note) {
 
 // ─── Data helpers ─────────────────────────────────────────────────────────────
 
-// Split events into non-overlapping sub-lanes (handles simultaneous / harmonic notes)
+// Split events into non-overlapping sub-lanes (handles simultaneous / harmonic notes).
+// Uses best-fit (latest-ending available lane) to minimise inter-note gaps and repeater use.
 function splitIntoSubLanes(events) {
   const sorted = [...events].sort((a, b) => a.time - b.time || a.note - b.note);
   const lanes = [];
   const epsilon = 1e-6;
   sorted.forEach((event) => {
-    let lane = lanes.find((l) => event.time + epsilon >= l.lastEndTime);
-    if (!lane) {
-      lane = { lastEndTime: -Infinity, events: [] };
-      lanes.push(lane);
+    // Best-fit: prefer the lane whose lastEndTime is closest (but still ≤) event.time.
+    // This minimises gaps, reducing total repeater usage.
+    let best = null;
+    for (const l of lanes) {
+      if (l.lastEndTime > event.time + epsilon) continue;
+      if (!best || l.lastEndTime > best.lastEndTime) best = l;
     }
-    lane.events.push(event);
-    lane.lastEndTime = Math.max(lane.lastEndTime, event.endTime);
+    if (!best) {
+      best = { lastEndTime: -Infinity, events: [] };
+      lanes.push(best);
+    }
+    best.events.push(event);
+    best.lastEndTime = Math.max(best.lastEndTime, event.endTime);
   });
   return lanes.map((l) => l.events);
 }
@@ -67,15 +74,44 @@ function eventsToPlacements(events) {
   });
 }
 
-function buildCells(notes) {
+// Decompose N ticks into minimum individual repeater delay values (1–4 each).
+// E.g. 10 → [4, 4, 2],  7 → [4, 3],  3 → [3]
+function decomposeDelay(ticks) {
+  const result = [];
+  for (let rem = ticks; rem > 0; rem -= 4) {
+    result.push(Math.min(rem, 4));
+  }
+  return result;
+}
+
+// Build the flat cell list for one sub-lane row.
+// - idx=0 with branchInfo: show a branch-start cell, then only the remaining delay repeaters
+// - idx=0 with delay>0 (no branch): initial start-delay repeaters
+// - idx>0 with delay>0: inter-note gap repeaters
+// - idx>0 with delay=0: redstone dust (consecutive notes)
+// - trailingTick: when set, pad the row to that absolute tick with filler repeaters
+function buildCells(notes, { trailingTick = null, branchInfo = null } = {}) {
   const cells = [];
   notes.forEach((p, idx) => {
-    if (idx > 0) {
-      if (p.delay > 0) {
-        cells.push({ type: 'repeater', count: Math.max(1, Math.ceil(p.delay / 4)), delay: p.delay, key: `rep-${idx}` });
-      } else {
-        cells.push({ type: 'dust', key: `dust-${idx}` });
+    const isBranching = idx === 0 && branchInfo != null;
+    const delay = isBranching ? Math.max(0, p.delay - branchInfo.savedTicks) : p.delay;
+
+    if (isBranching) {
+      // Show a branch-start indicator, then any residual delay after the tap point.
+      cells.push({ type: 'branch-start', sourceId: branchInfo.sourceId, savedTicks: branchInfo.savedTicks, key: 'branch-start' });
+      if (delay > 0) {
+        decomposeDelay(delay).forEach((t, ti) => {
+          cells.push({ type: 'repeater', ticks: t, key: `rep-0-${ti}` });
+        });
       }
+    } else if (delay > 0) {
+      // Include the initial start delay (idx=0) and all inter-note gaps
+      decomposeDelay(delay).forEach((t, ti) => {
+        cells.push({ type: 'repeater', ticks: t, key: `rep-${idx}-${ti}` });
+      });
+    } else if (idx > 0) {
+      // Consecutive notes with no gap → redstone dust
+      cells.push({ type: 'dust', key: `dust-${idx}` });
     }
     cells.push({
       type: 'note',
@@ -87,11 +123,52 @@ function buildCells(notes) {
       key: `note-${idx}`,
     });
   });
+
+  // Trailing filler for "align tracks" mode — pad this row to globalMaxTick
+  if (trailingTick !== null && notes.length > 0) {
+    const lastTick = notes[notes.length - 1].startTick;
+    const trailing = trailingTick - lastTick;
+    if (trailing > 0) {
+      decomposeDelay(trailing).forEach((t, ti) => {
+        cells.push({ type: 'repeater', ticks: t, key: `trail-${ti}` });
+      });
+    }
+  }
+
   return cells;
 }
 
-// Build groups (one per MIDI track, each with sub-lanes for harmonics)
-function buildLaneGroups(trackEvents, combineTracks) {
+// After assigning notes to sublanes, find where a sublane with a large start-delay can
+// "branch off" from an earlier sublane instead of running independent start repeaters.
+// Returns an array parallel to `sublanes`; entries are { sourceIndex, savedTicks } or null.
+function detectBranches(sublanes, minSavings = 8) {
+  return sublanes.map((lane, i) => {
+    if (i === 0 || !lane.notes.length) return null;
+    const firstTick = lane.notes[0].startTick;
+    if (firstTick < minSavings) return null;
+
+    let bestSaved = 0;
+    let bestSrcIdx = -1;
+    for (let j = 0; j < i; j++) {
+      const src = sublanes[j];
+      if (!src.notes.length) continue;
+      // The source lane's signal runs from tick 0 to its last note's startTick.
+      // We can tap anywhere in that span; the best tap is as close to firstTick as possible.
+      const srcLastTick = src.notes[src.notes.length - 1].startTick;
+      const savedTicks = Math.min(firstTick, srcLastTick);
+      if (savedTicks > bestSaved) {
+        bestSaved = savedTicks;
+        bestSrcIdx = j;
+      }
+    }
+    if (bestSaved < minSavings) return null;
+    return { sourceIndex: bestSrcIdx, savedTicks: bestSaved };
+  });
+}
+
+// Build groups (one per MIDI track, each with sub-lanes for harmonics).
+// groupByInstrument: merge all same-instrument tracks into one group with harmonic sublanes.
+function buildLaneGroups(trackEvents, combineTracks, groupByInstrument) {
   if (combineTracks) {
     const allEvents = trackEvents
       .flatMap((t) => t.events)
@@ -100,7 +177,39 @@ function buildLaneGroups(trackEvents, combineTracks) {
     const subLanes = splitIntoSubLanes(allEvents)
       .map((evts, i) => ({ id: `combined-${i}`, notes: eventsToPlacements(evts) }))
       .filter((sl) => sl.notes.length > 0);
+
+    // Annotate sublanes that can branch off another lane to reduce start-delay repeaters.
+    const branches = detectBranches(subLanes);
+    subLanes.forEach((sl, i) => {
+      if (branches[i]) {
+        sl.branchFrom = {
+          sourceId: subLanes[branches[i].sourceIndex].id,
+          savedTicks: branches[i].savedTicks,
+        };
+      }
+    });
+
     return subLanes.length > 0 ? [{ id: 'combined', label: 'All Tracks', sublanes: subLanes }] : [];
+  }
+
+  if (groupByInstrument) {
+    // Collect all events per instrument across all tracks, then re-split into sublanes.
+    const instrumentMap = new Map();
+    trackEvents.forEach((track) => {
+      if (!instrumentMap.has(track.title)) instrumentMap.set(track.title, []);
+      instrumentMap.get(track.title).push(...track.events);
+    });
+    const groups = [];
+    instrumentMap.forEach((events, instrument) => {
+      if (events.length === 0) return;
+      const sorted = [...events].sort((a, b) => a.time - b.time);
+      const subLanes = splitIntoSubLanes(sorted)
+        .map((evts, i) => ({ id: `inst-${instrument}-${i}`, notes: eventsToPlacements(evts) }))
+        .filter((sl) => sl.notes.length > 0);
+      if (subLanes.length > 0)
+        groups.push({ id: `inst-${instrument}`, label: instrument, sublanes: subLanes });
+    });
+    return groups;
   }
 
   return trackEvents
@@ -134,36 +243,89 @@ function NoteCell({ block, instrument, size }) {
   );
 }
 
-function RepeaterCell({ count, size }) {
+// Individual repeater — ticks is 1–4 (the repeater's delay setting).
+// The output torch slides right as the delay increases, mirroring Minecraft's UI.
+function RepeaterCell({ ticks, size }) {
   const s = size ?? CELL;
+  const outX = 6 + (ticks - 1) * 4; // 6 / 10 / 14 / 18 for 1t – 4t
   return (
-    <svg width={s} height={s} viewBox="0 0 28 28" aria-label={`${count} repeater(s)`} style={{ display: 'block', flexShrink: 0 }}>
+    <svg width={s} height={s} viewBox="0 0 28 28" aria-label={`Repeater ${ticks}t`} style={{ display: 'block', flexShrink: 0 }}>
       <rect width="28" height="28" fill="#b9b3a8" />
       <rect x="2" y="2" width="24" height="24" fill="#ddd7ca" />
       <rect x="2" y="11" width="24" height="6" fill="#b94141" />
-      <rect x="6" y="6" width="4" height="4" fill="#d63737" />
-      <rect x="18" y="6" width="4" height="4" fill="#d63737" />
-      {count > 1 && <text x="14" y="22" textAnchor="middle" fontSize="7" fill="#333" fontFamily="monospace">×{count}</text>}
+      {/* Fixed input torch (right side) */}
+      <rect x="18" y="5" width="4" height="4" fill="#d63737" />
+      {/* Output torch — position indicates delay setting */}
+      <rect x={outX} y="19" width="4" height="4" fill="#d63737" />
+      {/* Delay label */}
+      <text x="26" y="10" textAnchor="end" fontSize="5" fill="#333" fontFamily="monospace">{ticks}t</text>
     </svg>
   );
 }
 
-// direction: 'h' | 'v' | 'cross' | 'tee-down' | 'tee-up' | 'corner-up'
-function DustCell({ direction = 'h', size }) {
+function DustCell({ size }) {
   const s = size ?? CELL;
-  const showH   = ['h', 'cross', 'tee-down', 'tee-up'].includes(direction);
-  const showRightOnly = direction === 'corner-up';
-  const showV   = direction === 'v';
-  const showDown = ['tee-down', 'cross'].includes(direction);
-  const showUp   = ['tee-up', 'cross', 'corner-up'].includes(direction);
   return (
     <svg width={s} height={s} viewBox="0 0 28 28" aria-hidden="true" style={{ display: 'block', flexShrink: 0 }}>
       <rect width="28" height="28" fill="#888" opacity="0.15" />
-      {showH         && <rect x="0"  y="11" width="28" height="6" fill="#c0392b" />}
-      {showRightOnly && <rect x="14" y="11" width="14" height="6" fill="#c0392b" />}
-      {showV         && <rect x="11" y="0"  width="6" height="28" fill="#c0392b" />}
-      {showDown      && <rect x="11" y="14" width="6" height="14" fill="#c0392b" />}
-      {showUp        && <rect x="11" y="0"  width="6" height="14" fill="#c0392b" />}
+      <rect x="0" y="11" width="28" height="6" fill="#c0392b" />
+    </svg>
+  );
+}
+
+// ─── Branch-start cell (T-junction indicator: this lane branches off another lane) ────
+function BranchStartCell({ sourceId, savedTicks, size }) {
+  const s = size ?? CELL;
+  return (
+    <svg
+      width={s} height={s} viewBox="0 0 28 28"
+      aria-label={`Branch from ${sourceId}, saves ${savedTicks} ticks`}
+      style={{ display: 'block', flexShrink: 0 }}
+    >
+      <rect width="28" height="28" fill="#e67e22" opacity="0.2" />
+      {/* Horizontal signal wire */}
+      <rect x="0" y="11" width="28" height="6" fill="#e67e22" />
+      {/* Vertical tap going upward (to the source lane above) */}
+      <rect x="11" y="0" width="6" height="14" fill="#e67e22" />
+      {/* Saved-ticks label */}
+      <text x="27" y="10" textAnchor="end" fontSize="5" fill="#7f3e00" fontFamily="monospace">↥{savedTicks}
+      </text>
+    </svg>
+  );
+}
+
+// ─── Harmonic rail (vertical redstone connecting parallel sub-lanes) ────────────
+//
+// Rendered as an absolutely-positioned SVG that spans all sub-lane rows of a group.
+// Draws a vertical backbone redstone line plus one horizontal branch per sub-lane.
+function HarmonicRail({ count, cs }) {
+  const rowH = cs + 2; // each row is cs tall + 2px gap
+  const totalH = count * cs + (count - 1) * 2;
+  const midX = Math.round(cs / 2);
+
+  return (
+    <svg
+      width={cs}
+      height={totalH}
+      style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none', zIndex: 1 }}
+      aria-hidden="true"
+    >
+      {/* Vertical backbone */}
+      <rect x={midX - 3} y={0} width={6} height={totalH} fill="#c0392b" />
+      {/* Horizontal branch to each sub-lane */}
+      {Array.from({ length: count }, (_, i) => {
+        const branchY = i * rowH + Math.round(cs / 2) - 3;
+        return (
+          <rect
+            key={i}
+            x={midX - 3}
+            y={branchY}
+            width={cs - (midX - 3)}
+            height={6}
+            fill="#c0392b"
+          />
+        );
+      })}
     </svg>
   );
 }
@@ -176,94 +338,99 @@ function SchematicGrid({ groups, cellSize }) {
 
   const multipleGroups = groups.length > 1;
 
-  // Flatten to a list of rows so we can track absolute row index for tooltip direction
-  const flatRows = [];
-  groups.forEach((group, groupIndex) => {
-    group.sublanes.forEach((sublane, sublaneIndex) => {
-      flatRows.push({
-        sublane,
-        sublaneIndex,
-        sublaneCount: group.sublanes.length,
-        groupId: group.id,
-        groupLabel: group.label,
-        groupIndex,
-        showGroupSeparator: groupIndex > 0 && sublaneIndex === 0,
-        showGroupLabel: multipleGroups && sublaneIndex === 0,
-      });
-    });
-  });
-
   return (
     <div className="schematic-grid">
-      {flatRows.map((row, flatIndex) => {
-        const { sublane, sublaneIndex, sublaneCount, showGroupSeparator, showGroupLabel, groupLabel, groupIndex } = row;
-        const isFirstRow = flatIndex === 0;
-        const cells = buildCells(sublane.notes);
-
-        let connectorDir = 'h';
-        if (sublaneCount > 1) {
-          if (sublaneIndex === 0) connectorDir = 'tee-down';
-          else if (sublaneIndex === sublaneCount - 1) connectorDir = 'corner-up';
-          else connectorDir = 'cross';
-        }
+      {groups.map((group, groupIndex) => {
+        const isHarmonic = group.sublanes.length > 1;
+        const isFirstGroup = groupIndex === 0;
 
         return (
-          <div key={sublane.id}>
-            {showGroupSeparator && <div className="schematic-group-separator" />}
-            {showGroupLabel && (
-              <div className="schematic-group-label">{groupLabel}</div>
+          <div key={group.id} className="schematic-group">
+            {!isFirstGroup && <div className="schematic-group-separator" />}
+            {multipleGroups && (
+              <div className="schematic-group-label">{group.label}</div>
             )}
-            <div className="schematic-row">
-              <div className="schematic-connector" style={{ width: cs, height: cs, flexShrink: 0 }}>
-                <DustCell direction={connectorDir} size={cs} />
-              </div>
-              {cells.map((cell) => {
-                if (cell.type === 'note') {
-                  return (
-                    <div
-                      key={cell.key}
-                      className="schematic-cell schematic-cell-tip"
-                      tabIndex={0}
-                      role="button"
-                      aria-label={`${cell.instrument} - ${cell.pitch || 'drum'}`}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={() => void playPlacementSound({ instrument: cell.instrument, note: cell.note, pitch: cell.pitch })}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          void playPlacementSound({ instrument: cell.instrument, note: cell.note, pitch: cell.pitch });
-                        }
-                      }}
-                    >
-                      <NoteCell block={cell.block} instrument={cell.instrument} size={cs} />
-                      <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-                        {cell.instrument}<br />
-                        {cell.pitch || 'drum'}<br />
-                        Use count: {cell.useCount}<br />
-                        {blockLabel(cell.block)}
-                      </span>
+            {/* Sublanes wrapper — relative so the HarmonicRail SVG can be absolutely positioned */}
+            <div
+              className={isHarmonic ? 'schematic-sublanes' : undefined}
+              style={isHarmonic ? { position: 'relative' } : undefined}
+            >
+              {isHarmonic && <HarmonicRail count={group.sublanes.length} cs={cs} />}
+              {group.sublanes.map((sublane, sublaneIndex) => {
+                const isFirstRow = isFirstGroup && sublaneIndex === 0;
+                const trailingTick = null;
+                const branchInfo = sublane.branchFrom
+                  ? { sourceId: sublane.branchFrom.sourceId, savedTicks: sublane.branchFrom.savedTicks }
+                  : null;
+                const cells = buildCells(sublane.notes, { trailingTick, branchInfo });
+
+                return (
+                  <div key={sublane.id} className="schematic-row">
+                    {/* Connector column — empty for harmonic rows (HarmonicRail draws here) */}
+                    <div className="schematic-connector" style={{ width: cs, height: cs, flexShrink: 0 }}>
+                      {!isHarmonic && <DustCell size={cs} />}
                     </div>
-                  );
-                }
-                if (cell.type === 'repeater') {
-                  return (
-                    <div key={cell.key} className="schematic-cell schematic-cell-tip" tabIndex={0}>
-                      <RepeaterCell count={cell.count} size={cs} />
-                      <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-                        Delay: {cell.delay} ticks<br />
-                        Repeaters: ~{cell.count}
-                      </span>
-                    </div>
-                  );
-                }
-                if (cell.type === 'dust') {
-                  return (
-                    <div key={cell.key} className="schematic-cell">
-                      <DustCell direction="h" size={cs} />
-                    </div>
-                  );
-                }
-                return null;
+                    {cells.map((cell) => {
+                      if (cell.type === 'note') {
+                        return (
+                          <div
+                            key={cell.key}
+                            className="schematic-cell schematic-cell-tip"
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`${cell.instrument} - ${cell.pitch || 'drum'}`}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={() => void playPlacementSound({ instrument: cell.instrument, note: cell.note, pitch: cell.pitch })}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                void playPlacementSound({ instrument: cell.instrument, note: cell.note, pitch: cell.pitch });
+                              }
+                            }}
+                          >
+                            <NoteCell block={cell.block} instrument={cell.instrument} size={cs} />
+                            <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
+                              {cell.instrument}<br />
+                              {cell.pitch || 'drum'}<br />
+                              Use count: {cell.useCount}<br />
+                              {blockLabel(cell.block)}
+                            </span>
+                          </div>
+                        );
+                      }
+                      if (cell.type === 'repeater') {
+                        return (
+                          <div key={cell.key} className="schematic-cell schematic-cell-tip" tabIndex={0}>
+                            <RepeaterCell ticks={cell.ticks} size={cs} />
+                            <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
+                              Repeater: {cell.ticks} tick{cell.ticks !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        );
+                      }
+                      if (cell.type === 'dust') {
+                        return (
+                          <div key={cell.key} className="schematic-cell">
+                            <DustCell size={cs} />
+                          </div>
+                        );
+                      }
+                      if (cell.type === 'branch-start') {
+                        return (
+                          <div key={cell.key} className="schematic-cell schematic-cell-tip" tabIndex={0}>
+                            <BranchStartCell sourceId={cell.sourceId} savedTicks={cell.savedTicks} size={cs} />
+                            <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
+                              T-junction: branch from {cell.sourceId}<br />
+                              Saves {cell.savedTicks} ticks<br />
+                              (~{decomposeDelay(cell.savedTicks).length} fewer repeater{decomposeDelay(cell.savedTicks).length !== 1 ? 's' : ''})
+                            </span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                );
               })}
             </div>
           </div>
@@ -278,13 +445,17 @@ function SchematicGrid({ groups, cellSize }) {
 export default function SchematicPanel({ trackEvents }) {
   const [open, setOpen] = useState(false);
   const [combineTracks, setCombineTracks] = useState(false);
+  const [groupByInstrument, setGroupByInstrument] = useState(false);
   const [cellSize, setCellSize] = useState(28);
   const [indicatorX, setIndicatorX] = useState(0);
 
   const contentRef = useRef(null);
   const indicatorDragRef = useRef({ active: false, startClientX: 0, startX: 0 });
 
-  const groups = useMemo(() => buildLaneGroups(trackEvents, combineTracks), [trackEvents, combineTracks]);
+  const groups = useMemo(
+    () => buildLaneGroups(trackEvents, combineTracks, groupByInstrument),
+    [trackEvents, combineTracks, groupByInstrument],
+  );
   const totalNotes = useMemo(
     () => groups.reduce((s, g) => s + g.sublanes.reduce((ss, sl) => ss + sl.notes.length, 0), 0),
     [groups],
@@ -344,6 +515,15 @@ export default function SchematicPanel({ trackEvents }) {
               />
               <span>Combine all tracks into minimal lanes</span>
             </label>
+            <label className="option-row">
+              <input
+                type="checkbox"
+                checked={groupByInstrument}
+                disabled={combineTracks}
+                onChange={(e) => setGroupByInstrument(e.target.checked)}
+              />
+              <span>Group by instrument (show harmonics with vertical redstone)</span>
+            </label>
             <label className="option-row option-row-stacked">
               <span>Cell size</span>
               <select value={cellSize} onChange={(e) => setCellSize(Number(e.target.value))}>
@@ -356,8 +536,10 @@ export default function SchematicPanel({ trackEvents }) {
           </div>
 
           <p className="hint output-summary">
-            Top-down schematic. Background color = instrument block. Tracks with simultaneous notes
-            branch into parallel lanes connected by redstone dust.
+            Top-down schematic. Background color = instrument block. Each repeater shows its
+            individual delay setting (1–4 t). Tracks starting later include leading repeaters.
+            Harmonics are connected by a vertical redstone rail on the left.
+            An orange T-junction cell marks where a lane branches off another lane to save repeaters.
             Drag the gold marker to track your build progress.
           </p>
 
@@ -391,7 +573,10 @@ export default function SchematicPanel({ trackEvents }) {
               {groups.length === 0 ? (
                 <p className="hint">No notes to display.</p>
               ) : (
-                <SchematicGrid groups={groups} cellSize={cellSize} />
+                <SchematicGrid
+                  groups={groups}
+                  cellSize={cellSize}
+                />
               )}
             </div>
           </DragScrollArea>

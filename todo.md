@@ -19,14 +19,22 @@
 
 - add analytics with goatcounter
 
-- if noteblocks are back to back. it needs one tick repeater in between. or if it is playing multiplte notes on one track same time, it needs to split it to multiple tracks or rows. it is trying to play harmonics. in the visualization show harmonics noteblocks on top of each other, instead of in one line, because they should be played same time. visualization should represent the timeline of the track being played.
-
 - schematic should take into account the delay at start when the track should start compared to track that starts first.
 
 - schematic should visualize all the repeaters. like how many it needs minimum with what settings. there should be also option to use repeaters and redstone so that the tracks align in actual time horizontally.
 
 - schematic showing harmonics should use vertical redstone lines to connect the noteblocks together on the left side of the harmonic.
 
-- the track title box is not the same height as the actual track. it still needs to be kept separate from the track, so the playhead is accurate. move the track title above the track-box. make it not take so much height, use automatically just enough height for it. put title and the text "n notes" on same line and the mute-toggle button next to it on left side.
+- i think the horizontal scroll and play-head are not keeping up with the sounds playing of the song. they are not in sync.
 
-- make it so that pressing the track mute, will hide the track completelty, reducing rendering it.
+- for schematic. add option to split the track in 4-tempo blocks. show 4 4-tempo blocks and then move on to the next one, by checking checkbox on top of the 4-tempo area. hide other 4-tempo block areas for visual clarity. add option to use other tempos too.
+
+- for "combine all tracks into minimal lanes" try to optimize it. if there is much delay at start. branch of from other lane when you need to to reduce the delay, i.e. reduce the amount of repeaters needed.
+
+- for schematic, combine instrument tracks together, use multiple lanes if the multiple notes are played same time to make harmonics. use vertical redstone to indicate this.
+
+- add option to hide the noteblock on top of support block on the schematic.
+
+- move panel components to their own folders under components-folder. split their sub components to separate files.
+
+- simplify/reduce schematic options
