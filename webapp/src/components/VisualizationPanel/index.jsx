@@ -388,7 +388,8 @@ export default function VisualizationPanel({ trackEvents }) {
               : `Show ${visibleTracks.length} lane(s)`}
         </span>
       </button>
-      <div className="panel-body">
+      {tracksOpen ? (
+        <div className="panel-body">
         <div className="playback-controls">
           <label className="option-row option-row-stacked">
             <span>Playback</span>
@@ -462,8 +463,7 @@ export default function VisualizationPanel({ trackEvents }) {
             ? 'No tracks to visualize.'
             : `${visibleTracks.length} ${viewMode === viewModes.track ? 'track' : 'instrument'} lane(s) ready. Scroll horizontally for long tracks.`}
         </p>
-        {tracksOpen ? (
-          <div className="track-area">
+        <div className="track-area">
             <div className="track-scroll-column">
               <div className="track-scroll-proxy-top" ref={topScrollRef}>
                 <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
@@ -544,8 +544,8 @@ export default function VisualizationPanel({ trackEvents }) {
               </DragScrollArea>
             </div>
           </div>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </section>
   );
 }
