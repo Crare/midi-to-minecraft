@@ -115,6 +115,50 @@ const tonalProfiles = {
     decay: 0.5,
     gain: 0.1,
   },
+  trumpet: {
+    partials: [
+      { ratio: 1, gain: 1, type: 'sawtooth' },
+      { ratio: 2, gain: 0.5, type: 'sawtooth' },
+      { ratio: 3, gain: 0.25, type: 'sine' },
+    ],
+    attack: 0.015,
+    decay: 0.65,
+    gain: 0.10,
+    filter: { type: 'bandpass', frequency: 1200, q: 1.5 },
+  },
+  trumpet_exposed: {
+    partials: [
+      { ratio: 1, gain: 1, type: 'sawtooth' },
+      { ratio: 2, gain: 0.6, type: 'sawtooth' },
+      { ratio: 3, gain: 0.35, type: 'sawtooth' },
+    ],
+    attack: 0.012,
+    decay: 0.6,
+    gain: 0.09,
+    filter: { type: 'bandpass', frequency: 1500, q: 1.8 },
+  },
+  trumpet_weathered: {
+    partials: [
+      { ratio: 1, gain: 1, type: 'sawtooth' },
+      { ratio: 2, gain: 0.4, type: 'sine' },
+      { ratio: 3, gain: 0.2, type: 'sine' },
+    ],
+    attack: 0.02,
+    decay: 0.7,
+    gain: 0.12,
+    filter: { type: 'lowpass', frequency: 1000, q: 0.8 },
+  },
+  trumpet_oxidized: {
+    partials: [
+      { ratio: 1, gain: 1, type: 'sawtooth' },
+      { ratio: 2, gain: 0.5, type: 'sawtooth' },
+      { ratio: 3, gain: 0.3, type: 'sawtooth' },
+    ],
+    attack: 0.02,
+    decay: 0.65,
+    gain: 0.11,
+    filter: { type: 'lowpass', frequency: 800, q: 1.2 },
+  },
 };
 
 function getAudioContext() {

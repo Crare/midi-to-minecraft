@@ -378,42 +378,38 @@ button:disabled {
 }
 
 .track-area {
-  display: flex;
-  align-items: flex-start;
+  /* single column — no flex layout needed */
 }
 
-.track-labels {
-  flex: 0 0 130px;
+.track-headers {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  margin-bottom: 0.35rem;
 }
 
-.track-label {
+.track-header {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.15rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 700;
-  padding: 0.35rem 0.4rem;
+  padding: 0.2rem 0.5rem;
   background: #9dc378;
   border: 1px solid rgba(66, 97, 38, 0.65);
-  border-right: 1px solid rgba(66, 97, 38, 0.45);
-  border-radius: 4px 0 0 4px;
-  min-height: calc(120px + 0.7rem + 2px);
+  border-radius: 4px;
   transition: opacity 140ms ease, filter 140ms ease;
   box-sizing: border-box;
 }
 
 .track-scroll-column {
-  flex: 1;
+  width: 100%;
   min-width: 0;
 }
 
 .track-row {
   border: 1px solid rgba(66, 97, 38, 0.65);
-  border-left: 0;
-  border-radius: 0 4px 4px 0;
+  border-radius: 4px;
   background: rgba(219, 233, 194, 0.34);
   padding: 0.35rem 0.45rem 0.35rem 0.45rem;
   width: max-content;
@@ -506,8 +502,7 @@ button:disabled {
   width: 1.4rem;
   height: 1.4rem;
   min-width: unset;
-  margin-top: auto;
-  align-self: flex-end;
+  flex-shrink: 0;
 }
 
 .note-unit {
@@ -796,10 +791,6 @@ button:disabled {
 
   .playback-controls {
     align-items: stretch;
-  }
-
-  .track-row {
-    grid-template-columns: 92px max-content;
   }
 
   .note-meta {

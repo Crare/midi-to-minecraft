@@ -27,4 +27,6 @@
 
 - schematic showing harmonics should use vertical redstone lines to connect the noteblocks together on the left side of the harmonic.
 
-- add option to show visualization by the original tracks, or by as individual instruments. use instruments by default.
+- the track title box is not the same height as the actual track. it still needs to be kept separate from the track, so the playhead is accurate. move the track title above the track-box. make it not take so much height, use automatically just enough height for it. put title and the text "n notes" on same line and the mute-toggle button next to it on left side.
+
+- make it so that pressing the track mute, will hide the track completelty, reducing rendering it.

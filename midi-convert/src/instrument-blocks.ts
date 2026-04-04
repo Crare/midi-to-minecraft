@@ -30,6 +30,10 @@ export const instrumentByBlock = new Map(([
     ['emerald_block', 'bit'],
     ['hay_block', 'banjo'],
     ['glowstone', 'pling'],
+    ['copper_block', 'trumpet'],
+    ['exposed_copper', 'trumpet_exposed'],
+    ['weathered_copper', 'trumpet_weathered'],
+    ['oxidized_copper', 'trumpet_oxidized'],
     ['dirt', 'harp'],
 ] as [string, string][]).map(applyDefaultNamespaceToKey));
 
@@ -71,6 +75,15 @@ export const blockByPatchId = new Map(([
     [ 37, 'acacia_log'],
     [ 38, 'acacia_log'],
     [ 39, 'acacia_log'],
+    // Brass
+    [ 56, 'copper_block'],
+    [ 57, 'weathered_copper'],
+    [ 58, 'weathered_copper'],
+    [ 59, 'exposed_copper'],
+    [ 60, 'copper_block'],
+    [ 61, 'copper_block'],
+    [ 62, 'exposed_copper'],
+    [ 63, 'exposed_copper'],
     // Pipes
     [ 72, 'clay'],
     [ 73, 'clay'],

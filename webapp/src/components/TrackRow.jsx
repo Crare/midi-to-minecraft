@@ -47,6 +47,10 @@ const supportColorByBlock = {
   emerald_block: '#3cc76f',
   hay_block: '#d6c66a',
   glowstone: '#f2cb6c',
+  copper_block: '#c97b5d',
+  exposed_copper: '#bd906a',
+  weathered_copper: '#77a98a',
+  oxidized_copper: '#4fab8d',
   dirt: '#7f5a34',
 };
 

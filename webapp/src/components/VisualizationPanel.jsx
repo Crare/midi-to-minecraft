@@ -562,45 +562,45 @@ export default function VisualizationPanel({ trackEvents }) {
         </p>
         {tracksOpen ? (
           <div className="track-area">
-            <div className="track-labels">
-              {visibleTracks.map((track) => (
-                <div
-                  key={track.id}
-                  className={
-                    playbackScope === playbackScopes.single &&
-                    selectedPlaybackTrackId &&
-                    track.id !== selectedPlaybackTrackId
-                      ? 'track-label track-row-dimmed'
-                      : 'track-label'
-                  }
-                >
-                  <span className="track-index">{track.title}</span>
-                  <span className="track-count">{track.subtitle}</span>
-                  <button
-                    type="button"
-                    className="icon-btn track-mute-btn"
-                    title={mutedTracks.has(track.id) ? 'Unmute' : 'Mute'}
-                    onClick={(e) => { e.stopPropagation(); toggleMuteCallbacks.get(track.id)?.(); }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    aria-label={mutedTracks.has(track.id) ? 'Unmute track' : 'Mute track'}
-                  >
-                    <svg viewBox="0 0 16 16" aria-hidden="true">
-                      {mutedTracks.has(track.id) ? (
-                        <path d="M 3 3 L 13 13 M 13 3 L 3 13" stroke="currentColor" strokeWidth="2" fill="none" />
-                      ) : (
-                        <>
-                          <path d="M 3 5 L 8 2 L 8 14 L 3 11 Z" fill="currentColor" />
-                          <path d="M 10 4 Q 12 6 12 8 Q 12 10 10 12" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                        </>
-                      )}
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
             <div className="track-scroll-column">
               <div className="track-scroll-proxy-top" ref={topScrollRef}>
                 <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
+              </div>
+              <div className="track-headers">
+                {visibleTracks.map((track) => (
+                  <div
+                    key={track.id}
+                    className={
+                      playbackScope === playbackScopes.single &&
+                      selectedPlaybackTrackId &&
+                      track.id !== selectedPlaybackTrackId
+                        ? 'track-header track-row-dimmed'
+                        : 'track-header'
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="icon-btn track-mute-btn"
+                      title={mutedTracks.has(track.id) ? 'Unmute' : 'Mute'}
+                      onClick={(e) => { e.stopPropagation(); toggleMuteCallbacks.get(track.id)?.(); }}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      aria-label={mutedTracks.has(track.id) ? 'Unmute track' : 'Mute track'}
+                    >
+                      <svg viewBox="0 0 16 16" aria-hidden="true">
+                        {mutedTracks.has(track.id) ? (
+                          <path d="M 3 3 L 13 13 M 13 3 L 3 13" stroke="currentColor" strokeWidth="2" fill="none" />
+                        ) : (
+                          <>
+                            <path d="M 3 5 L 8 2 L 8 14 L 3 11 Z" fill="currentColor" />
+                            <path d="M 10 4 Q 12 6 12 8 Q 12 10 10 12" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                          </>
+                        )}
+                      </svg>
+                    </button>
+                    <span className="track-index">{track.title}</span>
+                    <span className="track-count">{track.subtitle}</span>
+                  </div>
+                ))}
               </div>
               <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
                 <button
@@ -619,24 +619,24 @@ export default function VisualizationPanel({ trackEvents }) {
                 </button>
                 <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
                   <div className="track-wrap">
-                    {visibleTracks.map((track, trackIndex) => (
-                      <TrackRow
-                        key={track.id}
-                        notes={track.notes}
-                        showColor={showColor}
-                        showNumber={showNumber}
-                        showSupport={showSupport}
-                        noteTooltipDirection={trackIndex === 0 ? 'bottom' : 'top'}
-                        isPlaybackDimmed={
-                          playbackScope === playbackScopes.single &&
-                          selectedPlaybackTrackId &&
-                          track.id !== selectedPlaybackTrackId
-                        }
-                        unitSize={trackUnitSize}
-                        scrollLeft={scrollLeft}
-                        containerWidth={scrollContainerWidth}
-                      />
-                    ))}
+                    {visibleTracks.reduce((acc, track) => {
+                      if (mutedTracks.has(track.id)) return acc;
+                      const renderedIndex = acc.length;
+                      acc.push(
+                        <TrackRow
+                          key={track.id}
+                          notes={track.notes}
+                          showColor={showColor}
+                          showNumber={showNumber}
+                          showSupport={showSupport}
+                          noteTooltipDirection={renderedIndex === 0 ? 'bottom' : 'top'}
+                          unitSize={trackUnitSize}
+                          scrollLeft={scrollLeft}
+                          containerWidth={scrollContainerWidth}
+                        />
+                      );
+                      return acc;
+                    }, [])}
                   </div>
                 </div>
               </DragScrollArea>
