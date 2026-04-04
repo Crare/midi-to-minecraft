@@ -40,18 +40,32 @@ function findFirstNoteIndexAtOrAfter(notes, startTick) {
   return low;
 }
 
-function buildVisualizationTracks(trackEvents) {
-  // Merge all lanes for the same instrument into one visual track.
-  const instrumentGroups = new Map();
-  trackEvents.forEach((track) => {
-    const key = track.title;
-    if (!instrumentGroups.has(key)) {
-      instrumentGroups.set(key, { id: track.id, title: track.title, events: [] });
-    }
-    instrumentGroups.get(key).events.push(...track.events);
-  });
+function buildVisualizationTracks(trackEvents, mode = 'instrument') {
+  const groups = new Map();
 
-  return Array.from(instrumentGroups.values())
+  if (mode === 'track') {
+    // Group by original MIDI track index.
+    trackEvents.forEach((track) => {
+      track.events.forEach((event) => {
+        const key = String(event.trackIndex);
+        if (!groups.has(key)) {
+          groups.set(key, { id: `original-track-${event.trackIndex}`, title: event.trackName, events: [] });
+        }
+        groups.get(key).events.push(event);
+      });
+    });
+  } else {
+    // Merge all lanes for the same instrument into one visual track (default).
+    trackEvents.forEach((track) => {
+      const key = track.title;
+      if (!groups.has(key)) {
+        groups.set(key, { id: track.id, title: track.title, events: [] });
+      }
+      groups.get(key).events.push(...track.events);
+    });
+  }
+
+  return Array.from(groups.values())
     .filter((g) => g.events.length > 0)
     .map(({ id, title, events }) => {
       // Sort all events by absolute time and group simultaneous ones by tick.
@@ -90,11 +104,17 @@ function buildVisualizationTracks(trackEvents) {
     });
 }
 
+const viewModes = {
+  instrument: 'instrument',
+  track: 'track',
+};
+
 export default function VisualizationPanel({ trackEvents }) {
   const [tracksOpen, setTracksOpen] = useState(false);
   const [showColor, setShowColor] = useState(true);
   const [showNumber, setShowNumber] = useState(true);
   const [showSupport, setShowSupport] = useState(true);
+  const [viewMode, setViewMode] = useState(viewModes.instrument);
   const [playbackScope, setPlaybackScope] = useState(playbackScopes.all);
   const [selectedPlaybackTrackId, setSelectedPlaybackTrackId] = useState('');
   const [playheadTick, setPlayheadTick] = useState(0);
@@ -130,8 +150,8 @@ export default function VisualizationPanel({ trackEvents }) {
   const playbackStartTickRef = useRef(0);
 
   const visibleTracks = useMemo(
-    () => buildVisualizationTracks(trackEvents).filter((track) => track.notes.length > 0),
-    [trackEvents]
+    () => buildVisualizationTracks(trackEvents, viewMode).filter((track) => track.notes.length > 0),
+    [trackEvents, viewMode]
   );
 
   const playbackTracks = useMemo(() => {
@@ -511,6 +531,17 @@ export default function VisualizationPanel({ trackEvents }) {
           <div className="playback-meta">Position: {playheadTick.toFixed(1)} ticks</div>
         </div>
         <div className="viz-toggles">
+          <label className="option-row option-row-stacked">
+            <span>Group by</span>
+            <select
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value)}
+              disabled={visibleTracks.length === 0 && trackEvents.length === 0}
+            >
+              <option value={viewModes.instrument}>Instrument</option>
+              <option value={viewModes.track}>Original tracks</option>
+            </select>
+          </label>
           <label className="viz-toggle-label">
             <input type="checkbox" checked={showColor} onChange={(e) => setShowColor(e.target.checked)} />
             Color
@@ -527,7 +558,7 @@ export default function VisualizationPanel({ trackEvents }) {
         <p className="hint output-summary">
           {visibleTracks.length === 0
             ? 'No tracks to visualize.'
-            : `${visibleTracks.length} instrument lane(s) ready. Scroll horizontally for long tracks.`}
+            : `${visibleTracks.length} ${viewMode === viewModes.track ? 'track' : 'instrument'} lane(s) ready. Scroll horizontally for long tracks.`}
         </p>
         {tracksOpen ? (
           <div className="track-area">
