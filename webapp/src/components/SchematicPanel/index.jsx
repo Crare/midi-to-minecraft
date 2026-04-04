@@ -38,7 +38,7 @@ export default function SchematicPanel({ trackEvents }) {
     [trackEvents],
   );
   const totalNotes = useMemo(
-    () => grid.instruments.reduce((s, inst) => s + inst.rows.reduce((rs, row) => rs + row.cells.filter((c) => c.kind === 'note' && c.note).length, 0), 0),
+    () => grid.instruments.reduce((s, inst) => s + inst.rows.reduce((rs, row) => rs + row.anchorCells.filter((c) => c.kind === 'note' && c.note).length, 0), 0),
     [grid],
   );
   const totalRows = useMemo(() => grid.instruments.reduce((s, inst) => s + inst.rows.length, 0), [grid]);

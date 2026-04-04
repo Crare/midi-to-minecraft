@@ -1,40 +1,34 @@
+import { Fragment } from 'react';
 import { playPlacementSound } from '../../audio/noteblockAudio';
 import { blockLabel, getUseCount } from './schematicData';
 import { NoteCell, RepeaterCell, DustCell, SplitPassCell, SplitBranchCell, CELL } from './SchematicCells';
 
-// Render one cell for a row, given the column kind and the row's cell data.
-function RowCell({ col, cell, cs, isFirstRow, instrument, block }) {
-  if (cell.kind === 'spacer' || cell.kind === 'inactive') {
-    return <div style={{ width: cs, height: cs, flexShrink: 0 }} aria-hidden="true" />;
+// ── CSS grid column template ──────────────────────────────────────────────────
+// Layout: [connector cs] then for each anchor: [segment auto] [anchor cs]
+// The shared grid means all rows (across all instruments) align at anchor columns.
+function makeGridTemplate(anchorCount, cs) {
+  const parts = [`${cs}px`];
+  for (let i = 0; i < anchorCount; i++) {
+    parts.push('auto');    // segment (fits to widest content in that segment column)
+    parts.push(`${cs}px`); // anchor (note / split — fixed width)
   }
-  if (cell.kind === 'repeater') {
-    return (
-      <div className="schematic-cell schematic-cell-tip" tabIndex={0}>
-        <RepeaterCell ticks={cell.ticks} size={cs} />
-        <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
-          Repeater: {cell.ticks} tick{cell.ticks !== 1 ? 's' : ''}
-        </span>
-      </div>
-    );
+  return parts.join(' ');
+}
+
+// ── Anchor cell ───────────────────────────────────────────────────────────────
+function AnchorCell({ anchor, cell, cs, isFirstRow, instrument, block }) {
+  if (!cell || cell.kind === 'inactive') {
+    return <div style={{ width: cs, height: cs }} aria-hidden="true" />;
   }
   if (cell.kind === 'split-pass') {
-    return (
-      <div className="schematic-cell" aria-hidden="true">
-        <SplitPassCell size={cs} />
-      </div>
-    );
+    return <div className="schematic-cell" aria-hidden="true"><SplitPassCell size={cs} /></div>;
   }
   if (cell.kind === 'split-branch') {
-    return (
-      <div className="schematic-cell" aria-hidden="true">
-        <SplitBranchCell size={cs} />
-      </div>
-    );
+    return <div className="schematic-cell" aria-hidden="true"><SplitBranchCell size={cs} /></div>;
   }
   if (cell.kind === 'note') {
     if (!cell.note) {
-      // This instrument/row doesn't play at this tick — empty alignment cell.
-      return <div style={{ width: cs, height: cs, flexShrink: 0 }} aria-hidden="true" />;
+      return <div style={{ width: cs, height: cs }} aria-hidden="true" />;
     }
     const note = cell.note;
     const useCount = getUseCount(note.note);
@@ -67,52 +61,83 @@ function RowCell({ col, cell, cs, isFirstRow, instrument, block }) {
   return null;
 }
 
+// ── Main grid component ───────────────────────────────────────────────────────
+// ALL rows (across all instruments) share one CSS grid so anchor columns align.
+// Instrument-label rows span all columns.
 export default function SchematicGrid({ grid, cellSize }) {
   const cs = cellSize ?? CELL;
   if (!grid || grid.instruments.length === 0) return null;
 
-  const { instruments, columns } = grid;
+  const { instruments, anchors } = grid;
+  const totalCols = 1 + anchors.length * 2; // connector + (seg + anchor) × N
+  const gridTemplate = makeGridTemplate(anchors.length, cs);
 
   return (
-    <div className="schematic-grid">
+    <div
+      className="schematic-grid"
+      style={{ display: 'grid', gridTemplateColumns: gridTemplate, alignItems: 'center' }}
+    >
       {instruments.map((inst, instIndex) => {
         const isFirstInst = instIndex === 0;
-        const hasSubs = inst.rows.length > 1;
-
         return (
-          <div key={inst.id} className="schematic-group">
-            {!isFirstInst && <div className="schematic-group-separator" />}
-            <div className="schematic-group-label">
+          <div key={inst.id} style={{ display: 'contents' }}>
+            {/* Group separator — spans all columns */}
+            {!isFirstInst && (
+              <div
+                className="schematic-group-separator"
+                style={{ gridColumn: `1 / ${totalCols + 1}` }}
+              />
+            )}
+            {/* Group label — spans all columns */}
+            <div
+              className="schematic-group-label"
+              style={{ gridColumn: `1 / ${totalCols + 1}` }}
+            >
               <span className="schematic-group-title">
                 {inst.label} — {blockLabel(inst.block)}
               </span>
             </div>
 
-            <div className={hasSubs ? 'schematic-sublanes' : undefined} style={hasSubs ? { position: 'relative' } : undefined}>
-              {inst.rows.map((row, rowIndex) => {
-                const isFirstRow = isFirstInst && rowIndex === 0;
-                return (
-                  <div key={row.id} className="schematic-row">
-                    {/* Connector dust cell at the start of every row */}
-                    <div className="schematic-connector" style={{ width: cs, height: cs, flexShrink: 0 }}>
-                      <DustCell size={cs} />
-                    </div>
-                    {/* Render cells aligned to the global column list */}
-                    {columns.map((col, ci) => (
-                      <RowCell
-                        key={ci}
-                        col={col}
-                        cell={row.cells[ci]}
-                        cs={cs}
-                        isFirstRow={isFirstRow}
-                        instrument={inst.label}
-                        block={inst.block}
-                      />
-                    ))}
+            {/* Instrument rows */}
+            {inst.rows.map((row, rowIndex) => {
+              const isFirstRow = isFirstInst && rowIndex === 0;
+              return (
+                <div key={row.id} style={{ display: 'contents' }}>
+                  {/* Connector dust — always column 1 */}
+                  <div className="schematic-connector" style={{ width: cs, height: cs }}>
+                    <DustCell size={cs} />
                   </div>
-                );
-              })}
-            </div>
+
+                  {anchors.map((anchor, ai) => {
+                    const seg = row.segments[ai] ?? [];
+                    return (
+                      <Fragment key={ai}>
+                        {/* Segment cell */}
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                          {seg.map((cell, ri) => (
+                            <div key={ri} className="schematic-cell schematic-cell-tip" tabIndex={0}>
+                              <RepeaterCell ticks={cell.ticks} size={cs} />
+                              <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
+                                Repeater: {cell.ticks} tick{cell.ticks !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Anchor cell */}
+                        <AnchorCell
+                          anchor={anchor}
+                          cell={row.anchorCells[ai]}
+                          cs={cs}
+                          isFirstRow={isFirstRow}
+                          instrument={inst.label}
+                          block={inst.block}
+                        />
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         );
       })}

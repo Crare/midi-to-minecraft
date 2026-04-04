@@ -277,61 +277,59 @@ export function computeRawResources({ noteblocks, repeaters, dust }) {
 //
 // Build a synchronized multi-instrument tick grid.
 //
-// All instrument lanes share the same X-axis column layout so that every tick
-// fires at the exact same horizontal position across all rows.
+// All instrument lanes share the same alignment anchors (note and split columns)
+// so every tick fires at the same CSS-grid column, while repeater segments between
+// anchors are variable width per row — no wasted spacer cells.
 //
 // Returned structure:
 // {
-//   instruments: [{ id, label, block, rows: [ rowDef, ... ] }],
-//   columns:     [ colDef, ... ],   // flat ordered list of display columns
+//   instruments: [ { id, label, block, rows: [ rowDef, ... ] } ],
+//   anchors:     [ { kind: 'split'|'note', tick, index } ],
 // }
 //
-// colDef kinds:
-//   { kind: 'repeater', ticks }   — one repeater cell (1–4 t)
-//   { kind: 'spacer' }            — empty alignment cell (instrument doesn't need
-//                                   a repeater here but another instrument does)
-//   { kind: 'split' }             — vertical redstone column (some instrument has
-//                                   ≥2 simultaneous notes at the upcoming tick)
-//   { kind: 'note' }              — note column (each row renders its note or empty)
+// rowDef: { id, isSub,
+//   segments: [ [repCell, ...], ... ],   // N+1 segments (before/between/after anchors)
+//   anchorCells: [ anchorCell, ... ],    // N anchor cells (parallel to anchors[])
+// }
 //
-// rowDef (per instrument row): { id, isSub, cells: [ cellEntry, ... ] }
-// cellEntry mirrors colDef kind, plus note-specific info:
-//   { kind: 'spacer' | 'repeater' | 'split-pass' | 'note', ... }
+// repCell: { kind: 'repeater', ticks }
+// anchorCell:
+//   { kind: 'note', note, tick }          — note block (note may be null = silent)
+//   { kind: 'split-pass' }                — vertical wire column, no branch
+//   { kind: 'split-branch' }              — vertical wire column with horizontal branch
+//   { kind: 'inactive' }                  — sub-row not active here
 
 export function buildTickGrid(trackEvents) {
   // ── 1. Gather events per instrument ─────────────────────────────────────────
-  const instrumentMap = new Map(); // instrument → [event, ...]
+  const instrumentMap = new Map();
   trackEvents.forEach((track) => {
     if (!instrumentMap.has(track.title)) instrumentMap.set(track.title, []);
     instrumentMap.get(track.title).push(...track.events);
   });
 
-  // ── 2. Convert each instrument's events to absolute ticks ──────────────────
-  // Each event: { absoluteTick, block, instrument, note, pitch }
-  const instrumentTicks = new Map(); // instrument → sorted [{absoluteTick, ...}]
+  // ── 2. Convert to absolute ticks ──────────────────────────────────────────
+  const instrumentTicks = new Map(); // instrument → [{absoluteTick,...}]
   instrumentMap.forEach((events, instrument) => {
     if (events.length === 0) return;
     const sorted = [...events].sort((a, b) => a.time - b.time || a.note - b.note);
-    const withTicks = sorted.map((ev) => ({
+    instrumentTicks.set(instrument, sorted.map((ev) => ({
       absoluteTick: Math.round(ev.time * 10),
       block: ev.block,
       instrument: ev.instrument,
       note: ev.note,
       pitch: ev.pitch,
-    }));
-    instrumentTicks.set(instrument, withTicks);
+    })));
   });
 
-  if (instrumentTicks.size === 0) return { instruments: [], columns: [] };
+  if (instrumentTicks.size === 0) return { instruments: [], anchors: [] };
 
-  // ── 3. Build sorted list of unique global ticks ────────────────────────────
+  // ── 3. Unique sorted global ticks ─────────────────────────────────────────
   const tickSet = new Set();
   instrumentTicks.forEach((evts) => evts.forEach((e) => tickSet.add(e.absoluteTick)));
   const globalTicks = [...tickSet].sort((a, b) => a - b);
 
-  // ── 4. For each instrument and each global tick: collect simultaneous notes ─
-  // instAtTick[instrument][tick] = [event, ...]
-  const instAtTick = new Map();
+  // ── 4. Group simultaneous notes per instrument per tick ──────────────────
+  const instAtTick = new Map(); // instrument → Map(tick → [event,...])
   instrumentTicks.forEach((evts, instrument) => {
     const byTick = new Map();
     evts.forEach((e) => {
@@ -341,153 +339,124 @@ export function buildTickGrid(trackEvents) {
     instAtTick.set(instrument, byTick);
   });
 
-  // ── 5. Build column sequence ───────────────────────────────────────────────
-  // For each consecutive (prevTick → curTick) interval:
-  //   a) compute tick gap
-  //   b) decompose into repeater delays
-  //   c) pad shorter repeater chains with spacers so all rows align
-  //   d) if any instrument has ≥2 notes at curTick → append a 'split' column
-  //   e) append a 'note' column
-
-  // We track, per instrument, the "last tick" played so we can compute gaps.
-  // If an instrument has no note at a global tick it just gets spacers.
-  const instrLastTick = new Map(); // instrument → last played absolute tick (-1 = not yet)
+  // ── 5. Build anchors sequence and per-instrument segment/anchor data ───────
+  // "Last played tick" per instrument — used to compute per-row repeater gaps.
+  const instrLastTick = new Map();
   instrumentTicks.forEach((_, instrument) => instrLastTick.set(instrument, -1));
 
-  const columns = []; // global column definitions
+  // Parallel per-instrument accumulators
+  const instrSegments = new Map(); // instrument → segments[]  (each segment = repCell[])
+  const instrAnchors  = new Map(); // instrument → anchorCell[]
+  instrumentTicks.forEach((_, instrument) => {
+    instrSegments.set(instrument, []);
+    instrAnchors.set(instrument, []);
+  });
 
-  // Per-instrument per-column cell assignments.
-  // We'll build rowCells[instrument] = [cellEntry, ...]
-  const rowCells = new Map();
-  instrumentTicks.forEach((_, instrument) => rowCells.set(instrument, []));
+  const anchors = []; // global anchor list
 
   globalTicks.forEach((tick) => {
-    // For every instrument: compute gap (in ticks) from its last-played tick to this tick.
-    // Instruments that don't play at this tick still need to stay aligned.
-    const gapRepeaters = new Map(); // instrument → decomposeDelay result (or [])
-
+    // Per-instrument: compute repeater chain for the gap from last-played tick to this tick.
+    // Only for instruments that actually play at this tick.
+    const gapReps = new Map(); // instrument → repCell[] | null (null = not playing)
     instrumentTicks.forEach((_, instrument) => {
-      const last = instrLastTick.get(instrument);
       const plays = instAtTick.get(instrument)?.has(tick) ?? false;
-      if (plays) {
-        const gap = last < 0 ? tick : tick - last;
-        gapRepeaters.set(instrument, gap > 0 ? decomposeDelay(gap) : []);
-      } else {
-        gapRepeaters.set(instrument, null); // not playing at this tick
-      }
+      if (!plays) { gapReps.set(instrument, null); return; }
+      const last = instrLastTick.get(instrument);
+      const gap = last < 0 ? tick : tick - last;
+      gapReps.set(instrument, gap > 0
+        ? decomposeDelay(gap).map((t) => ({ kind: 'repeater', ticks: t }))
+        : []);
     });
 
-    // Maximum repeater count across all playing instruments for this gap.
-    let maxRepCount = 0;
-    gapRepeaters.forEach((reps) => {
-      if (reps != null) maxRepCount = Math.max(maxRepCount, reps.length);
-    });
-
-    // Emit repeater / spacer columns.
-    for (let ci = 0; ci < maxRepCount; ci++) {
-      columns.push({ kind: 'repeater', colIndex: columns.length });
-      instrumentTicks.forEach((_, instrument) => {
-        const reps = gapRepeaters.get(instrument);
-        if (reps != null && ci < reps.length) {
-          rowCells.get(instrument).push({ kind: 'repeater', ticks: reps[ci] });
-        } else {
-          rowCells.get(instrument).push({ kind: 'spacer' });
-        }
-      });
-    }
-
-    // Determine if this tick is a "split" tick (any instrument has ≥2 simultaneous notes).
+    // Determine if any instrument splits here.
     let isSplitTick = false;
     instAtTick.forEach((byTick) => {
       if ((byTick.get(tick)?.length ?? 0) >= 2) isSplitTick = true;
     });
 
+    // ── emit split anchor (if needed) ────────────────────────────────────────
     if (isSplitTick) {
-      columns.push({ kind: 'split', tick, colIndex: columns.length });
+      anchors.push({ kind: 'split', tick, index: anchors.length });
       instrumentTicks.forEach((_, instrument) => {
+        const plays = instAtTick.get(instrument)?.has(tick) ?? false;
         const instNoteCount = instAtTick.get(instrument)?.get(tick)?.length ?? 0;
-        // The splitting instrument's main row shows a branch-out; others just pass through.
-        rowCells.get(instrument).push(instNoteCount >= 2 ? { kind: 'split-branch' } : { kind: 'split-pass' });
+        // Segment before split anchor: if this instrument is playing here, emit its
+        // repeater gap now (since the repeaters come before the split column).
+        // Non-playing instruments get an empty segment.
+        instrSegments.get(instrument).push(plays ? (gapReps.get(instrument) ?? []) : []);
+        instrAnchors.get(instrument).push(
+          instNoteCount >= 2 ? { kind: 'split-branch' } : { kind: 'split-pass' },
+        );
+        // Mark the repeaters as already emitted for this instrument.
+        if (plays) gapReps.set(instrument, []); // consumed
       });
     }
 
-    // Emit note column.
-    columns.push({ kind: 'note', tick, isSplit: isSplitTick, colIndex: columns.length });
+    // ── emit note anchor ─────────────────────────────────────────────────────
+    anchors.push({ kind: 'note', tick, isSplit: isSplitTick, index: anchors.length });
     instrumentTicks.forEach((_, instrument) => {
-      const notes = instAtTick.get(instrument)?.get(tick) ?? [];
-      rowCells.get(instrument).push({ kind: 'note', notes, tick });
+      const plays = instAtTick.get(instrument)?.has(tick) ?? false;
+      const notes  = instAtTick.get(instrument)?.get(tick) ?? [];
+      // Segment before note anchor.
+      // If split anchor already consumed the repeaters, gapReps[instrument] is [].
+      // Non-playing instruments emit empty segment.
+      instrSegments.get(instrument).push(plays ? (gapReps.get(instrument) ?? []) : []);
+      instrAnchors.get(instrument).push({ kind: 'note', notes, tick });
       if (notes.length > 0) instrLastTick.set(instrument, tick);
     });
   });
 
-  // ── 6. Build instrument rows with sub-lane splitting ───────────────────────
-  // For each instrument: the main row carries notes[0] at each tick.
-  // Sub-rows carry notes[1], notes[2], ... and are active only while needed.
-  //
-  // A sub-row for simultaneous note[k] (k≥1) starts at the 'split' column before
-  // its note and ends at the column after its last consecutive split participation.
-  // "Kill" rule: a sub-row terminates when the next gap from its note to the next
-  // note of main lane is ≤ the gap the main lane already has — meaning the sub-row
-  // has no further independent notes to carry.
-  //
-  // For simplicity: each sub-row is active from its first split-note column to the
-  // column just after its last note (it plays only simultaneous notes, never carrying
-  // independent inter-note gaps).
+  // Trailing segment (after last anchor) — empty for all instruments.
+  instrumentTicks.forEach((_, instrument) => instrSegments.get(instrument).push([]));
 
+  // ── 6. Build instrument rows ───────────────────────────────────────────────
   const instruments = [];
   instrumentTicks.forEach((_, instrument) => {
-    const byTick = instAtTick.get(instrument);
-    const mainCells = rowCells.get(instrument);
+    const byTick    = instAtTick.get(instrument);
+    const segments  = instrSegments.get(instrument);
+    const anchorArr = instrAnchors.get(instrument);
 
-    // Maximum simultaneous notes at any tick for this instrument.
+    // Max simultaneous notes for this instrument.
     let maxSimul = 1;
     byTick?.forEach((notes) => { maxSimul = Math.max(maxSimul, notes.length); });
 
-    // Build the main row and sub-rows.
-    const rows = [];
-
-    // Main row: note[0] at each tick (or empty if instrument doesn't play that tick).
-    const mainRowCells = mainCells.map((cell) => {
+    // Main row: note[0] at each note anchor.
+    const mainAnchorCells = anchorArr.map((cell) => {
       if (cell.kind !== 'note') return { ...cell };
-      const note = cell.notes[0] ?? null;
-      return { kind: 'note', note, tick: cell.tick, isMain: true };
+      return { kind: 'note', note: cell.notes[0] ?? null, tick: cell.tick };
     });
-    rows.push({ id: `${instrument}-main`, isSub: false, cells: mainRowCells });
+    const rows = [{ id: `${instrument}-main`, isSub: false, segments, anchorCells: mainAnchorCells }];
 
-    // Sub-rows for notes[1], notes[2], etc.
-    // Each sub-row is "active" (visible) only from the split column before its note
-    // through the note column; outside that range the cell is type 'inactive'.
+    // Sub-rows for notes[1], [2], ...
     for (let subIdx = 1; subIdx < maxSimul; subIdx++) {
-      // Determine which ticks this sub-row has a note.
       const activeTicks = new Set(
-        [...(byTick?.entries() ?? [])].filter(([, notes]) => notes.length > subIdx).map(([t]) => t),
+        [...(byTick?.entries() ?? [])]
+          .filter(([, notes]) => notes.length > subIdx)
+          .map(([t]) => t),
       );
       if (activeTicks.size === 0) continue;
 
-      // Build cells: inactive everywhere, active at split-pass and note columns within activeTicks.
-      // To determine activity per column, we walk columns and track whether we're "active".
-      const subCells = [];
-      columns.forEach((col, ci) => {
-        if (col.kind === 'split' && activeTicks.has(col.tick)) {
-          subCells.push({ kind: 'split-branch' }); // T-junction going to sub-row
-        } else if (col.kind === 'note' && activeTicks.has(col.tick)) {
-          const note = instAtTick.get(instrument)?.get(col.tick)?.[subIdx] ?? null;
-          subCells.push({ kind: 'note', note, tick: col.tick, isMain: false });
-        } else {
-          subCells.push({ kind: 'inactive' });
+      const subAnchorCells = anchorArr.map((cell, ai) => {
+        const anchor = anchors[ai];
+        if (anchor.kind === 'split' && activeTicks.has(anchor.tick)) {
+          return { kind: 'split-branch' };
         }
+        if (anchor.kind === 'note' && activeTicks.has(anchor.tick)) {
+          return { kind: 'note', note: byTick?.get(anchor.tick)?.[subIdx] ?? null, tick: anchor.tick };
+        }
+        return { kind: 'inactive' };
       });
 
-      rows.push({ id: `${instrument}-sub-${subIdx}`, isSub: true, cells: subCells });
+      // Sub-rows have empty segments (they only appear at their active anchors).
+      const emptySeg = segments.map(() => []);
+      rows.push({ id: `${instrument}-sub-${subIdx}`, isSub: true, segments: emptySeg, anchorCells: subAnchorCells });
     }
 
-    // Pick support block from first event with a block.
     const firstBlock = [...(byTick?.values() ?? [])].flat().find((e) => e.block)?.block ?? 'minecraft:dirt';
-
     instruments.push({ id: `inst-${instrument}`, label: instrument, block: firstBlock, rows });
   });
 
-  return { instruments, columns };
+  return { instruments, anchors };
 }
 
 // Count block totals for the tick-grid model.
@@ -496,26 +465,23 @@ export function computeTickGridBlockCounts(grid) {
   const supportMap = new Map();
   grid.instruments.forEach((inst) => {
     inst.rows.forEach((row) => {
-      row.cells.forEach((cell) => {
+      row.anchorCells.forEach((cell) => {
         if (cell.kind === 'note' && cell.note) {
           noteblocks++;
           const b = cell.note.block ?? inst.block;
           supportMap.set(b, (supportMap.get(b) ?? 0) + 1);
-        } else if (cell.kind === 'repeater') {
-          repeaters++;
-        } else if (cell.kind === 'spacer' || cell.kind === 'split-pass' || cell.kind === 'split-branch' || cell.kind === 'inactive') {
-          // pass — no placed block
         }
+      });
+      row.segments.forEach((seg) => {
+        seg.forEach((cell) => { if (cell.kind === 'repeater') repeaters++; });
       });
       dust++; // connector dust per row
     });
-    // split-pass columns count as vertical dust
-    grid.columns.forEach((col) => {
-      if (col.kind === 'split') dust += inst.rows.length;
-    });
+    // Each split anchor adds vertical dust for all rows of the instrument.
+    const splitCount = grid.anchors.filter((a) => a.kind === 'split').length;
+    dust += splitCount * inst.rows.length;
   });
-  const supportBlocks = noteblocks;
-  return { noteblocks, repeaters, dust, supportBlocks, supportMap };
+  return { noteblocks, repeaters, dust, supportBlocks: noteblocks, supportMap };
 }
 
 // Build groups — one per instrument, combining all same-instrument tracks.

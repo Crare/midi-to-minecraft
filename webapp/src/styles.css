@@ -685,11 +685,37 @@ button:disabled {
 }
 
 .schematic-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid; /* column template is set inline — overrides flex */
+  row-gap: 2px;
+  column-gap: 2px;
   width: max-content;
   padding: 4px 0;
+  align-items: center;
+}
+
+.schematic-row {
+  /* rows are now display:contents inside the shared grid — this class is kept for
+     any legacy references but no longer drives the layout */
+  display: contents;
+}
+
+.schematic-connector {
+  flex-shrink: 0;
+}
+
+/* Group label and separator span all columns (gridColumn set inline) */
+.schematic-group-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 2px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.schematic-group-separator {
+  height: 8px;
 }
 
 .schematic-row {
@@ -750,32 +776,14 @@ button:disabled {
   background: #fffbe6;
 }
 
-.schematic-group-separator {
-  height: 8px;
-}
-
-/* Wrapper for each track group — participates in schematic-grid's flex gap */
+/* Wrapper for each track group — display:contents so cells participate in shared grid */
 .schematic-group {
-  display: flex;
-  flex-direction: column;
+  display: contents;
 }
 
-/* Sub-lane container for harmonic groups — stacks rows with the same gap as the grid */
+/* Sub-lane container — display:contents in the shared grid */
 .schematic-sublanes {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.schematic-group-label {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: var(--muted);
-  padding: 2px 4px;
-  margin-bottom: 1px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  display: contents;
 }
 
 .schematic-group-title {
