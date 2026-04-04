@@ -3,6 +3,7 @@ import { useState } from 'react';
 import JsonOutputPanel from './components/JsonOutputPanel';
 import UploadPanel from './components/UploadPanel';
 import VisualizationPanel from './components/VisualizationPanel';
+import { playSuccessJingle } from './audio/noteblockAudio';
 
 const defaultInstrumentBlock = 'minecraft:dirt';
 const defaultPercussiveBlock = 'minecraft:sand';
@@ -216,6 +217,7 @@ export default function App() {
           setZipFilename(getZipFilename(outputName, file.name));
       const totalNotes = sequences.reduce((sum, track) => sum + track.length, 0);
       setStatus(`Converted ${sequences.length} track(s), ${totalNotes} notes total.`);
+      playSuccessJingle();
     } catch (error) {
       console.error(error);
       setStatus(`Conversion failed: ${error.message || String(error)}`);

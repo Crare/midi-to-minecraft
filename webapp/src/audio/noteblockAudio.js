@@ -306,6 +306,24 @@ export async function playPlacementSound(placement) {
   playTonalSound(context, placement);
 }
 
+export async function playSuccessJingle() {
+  const context = await prepareAudioPlayback();
+  const beat = 130;
+  const notes = [
+    { delay: 0,        instrument: 'pling', note: 6  },
+    { delay: beat,     instrument: 'pling', note: 10 },
+    { delay: beat * 2, instrument: 'pling', note: 13 },
+    { delay: beat * 3, instrument: 'bell',  note: 18 },
+  ];
+  notes.forEach(({ delay, instrument, note }) => {
+    if (delay === 0) {
+      playTonalSound(context, { instrument, note });
+    } else {
+      setTimeout(() => playTonalSound(context, { instrument, note }), delay);
+    }
+  });
+}
+
 // Synchronous version for the hot playback loop — skips async overhead.
 // Only fires if the AudioContext is already running (call prepareAudioPlayback once before loop).
 export function playPlacementSoundSync(placement) {
