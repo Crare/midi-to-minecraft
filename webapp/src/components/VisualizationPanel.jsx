@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { playPlacementSound, prepareAudioPlayback } from '../audio/noteblockAudio';
+import { playPlacementSound, playPlacementSoundSync, prepareAudioPlayback } from '../audio/noteblockAudio';
 import DragScrollArea from './DragScrollArea';
 import TrackRow from './TrackRow';
 
@@ -147,9 +147,14 @@ export default function VisualizationPanel({ trackEvents }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playheadDragging, setPlayheadDragging] = useState(false);
   const [mutedTracks, setMutedTracks] = useState(new Set());
+  const mutedTracksRef = useRef(mutedTracks);
   const [trackUnitSize, setTrackUnitSize] = useState(() =>
     typeof window !== 'undefined' && window.innerWidth <= 700 ? 30 : 34
   );
+
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [scrollContainerWidth, setScrollContainerWidth] = useState(Infinity);
+  const scrollRafRef = useRef(0);
 
   const trackScrollRef = useRef(null);
   const topScrollRef = useRef(null);
@@ -188,10 +193,27 @@ export default function VisualizationPanel({ trackEvents }) {
   const playbackNotes = useMemo(
     () =>
       playbackTracks
-        .flatMap((track) => track.notes)
+        .flatMap((track) => track.notes.map((note) => ({ ...note, trackId: track.id })))
         .sort((left, right) => left.startTick - right.startTick || left.note - right.note),
     [playbackTracks]
   );
+
+  // Stable per-track toggle callbacks — only recreated when the track list changes,
+  // not on every playheadTick update. This keeps TrackRow memo intact during playback.
+  const toggleMuteCallbacks = useMemo(() => {
+    const map = new Map();
+    visibleTracks.forEach((track) => {
+      map.set(track.id, () => {
+        setMutedTracks((prev) => {
+          const next = new Set(prev);
+          if (next.has(track.id)) next.delete(track.id);
+          else next.add(track.id);
+          return next;
+        });
+      });
+    });
+    return map;
+  }, [visibleTracks]);
 
   const maxVisibleTick = useMemo(() => getMaxTrackTick(visibleTracks), [visibleTracks]);
   const playbackEndTick = useMemo(() => getMaxTrackTick(playbackTracks), [playbackTracks]);
@@ -210,6 +232,10 @@ export default function VisualizationPanel({ trackEvents }) {
     playbackNotesRef.current = playbackNotes;
     playbackEndTickRef.current = playbackEndTick;
   }, [playbackEndTick, playbackNotes]);
+
+  useEffect(() => {
+    mutedTracksRef.current = mutedTracks;
+  }, [mutedTracks]);
 
   function clearPlaybackTimers() {
     if (playbackAnimationFrameRef.current) {
@@ -286,7 +312,10 @@ export default function VisualizationPanel({ trackEvents }) {
         playbackCursorRef.current < playbackNotesRef.current.length &&
         playbackNotesRef.current[playbackCursorRef.current].startTick <= nextTick + 0.0001
       ) {
-        void playPlacementSound(playbackNotesRef.current[playbackCursorRef.current]);
+        const note = playbackNotesRef.current[playbackCursorRef.current];
+        if (!mutedTracksRef.current.has(note.trackId)) {
+          playPlacementSoundSync(note);
+        }
         playbackCursorRef.current += 1;
       }
 
@@ -363,8 +392,14 @@ export default function VisualizationPanel({ trackEvents }) {
   };
 
   useEffect(() => {
+    document.documentElement.style.setProperty('--track-unit-size', `${trackUnitSize}px`);
+  }, [trackUnitSize]);
+
+  useEffect(() => {
     const syncTrackUnitSize = () => {
       setTrackUnitSize(window.innerWidth <= 700 ? 30 : 34);
+      const container = trackScrollRef.current;
+      if (container) setScrollContainerWidth(container.clientWidth);
     };
 
     syncTrackUnitSize();
@@ -373,6 +408,7 @@ export default function VisualizationPanel({ trackEvents }) {
     return () => {
       window.removeEventListener('resize', syncTrackUnitSize);
       clearPlaybackTimers();
+      if (scrollRafRef.current) window.cancelAnimationFrame(scrollRafRef.current);
     };
   }, []);
 
@@ -414,17 +450,35 @@ export default function VisualizationPanel({ trackEvents }) {
     const proxy = topScrollRef.current;
     if (!main || !proxy) return;
 
+    // Initialise scroll info now that the container is mounted.
+    setScrollLeft(main.scrollLeft);
+    setScrollContainerWidth(main.clientWidth);
+
+    const syncScrollInfo = () => {
+      if (scrollRafRef.current) return;
+      scrollRafRef.current = window.requestAnimationFrame(() => {
+        scrollRafRef.current = 0;
+        const c = trackScrollRef.current;
+        if (c) {
+          setScrollLeft(c.scrollLeft);
+          setScrollContainerWidth(c.clientWidth);
+        }
+      });
+    };
+
     const syncToProxy = () => {
       if (isSyncingScrollRef.current) return;
       isSyncingScrollRef.current = true;
       proxy.scrollLeft = main.scrollLeft;
       isSyncingScrollRef.current = false;
+      syncScrollInfo();
     };
     const syncToMain = () => {
       if (isSyncingScrollRef.current) return;
       isSyncingScrollRef.current = true;
       main.scrollLeft = proxy.scrollLeft;
       isSyncingScrollRef.current = false;
+      syncScrollInfo();
     };
 
     main.addEventListener('scroll', syncToProxy, { passive: true });
@@ -563,20 +617,15 @@ export default function VisualizationPanel({ trackEvents }) {
                       repeaterVisualizationMode={repeaterVisualizationMode}
                       noteTooltipDirection={trackIndex === 0 ? 'bottom' : 'top'}
                       isMuted={mutedTracks.has(track.id)}
-                      onToggleMute={() => {
-                        const newMuted = new Set(mutedTracks);
-                        if (newMuted.has(track.id)) {
-                          newMuted.delete(track.id);
-                        } else {
-                          newMuted.add(track.id);
-                        }
-                        setMutedTracks(newMuted);
-                      }}
+                      onToggleMute={toggleMuteCallbacks.get(track.id)}
                       isPlaybackDimmed={
                         playbackScope === playbackScopes.single &&
                         selectedPlaybackTrackId &&
                         track.id !== selectedPlaybackTrackId
                       }
+                      unitSize={trackUnitSize}
+                      scrollLeft={scrollLeft}
+                      containerWidth={scrollContainerWidth}
                     />
                   ))}
                 </div>

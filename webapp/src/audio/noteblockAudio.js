@@ -305,3 +305,16 @@ export async function playPlacementSound(placement) {
 
   playTonalSound(context, placement);
 }
+
+// Synchronous version for the hot playback loop — skips async overhead.
+// Only fires if the AudioContext is already running (call prepareAudioPlayback once before loop).
+export function playPlacementSoundSync(placement) {
+  if (!placement || !audioContext || audioContext.state !== 'running') return;
+
+  if (placement.pitch === undefined) {
+    playPercussionSound(audioContext, placement.instrument);
+    return;
+  }
+
+  playTonalSound(audioContext, placement);
+}

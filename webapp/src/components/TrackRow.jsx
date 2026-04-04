@@ -1,4 +1,4 @@
-import { Fragment, memo } from 'react';
+import { Fragment, memo, useMemo } from 'react';
 import { playPlacementSound } from '../audio/noteblockAudio';
 
 const notePitchNames = [
@@ -130,6 +130,15 @@ function getNoteblockTooltip(placement) {
     .join('\n');
 }
 
+// Resolved once at module load — these paths never change.
+const repeaterImages = {
+  1: `${import.meta.env.BASE_URL}assets/repeater-1.svg`,
+  2: `${import.meta.env.BASE_URL}assets/repeater-2.svg`,
+  3: `${import.meta.env.BASE_URL}assets/repeater-3.svg`,
+  4: `${import.meta.env.BASE_URL}assets/repeater-4.svg`,
+};
+const noteblockImg = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
+
 function TrackRow({
   title,
   subtitle,
@@ -139,14 +148,74 @@ function TrackRow({
   isPlaybackDimmed = false,
   isMuted = false,
   onToggleMute,
+  // Virtualization props — VisualizationPanel supplies these.
+  // containerWidth = Infinity renders all notes (no virtualization).
+  unitSize = 34,
+  scrollLeft = 0,
+  containerWidth = Infinity,
 }) {
-  const repeaterImages = {
-    1: `${import.meta.env.BASE_URL}assets/repeater-1.svg`,
-    2: `${import.meta.env.BASE_URL}assets/repeater-2.svg`,
-    3: `${import.meta.env.BASE_URL}assets/repeater-3.svg`,
-    4: `${import.meta.env.BASE_URL}assets/repeater-4.svg`,
-  };
-  const noteblockImg = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
+  // Each visual unit (repeater or noteblock) is unitSize wide with a 2px flex-gap between units.
+  const CELL = unitSize + 2;
+
+  // Pre-compute the cumulative unit-start index for every note.
+  // This only changes when notes or repeaterVisualizationMode changes, not on scroll.
+  const noteLayout = useMemo(() => {
+    let cum = 0;
+    return notes.map((note) => {
+      const r = getRepeaterCount(note.redstoneTickDelay, repeaterVisualizationMode);
+      const unitStart = cum;
+      cum += r + 1;
+      return { unitStart, repeaterCount: r, unitEnd: cum };
+    });
+  }, [notes, repeaterVisualizationMode]);
+
+  const totalUnits = noteLayout.length > 0 ? noteLayout[noteLayout.length - 1].unitEnd : 0;
+
+  // --- Determine the visible slice ---
+  // Overscan: one full container width on each side for smooth scrolling.
+  const overscan = Number.isFinite(containerWidth) ? containerWidth : 0;
+  const visStart = scrollLeft - overscan;
+  const visEnd = scrollLeft + (Number.isFinite(containerWidth) ? containerWidth : 1e9) + overscan;
+
+  // Binary search: first note whose pixel-end (unitEnd * CELL - 2) is past visStart.
+  // unitEnd * CELL - 2 > visStart  →  unitEnd > (visStart + 2) / CELL
+  const threshStart = (visStart + 2) / CELL;
+  let startIdx = 0;
+  {
+    let lo = 0;
+    let hi = noteLayout.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (noteLayout[mid].unitEnd <= threshStart) lo = mid + 1;
+      else hi = mid;
+    }
+    startIdx = lo;
+  }
+
+  // Binary search: first note whose pixel-start (unitStart * CELL) is at or past visEnd.
+  const threshEnd = visEnd / CELL;
+  let endIdx = noteLayout.length;
+  {
+    let lo = startIdx;
+    let hi = noteLayout.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (noteLayout[mid].unitStart < threshEnd) lo = mid + 1;
+      else hi = mid;
+    }
+    endIdx = lo;
+  }
+
+  // Spacer widths.  The flex gap is 2px between every pair of adjacent items.
+  // A spacer of N units has width = N * CELL - 2  (so the gap after it positions
+  // the next real element at exactly N * CELL pixels from the track start).
+  const beforeUnitCount = noteLayout[startIdx]?.unitStart ?? totalUnits;
+  const afterUnitStart = noteLayout[endIdx]?.unitStart ?? totalUnits;
+  const afterUnitCount = totalUnits - afterUnitStart;
+
+  const beforeSpacerWidth = beforeUnitCount > 0 ? beforeUnitCount * CELL - 2 : 0;
+  const afterSpacerWidth = afterUnitCount > 0 ? afterUnitCount * CELL - 2 : 0;
+
   const isEmpty = notes.length === 0;
   const rowClassName = [
     'track-row',
@@ -184,7 +253,12 @@ function TrackRow({
         ) : null}
       </div>
       <div className="track-line">
-        {notes.map((placement, noteIndex) => {
+        {beforeSpacerWidth > 0 && (
+          <div style={{ width: `${beforeSpacerWidth}px`, flexShrink: 0 }} aria-hidden="true" />
+        )}
+        {noteLayout.slice(startIdx, endIdx).map((layout, i) => {
+          const noteIndex = startIdx + i;
+          const placement = notes[noteIndex];
           const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
           const tooltipLines = getNoteblockTooltip(placement).split('\n');
           const repeaterSettings = getRepeaterSettings(
@@ -193,17 +267,17 @@ function TrackRow({
           );
           const units = [];
 
-          for (let i = 0; i < repeaterSettings.length; i += 1) {
-            const setting = repeaterSettings[i];
+          for (let j = 0; j < repeaterSettings.length; j += 1) {
+            const setting = repeaterSettings[j];
             units.push(
               <div
                 className="repeater repeater-with-tooltip"
-                key={`rep-${noteIndex}-${i}`}
+                key={`rep-${noteIndex}-${j}`}
                 tabIndex={0}
                 aria-label={`Repeater state ${setting}, delay ${placement.redstoneTickDelay} ticks, ${repeaterSettings.length} repeater(s) total`}
               >
                 <img src={repeaterImages[setting] || repeaterImages[1]} alt={`repeater setting ${setting}`} />
-                {i === 0 ? (
+                {j === 0 ? (
                   <div className="delay-label">{placement.redstoneTickDelay}</div>
                 ) : null}
                 <span className="cell-tooltip" role="tooltip">
@@ -282,6 +356,9 @@ function TrackRow({
 
           return <Fragment key={`frag-${noteIndex}`}>{units}</Fragment>;
         })}
+        {afterSpacerWidth > 0 && (
+          <div style={{ width: `${afterSpacerWidth}px`, flexShrink: 0 }} aria-hidden="true" />
+        )}
       </div>
     </div>
   );
