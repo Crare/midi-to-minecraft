@@ -83,7 +83,7 @@ function SegRepCell({ cell, cs }) {
 }
 
 // ── Note block anchor cell with portal tooltip ────────────────────────────────
-function NoteBlockCell({ cell, cs, instrument, block }) {
+function NoteBlockCell({ cell, cs, instrument, block, isLastPressed, onPress }) {
   const { ref, pos, show, hide } = usePortalTooltip();
   const note = cell.note;
   const useCount = getUseCount(note.note);
@@ -91,7 +91,7 @@ function NoteBlockCell({ cell, cs, instrument, block }) {
   return (
     <div
       ref={ref}
-      className="schematic-cell schematic-cell-tip"
+      className={`schematic-cell schematic-cell-tip${isLastPressed ? ' schematic-cell--last-pressed' : ''}`}
       tabIndex={0}
       role="button"
       aria-label={`${note.instrument ?? instrument} - ${note.pitch || 'drum'}`}
@@ -100,11 +100,15 @@ function NoteBlockCell({ cell, cs, instrument, block }) {
       onMouseLeave={hide}
       onFocus={show}
       onBlur={hide}
-      onClick={() => void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch })}
+      onClick={() => {
+        void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch });
+        onPress?.();
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           void playPlacementSound({ instrument: note.instrument ?? instrument, note: note.note, pitch: note.pitch });
+          onPress?.();
         }
       }}
     >
@@ -122,7 +126,7 @@ function NoteBlockCell({ cell, cs, instrument, block }) {
 }
 
 // ── Anchor cell ───────────────────────────────────────────────────────────────
-function AnchorCell({ anchor, cell, cs, instrument, block }) {
+function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPress }) {
   if (!cell || cell.kind === 'inactive') {
     return <div style={{ width: cs, height: cs }} aria-hidden="true" />;
   }
@@ -136,7 +140,7 @@ function AnchorCell({ anchor, cell, cs, instrument, block }) {
     if (!cell.note) {
       return <div style={{ width: cs, height: cs }} aria-hidden="true" />;
     }
-    return <NoteBlockCell cell={cell} cs={cs} instrument={instrument} block={block} />;
+    return <NoteBlockCell cell={cell} cs={cs} instrument={instrument} block={block} isLastPressed={isLastPressed} onPress={onPress} />;
   }
   return null;
 }
@@ -144,8 +148,9 @@ function AnchorCell({ anchor, cell, cs, instrument, block }) {
 // ── Main grid component ───────────────────────────────────────────────────────
 // ALL rows (across all instruments) share one CSS grid so anchor columns align.
 // Instrument-label rows span all columns.
-export default function SchematicGrid({ grid, cellSize }) {
+export default function SchematicGrid({ grid, cellSize, onColumnClick, onRowClick }) {
   const cs = cellSize ?? CELL;
+  const [lastPressed, setLastPressed] = useState(null);
   if (!grid || grid.instruments.length === 0) return null;
 
   const { instruments, anchors } = grid;
@@ -157,6 +162,24 @@ export default function SchematicGrid({ grid, cellSize }) {
       className="schematic-grid"
       style={{ display: 'grid', gridTemplateColumns: gridTemplate, alignItems: 'center' }}
     >
+      {/* ── Top ruler row — click tick to jump vertical indicator ── */}
+      <div
+        className="schematic-ruler-corner"
+        style={{ width: cs, height: 10, position: 'sticky', left: 0, zIndex: 6 }}
+      />
+      {anchors.map((_anchor, ai) => (
+        <Fragment key={ai}>
+          <div style={{ height: 10 }} />
+          <button
+            type="button"
+            className="schematic-ruler-tick"
+            style={{ width: cs }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onColumnClick?.(e.currentTarget); }}
+            aria-label={`Move column marker to position ${ai + 1}`}
+          />
+        </Fragment>
+      ))}
       {instruments.map((inst, instIndex) => (
         <div key={inst.id} style={{ display: 'contents' }}>
           {/* Group separator — spans all columns */}
@@ -179,10 +202,17 @@ export default function SchematicGrid({ grid, cellSize }) {
           {/* Instrument rows */}
           {inst.rows.map((row) => (
             <div key={row.id} style={{ display: 'contents' }}>
-              {/* Connector dust — always column 1 */}
-              <div className="schematic-connector" style={{ width: cs, height: cs }}>
+              {/* Connector dust — sticky column 1, click to jump horizontal indicator */}
+              <button
+                type="button"
+                className="schematic-connector schematic-connector--sticky"
+                style={{ width: cs, height: cs }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); onRowClick?.(e.currentTarget); }}
+                aria-label="Move row marker here"
+              >
                 <DustCell size={cs} />
-              </div>
+              </button>
 
               {anchors.map((anchor, ai) => {
                 const seg = row.segments[ai] ?? [];
@@ -201,6 +231,8 @@ export default function SchematicGrid({ grid, cellSize }) {
                       cs={cs}
                       instrument={inst.label}
                       block={inst.block}
+                      isLastPressed={lastPressed === `${row.id}:${ai}`}
+                      onPress={() => setLastPressed(`${row.id}:${ai}`)}
                     />
                   </Fragment>
                 );

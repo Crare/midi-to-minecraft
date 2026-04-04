@@ -21,3 +21,7 @@
 - in the visualization show track length in time and minecraft ticks.
 
 - add export schematic as excel file.
+
+- add horizontal indicator, and add highlight on last pressed noteblock on the schematic. to make it easier to find where you left of.
+
+need to compact the schematic to more clearer view. now there is spaces in between noteblocks. maybe it should go through all the instruments same time tick per tick. so we don't have this misaligned problem.
