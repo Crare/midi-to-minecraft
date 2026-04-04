@@ -3,12 +3,6 @@ import { playPlacementSound, playPlacementSoundSync, prepareAudioPlayback } from
 import DragScrollArea from './DragScrollArea';
 import TrackRow from './TrackRow';
 
-const repeaterVisualizationModes = {
-  single: 'single',
-  accurate: 'accurate',
-  synchronous: 'synchronous',
-};
-
 const playbackScopes = {
   all: 'all',
   single: 'single',
@@ -21,20 +15,6 @@ function formatInstrumentName(instrument) {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
-}
-
-function getRepeaterCount(redstoneTickDelay, repeaterVisualizationMode) {
-  if (redstoneTickDelay <= 0) return 0;
-  if (repeaterVisualizationMode === repeaterVisualizationModes.single) return 1;
-  if (repeaterVisualizationMode === repeaterVisualizationModes.synchronous) return redstoneTickDelay;
-  return Math.max(1, Math.ceil(redstoneTickDelay / 4));
-}
-
-function getTrackVisualUnitCount(notes, repeaterVisualizationMode) {
-  return notes.reduce(
-    (totalUnits, note) => totalUnits + getRepeaterCount(note.redstoneTickDelay, repeaterVisualizationMode) + 1,
-    0
-  );
 }
 
 function getMaxTrackTick(tracks) {
@@ -60,87 +40,61 @@ function findFirstNoteIndexAtOrAfter(notes, startTick) {
   return low;
 }
 
-function eventsToPlacements(events) {
-  let lastTime = 0;
-  let lastTick = 0;
-
-  return events.map((event) => {
-    const redstoneTickDelay = Math.round(Math.max(0, event.time - lastTime) * 10);
-    const startTick = lastTick + redstoneTickDelay;
-    lastTime = event.time;
-    lastTick = startTick;
-
-    return {
-      redstoneTickDelay,
-      startTick,
-      block: event.block,
-      pitch: event.pitch,
-      note: event.note,
-      instrument: event.instrument,
-    };
-  });
-}
-
-function buildVisualizationTracks(trackEvents, groupTracksByInstrument) {
-  if (!groupTracksByInstrument) {
-    return trackEvents.map((track) => ({
-      id: track.id,
-      title: track.title,
-      subtitle: `${track.events.length} notes`,
-      notes: eventsToPlacements(track.events),
-    }));
-  }
-
-  const instrumentTracks = new Map();
+function buildVisualizationTracks(trackEvents) {
+  // Merge all lanes for the same instrument into one visual track.
+  const instrumentGroups = new Map();
   trackEvents.forEach((track) => {
-    track.events.forEach((event) => {
-      if (!instrumentTracks.has(event.instrument)) instrumentTracks.set(event.instrument, []);
-      instrumentTracks.get(event.instrument).push(event);
-    });
+    const key = track.title;
+    if (!instrumentGroups.has(key)) {
+      instrumentGroups.set(key, { id: track.id, title: track.title, events: [] });
+    }
+    instrumentGroups.get(key).events.push(...track.events);
   });
 
-  const groupedTracks = [];
-  const epsilon = 0.000001;
-
-  instrumentTracks.forEach((events, instrument) => {
-    const sortedEvents = [...events].sort(
-      (left, right) => left.time - right.time || left.endTime - right.endTime || left.note - right.note
-    );
-    const lanes = [];
-
-    sortedEvents.forEach((event) => {
-      let lane = lanes.find((candidate) => event.time + epsilon >= candidate.lastEndTime);
-      if (!lane) {
-        lane = { lastEndTime: -Infinity, events: [] };
-        lanes.push(lane);
-      }
-      lane.events.push(event);
-      lane.lastEndTime = Math.max(lane.lastEndTime, event.endTime);
-    });
-
-    const title = formatInstrumentName(instrument);
-    lanes.forEach((lane, laneIndex) => {
-      groupedTracks.push({
-        id: `instrument-${instrument}-${laneIndex}`,
-        title,
-        subtitle:
-          lanes.length > 1
-            ? `Lane ${laneIndex + 1} · ${lane.events.length} notes`
-            : `${lane.events.length} notes`,
-        notes: eventsToPlacements(lane.events),
+  return Array.from(instrumentGroups.values())
+    .filter((g) => g.events.length > 0)
+    .map(({ id, title, events }) => {
+      // Sort all events by absolute time and group simultaneous ones by tick.
+      const sorted = [...events].sort((a, b) => a.time - b.time);
+      const byTick = new Map();
+      sorted.forEach((event) => {
+        const tick = Math.round(event.time * 10);
+        if (!byTick.has(tick)) byTick.set(tick, []);
+        byTick.get(tick).push(event);
       });
-    });
-  });
 
-  return groupedTracks;
+      let prevTick = 0;
+      const notes = [...byTick.entries()]
+        .sort(([a], [b]) => a - b)
+        .map(([tick, tickEvents]) => {
+          const redstoneTickDelay = tick - prevTick;
+          prevTick = tick;
+          return {
+            redstoneTickDelay,
+            startTick: tick,
+            placements: tickEvents.map((e) => ({
+              block: e.block,
+              pitch: e.pitch,
+              note: e.note,
+              instrument: e.instrument,
+            })),
+          };
+        });
+
+      return {
+        id,
+        title: formatInstrumentName(title),
+        subtitle: `${events.length} notes`,
+        notes,
+      };
+    });
 }
 
 export default function VisualizationPanel({ trackEvents }) {
   const [tracksOpen, setTracksOpen] = useState(false);
-  const [groupTracksByInstrument, setGroupTracksByInstrument] = useState(false);
-  const [repeaterVisualizationMode, setRepeaterVisualizationMode] = useState(
-    repeaterVisualizationModes.synchronous
-  );
+  const [showColor, setShowColor] = useState(true);
+  const [showNumber, setShowNumber] = useState(true);
+  const [showSupport, setShowSupport] = useState(true);
   const [playbackScope, setPlaybackScope] = useState(playbackScopes.all);
   const [selectedPlaybackTrackId, setSelectedPlaybackTrackId] = useState('');
   const [playheadTick, setPlayheadTick] = useState(0);
@@ -176,11 +130,8 @@ export default function VisualizationPanel({ trackEvents }) {
   const playbackStartTickRef = useRef(0);
 
   const visibleTracks = useMemo(
-    () =>
-      buildVisualizationTracks(trackEvents, groupTracksByInstrument).filter(
-        (track) => track.notes.length > 0
-      ),
-    [trackEvents, groupTracksByInstrument]
+    () => buildVisualizationTracks(trackEvents).filter((track) => track.notes.length > 0),
+    [trackEvents]
   );
 
   const playbackTracks = useMemo(() => {
@@ -193,7 +144,11 @@ export default function VisualizationPanel({ trackEvents }) {
   const playbackNotes = useMemo(
     () =>
       playbackTracks
-        .flatMap((track) => track.notes.map((note) => ({ ...note, trackId: track.id })))
+        .flatMap((track) =>
+          track.notes.flatMap((notePos) =>
+            notePos.placements.map((p) => ({ ...p, startTick: notePos.startTick, trackId: track.id }))
+          )
+        )
         .sort((left, right) => left.startTick - right.startTick || left.note - right.note),
     [playbackTracks]
   );
@@ -221,12 +176,12 @@ export default function VisualizationPanel({ trackEvents }) {
   const timelineUnitCount = useMemo(() => {
     const visualUnits = visibleTracks.reduce(
       (maxUnits, track) =>
-        Math.max(maxUnits, getTrackVisualUnitCount(track.notes, repeaterVisualizationMode)),
+        Math.max(maxUnits, track.notes.reduce((total, note) => total + note.redstoneTickDelay + 1, 0)),
       0
     );
 
     return Math.max(visualUnits, Math.ceil(maxVisibleTick) + 2, 1);
-  }, [maxVisibleTick, repeaterVisualizationMode, visibleTracks]);
+  }, [maxVisibleTick, visibleTracks]);
 
   useEffect(() => {
     playbackNotesRef.current = playbackNotes;
@@ -508,9 +463,7 @@ export default function VisualizationPanel({ trackEvents }) {
             ? 'No tracks yet'
             : tracksOpen
               ? 'Hide'
-              : groupTracksByInstrument
-                ? `Show ${visibleTracks.length} lane(s)`
-                : `Show ${visibleTracks.length} track(s)`}
+              : `Show ${visibleTracks.length} lane(s)`}
         </span>
       </button>
       <div className="panel-body">
@@ -557,34 +510,24 @@ export default function VisualizationPanel({ trackEvents }) {
           </div>
           <div className="playback-meta">Position: {playheadTick.toFixed(1)} ticks</div>
         </div>
-        <label className="option-row">
-          <input
-            type="checkbox"
-            checked={groupTracksByInstrument}
-            onChange={(event) => setGroupTracksByInstrument(event.target.checked)}
-            disabled={trackEvents.length === 0}
-          />
-          <span>Organize visualization by instrument</span>
-        </label>
-        <label className="option-row option-row-stacked">
-          <span>Repeater visualization</span>
-          <select
-            value={repeaterVisualizationMode}
-            onChange={(event) => setRepeaterVisualizationMode(event.target.value)}
-            disabled={visibleTracks.length === 0}
-          >
-            <option value={repeaterVisualizationModes.single}>Single repeater</option>
-            <option value={repeaterVisualizationModes.accurate}>Accurate amount needed</option>
-            <option value={repeaterVisualizationModes.synchronous}>Synchronous alignment</option>
-          </select>
-        </label>
+        <div className="viz-toggles">
+          <label className="viz-toggle-label">
+            <input type="checkbox" checked={showColor} onChange={(e) => setShowColor(e.target.checked)} />
+            Color
+          </label>
+          <label className="viz-toggle-label">
+            <input type="checkbox" checked={showNumber} onChange={(e) => setShowNumber(e.target.checked)} />
+            Number
+          </label>
+          <label className="viz-toggle-label">
+            <input type="checkbox" checked={showSupport} onChange={(e) => setShowSupport(e.target.checked)} />
+            Support
+          </label>
+        </div>
         <p className="hint output-summary">
-          Repeaters are inserted before each note based on redstoneTickDelay.
           {visibleTracks.length === 0
-            ? ' No tracks to visualize.'
-            : groupTracksByInstrument
-              ? ` ${visibleTracks.length} instrument lane(s) ready. Scroll horizontally for long tracks.`
-              : ` ${visibleTracks.length} track(s) ready. Scroll horizontally for long tracks.`}
+            ? 'No tracks to visualize.'
+            : `${visibleTracks.length} instrument lane(s) ready. Scroll horizontally for long tracks.`}
         </p>
         {tracksOpen ? (
           <div className="track-area">
@@ -649,7 +592,9 @@ export default function VisualizationPanel({ trackEvents }) {
                       <TrackRow
                         key={track.id}
                         notes={track.notes}
-                        repeaterVisualizationMode={repeaterVisualizationMode}
+                        showColor={showColor}
+                        showNumber={showNumber}
+                        showSupport={showSupport}
                         noteTooltipDirection={trackIndex === 0 ? 'bottom' : 'top'}
                         isPlaybackDimmed={
                           playbackScope === playbackScopes.single &&

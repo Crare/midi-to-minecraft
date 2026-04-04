@@ -69,39 +69,7 @@ function supportSpriteForBlock(blockId) {
   return uri;
 }
 
-function getRepeaterCount(redstoneTickDelay, repeaterVisualizationMode) {
-  if (redstoneTickDelay <= 0) return 0;
 
-  if (repeaterVisualizationMode === 'single') return 1;
-  if (repeaterVisualizationMode === 'synchronous') return redstoneTickDelay;
-
-  return Math.max(1, Math.ceil(redstoneTickDelay / 4));
-}
-
-function getRepeaterSettings(redstoneTickDelay, repeaterVisualizationMode) {
-  if (redstoneTickDelay <= 0) return [];
-
-  if (repeaterVisualizationMode === 'single') return [1];
-  if (repeaterVisualizationMode === 'synchronous') {
-    return Array.from({ length: redstoneTickDelay }, () => 1);
-  }
-
-  const settings = [];
-  let remainingTicks = redstoneTickDelay;
-
-  while (remainingTicks > 0) {
-    const setting = Math.min(4, remainingTicks);
-    settings.push(setting);
-    remainingTicks -= setting;
-  }
-
-  return settings;
-}
-
-function formatRepeaterStates(repeaterSettings) {
-  if (repeaterSettings.length === 0) return 'none';
-  return repeaterSettings.join(', ');
-}
 
 function getMinecraftTuningInfo(useCount) {
   const normalizedUseCount = ((useCount % 24) + 24) % 24;
@@ -130,18 +98,13 @@ function getNoteblockTooltip(placement) {
     .join('\n');
 }
 
-// Resolved once at module load — these paths never change.
-const repeaterImages = {
-  1: `${import.meta.env.BASE_URL}assets/repeater-1.svg`,
-  2: `${import.meta.env.BASE_URL}assets/repeater-2.svg`,
-  3: `${import.meta.env.BASE_URL}assets/repeater-3.svg`,
-  4: `${import.meta.env.BASE_URL}assets/repeater-4.svg`,
-};
 const noteblockImg = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
 
 function TrackRow({
   notes,
-  repeaterVisualizationMode,
+  showColor = true,
+  showNumber = true,
+  showSupport = true,
   noteTooltipDirection = 'top',
   isPlaybackDimmed = false,
   // Virtualization props — VisualizationPanel supplies these.
@@ -150,20 +113,20 @@ function TrackRow({
   scrollLeft = 0,
   containerWidth = Infinity,
 }) {
-  // Each visual unit (repeater or noteblock) is unitSize wide with a 2px flex-gap between units.
+  // Each visual unit is unitSize wide with a 2px flex-gap between units.
   const CELL = unitSize + 2;
 
   // Pre-compute the cumulative unit-start index for every note.
-  // This only changes when notes or repeaterVisualizationMode changes, not on scroll.
+  // spacerUnits = redstoneTickDelay (synchronous: 1 unit = 1 tick)
   const noteLayout = useMemo(() => {
     let cum = 0;
     return notes.map((note) => {
-      const r = getRepeaterCount(note.redstoneTickDelay, repeaterVisualizationMode);
+      const spacerUnits = Math.max(0, note.redstoneTickDelay);
       const unitStart = cum;
-      cum += r + 1;
-      return { unitStart, repeaterCount: r, unitEnd: cum };
+      cum += spacerUnits + 1; // delay spacer units + 1 noteblock unit
+      return { unitStart, spacerUnits, unitEnd: cum };
     });
-  }, [notes, repeaterVisualizationMode]);
+  }, [notes]);
 
   const totalUnits = noteLayout.length > 0 ? noteLayout[noteLayout.length - 1].unitEnd : 0;
 
@@ -227,103 +190,75 @@ function TrackRow({
         )}
         {noteLayout.slice(startIdx, endIdx).map((layout, i) => {
           const noteIndex = startIdx + i;
-          const placement = notes[noteIndex];
-          const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
-          const tooltipLines = getNoteblockTooltip(placement).split('\n');
-          const repeaterSettings = getRepeaterSettings(
-            placement.redstoneTickDelay,
-            repeaterVisualizationMode
-          );
-          const units = [];
+          const note = notes[noteIndex];
+          const spacerWidth = layout.spacerUnits > 0 ? layout.spacerUnits * CELL - 2 : 0;
 
-          for (let j = 0; j < repeaterSettings.length; j += 1) {
-            const setting = repeaterSettings[j];
-            units.push(
-              <div
-                className="repeater repeater-with-tooltip"
-                key={`rep-${noteIndex}-${j}`}
-                tabIndex={0}
-                aria-label={`Repeater state ${setting}, delay ${placement.redstoneTickDelay} ticks, ${repeaterSettings.length} repeater(s) total`}
-              >
-                <img src={repeaterImages[setting] || repeaterImages[1]} alt={`repeater setting ${setting}`} />
-                {j === 0 ? (
-                  <div className="delay-label">{placement.redstoneTickDelay}</div>
-                ) : null}
-                <span className="cell-tooltip" role="tooltip">
-                  Mode: {repeaterVisualizationMode}
-                  <br />
-                  Delay: {placement.redstoneTickDelay} ticks
-                  <br />
-                  Repeaters: {repeaterSettings.length}
-                  <br />
-                  States: {formatRepeaterStates(repeaterSettings)}
-                  <br />
-                  This: state {setting}
-                </span>
+          return (
+            <Fragment key={`frag-${noteIndex}`}>
+              {spacerWidth > 0 && (
+                <div style={{ width: `${spacerWidth}px`, flexShrink: 0 }} aria-hidden="true" />
+              )}
+              <div className="note-unit">
+                {note.placements.map((placement, pi) => {
+                  const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
+                  const tooltipLines = getNoteblockTooltip(placement).split('\n');
+                  return (
+                    <div
+                      key={pi}
+                      className="note-stack-item note-unit-button"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={getNoteblockTooltip(placement).replace(/\n/g, ', ')}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={() => { void playPlacementSound(placement); }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          void playPlacementSound(placement);
+                        }
+                      }}
+                    >
+                      {showColor && tuningInfo ? (
+                        <span
+                          className="note-corner-color"
+                          style={{ backgroundColor: tuningInfo.color }}
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      {showNumber && tuningInfo ? (
+                        <span className="note-use-count" aria-hidden="true">
+                          {tuningInfo.useCount}
+                        </span>
+                      ) : null}
+                      <img className="note-img" src={noteblockImg} alt="noteblock" />
+                      {showSupport ? (
+                        <img
+                          className="support-img"
+                          src={supportSpriteForBlock(placement.block)}
+                          alt={placement.block}
+                        />
+                      ) : null}
+                      <span
+                        className={
+                          noteTooltipDirection === 'bottom'
+                            ? 'cell-tooltip cell-tooltip-below'
+                            : 'cell-tooltip'
+                        }
+                        role="tooltip"
+                      >
+                        {tooltipLines.map((line, lineIndex) => (
+                          <Fragment key={`${noteIndex}-${pi}-tooltip-${lineIndex}`}>
+                            {lineIndex > 0 ? <br /> : null}
+                            {line}
+                          </Fragment>
+                        ))}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          }
-
-          units.push(
-            <div
-              className="note-unit note-unit-button"
-              key={`note-${noteIndex}`}
-              role="button"
-              tabIndex={0}
-              aria-label={getNoteblockTooltip(placement).replace(/\n/g, ', ')}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => {
-                void playPlacementSound(placement);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  void playPlacementSound(placement);
-                }
-              }}
-            >
-              {tuningInfo ? (
-                <span
-                  className="note-corner-color"
-                  style={{ backgroundColor: tuningInfo.color }}
-                  aria-hidden="true"
-                />
-              ) : null}
-              {tuningInfo ? (
-                <span className="note-use-count" aria-hidden="true">
-                  {tuningInfo.useCount}
-                </span>
-              ) : null}
-              <img className="note-img" src={noteblockImg} alt="noteblock" />
-              <img
-                className="support-img"
-                src={supportSpriteForBlock(placement.block)}
-                alt={placement.block}
-              />
-              <div className="note-meta">
-                {placement.instrument}
-                <br />
-                {placement.pitch || 'drum'} {placement.note}
-              </div>
-              <span
-                className={
-                  noteTooltipDirection === 'bottom'
-                    ? 'cell-tooltip cell-tooltip-below'
-                    : 'cell-tooltip'
-                }
-                role="tooltip"
-              >
-                {tooltipLines.map((line, lineIndex) => (
-                  <Fragment key={`${noteIndex}-tooltip-${lineIndex}`}>
-                    {lineIndex > 0 ? <br /> : null}
-                    {line}
-                  </Fragment>
-                ))}
-              </span>
-            </div>
+            </Fragment>
           );
-
-          return <Fragment key={`frag-${noteIndex}`}>{units}</Fragment>;
         })}
         {afterSpacerWidth > 0 && (
           <div style={{ width: `${afterSpacerWidth}px`, flexShrink: 0 }} aria-hidden="true" />

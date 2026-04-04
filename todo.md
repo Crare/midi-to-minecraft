@@ -27,4 +27,4 @@
 
 - schematic showing harmonics should use vertical redstone lines to connect the noteblocks together on the left side of the harmonic.
 
-- maybe instead of looking at tracks and notes. convert the tracks to single list of notes, with each note having delay from start counted by checking the previous note and adding its own delay on top of that. order the list by delay starting from smallest. then we can know when individual notes should be played and we can split the notes to track based on instruments and play them in timeline better. then use that notes list to visualize the tracks and do the schematic.
+- add option to show visualization by the original tracks, or by as individual instruments. use instruments by default.

@@ -313,6 +313,22 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.viz-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.viz-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  user-select: none;
+}
+
 .hint {
   margin: 0 0 0.6rem;
   color: var(--muted);
@@ -474,6 +490,12 @@ button:disabled {
   gap: 2px;
   min-height: 120px;
   white-space: nowrap;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent calc(4 * (var(--track-unit-size) + 2px) - 2px),
+    rgba(66, 97, 38, 0.3) calc(4 * (var(--track-unit-size) + 2px) - 2px),
+    rgba(66, 97, 38, 0.3) calc(4 * (var(--track-unit-size) + 2px))
+  );
 }
 
 .track-row-empty .track-line {
@@ -488,32 +510,15 @@ button:disabled {
   align-self: flex-end;
 }
 
-.repeater {
+.note-unit {
   width: var(--track-unit-size);
   min-width: var(--track-unit-size);
-  display: grid;
-  place-items: center;
-  position: relative;
-  outline: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.repeater img {
-  width: var(--track-unit-size);
-  height: var(--track-unit-size);
-  image-rendering: pixelated;
-}
-
-.repeater .delay-label {
-  position: absolute;
-  bottom: -10px;
-  font-size: 0.66rem;
-  background: rgba(215, 210, 195, 0.95);
-  border: 1px solid #7c765e;
-  border-radius: 4px;
-  padding: 0 4px;
-}
-
-.note-unit {
+.note-stack-item {
   width: var(--track-unit-size);
   min-width: var(--track-unit-size);
   display: flex;
@@ -615,16 +620,9 @@ button:disabled {
 }
 
 .note-unit-button:hover .cell-tooltip,
-.note-unit-button:focus-visible .cell-tooltip,
-.repeater-with-tooltip:hover .cell-tooltip,
-.repeater-with-tooltip:focus-visible .cell-tooltip {
+.note-unit-button:focus-visible .cell-tooltip {
   opacity: 1;
   visibility: visible;
-}
-
-.repeater-with-tooltip:focus-visible {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35), 0 0 0 4px rgba(61, 95, 34, 0.85);
-  border-radius: 4px;
 }
 
 .note-img {
@@ -638,16 +636,6 @@ button:disabled {
   width: var(--track-unit-size);
   height: var(--track-unit-size);
   image-rendering: pixelated;
-}
-
-.note-meta {
-  margin-top: 2px;
-  text-align: center;
-  font-size: 0.66rem;
-  color: #243018;
-  line-height: 1.2;
-  max-width: calc(var(--track-unit-size) + 12px);
-  white-space: normal;
 }
 
 @keyframes spin {
