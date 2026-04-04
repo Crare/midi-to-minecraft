@@ -28,7 +28,7 @@ function TotalsChip({ icon, count, label }) {
 export default function SchematicPanel({ trackEvents }) {
   const [open, setOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
-  const [indicatorX, setIndicatorX] = useState(0);
+  const [indicatorX, setIndicatorX] = useState(15);
 
   const contentRef = useRef(null);
   const indicatorDragRef = useRef({ active: false, startClientX: 0, startX: 0 });
