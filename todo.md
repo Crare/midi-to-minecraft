@@ -5,13 +5,7 @@
     - with tests run
 - tests
 
-- add option in the visualization to organize tracks to tracks per instrument. if multiple same instruments are played same time, then use multiple tracks for them. make sure the tracks stay synchronous. so if the note is played later, it needs to be taken to account where it actually should be played at. take into account also the option "remove empty space at the start of the song" how it will effect this.
-
-- when playing the song, always change to synchronous alignment mode before starting to play the song if it is not in that mode.
-
 - convert the app to typescript
-
-- add visualization: compact mode, use less tracks as possible. only use multiple tracks if multiple notes are played same time. otherwise the repeaters are in similar to asynchronous mode.
 
 - optimize the app
 
@@ -21,20 +15,31 @@
 
 - schematic should take into account the delay at start when the track should start compared to track that starts first.
 
-- schematic should visualize all the repeaters. like how many it needs minimum with what settings. there should be also option to use repeaters and redstone so that the tracks align in actual time horizontally.
-
 - schematic showing harmonics should use vertical redstone lines to connect the noteblocks together on the left side of the harmonic.
 
 - i think the horizontal scroll and play-head are not keeping up with the sounds playing of the song. they are not in sync.
 
 - for schematic. add option to split the track in 4-tempo blocks. show 4 4-tempo blocks and then move on to the next one, by checking checkbox on top of the 4-tempo area. hide other 4-tempo block areas for visual clarity. add option to use other tempos too.
 
-- for "combine all tracks into minimal lanes" try to optimize it. if there is much delay at start. branch of from other lane when you need to to reduce the delay, i.e. reduce the amount of repeaters needed.
+- in shcematic, the second row tooltip doesn't fit in the horizontal box, maybe use z-index to put the tooltips at top.
 
-- for schematic, combine instrument tracks together, use multiple lanes if the multiple notes are played same time to make harmonics. use vertical redstone to indicate this.
+- in schematic instrument lane title, show the support block name too. show amount of blocks needed: redstone, repeaters, noteblocks, support blocks. show total amount of blocks needed in the top of the schematic. show raw resource amount too:
+- noteblock is 4 wooden planks and 1 redstone dust. 
+- repeater is 1 redstone dust, 3 stone blocks and 2 redstone torches. 
+- redstone torches are 1 stick and one redstone dust. 
+- 4 sticks come from 2 wooden planks. 
+- 1 wooden log turns to 4 wooden planks.
+- raw resources are wooden logs, redstone dust and stone blocks and also the required support block.
+- redstone dust can be compacted to redstone blocks from 9 dusts.
 
-- add option to hide the noteblock on top of support block on the schematic.
+- track visualization doesn't show the 4-tempo lines.
 
-- move panel components to their own folders under components-folder. split their sub components to separate files.
+- in the visualization show track length in time and minecraft ticks.
 
-- simplify/reduce schematic options
+- in the schematic, show the noteblock use amount on top of the block.
+
+- splitting to multiple lanes still doesn't work correctly. t-junctions are on top of noteblocks. noteblocks should be moved one block further right.
+
+there is some extra redstone at the start. there is no redstone where there should be, maybe the empty space in between is in wrong place or too long or the redstone should be after it.
+
+for schematics. build the lanes per instrument. don't group by harmonics. build lanes simultaneously. build per 1 tick at a time. check if there is same instrument played same time, if so add split vertical column, meanind add column of redstone for each lane, even the other instruments. then add the noteblocks for each lane for that tick. split of the first lane again if there is multiple notes same time. kill of new lanes when there is same amount repeaters needed for the next note. killing of means end the lane. branch out again from the main lane.

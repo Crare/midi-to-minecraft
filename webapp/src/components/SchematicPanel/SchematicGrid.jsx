@@ -1,6 +1,6 @@
 import { playPlacementSound } from '../../audio/noteblockAudio';
-import { buildCells, blockLabel, decomposeDelay } from './schematicData';
-import { NoteCell, RepeaterCell, DustCell, BranchStartCell, CELL } from './SchematicCells';
+import { buildCells, blockLabel, decomposeDelay, computeGroupBlockCounts, getGroupSupportBlock } from './schematicData';
+import { NoteCell, RepeaterCell, DustCell, BranchStartCell, BranchTapCell, CELL } from './SchematicCells';
 import HarmonicRail from './HarmonicRail';
 
 export default function SchematicGrid({ groups, cellSize }) {
@@ -18,9 +18,20 @@ export default function SchematicGrid({ groups, cellSize }) {
         return (
           <div key={group.id} className="schematic-group">
             {!isFirstGroup && <div className="schematic-group-separator" />}
-            {multipleGroups && (
-              <div className="schematic-group-label">{group.label}</div>
-            )}
+            {(() => {
+              const supportBlock = getGroupSupportBlock(group);
+              const counts = computeGroupBlockCounts(group);
+              return (
+                <div className="schematic-group-label">
+                  <span className="schematic-group-title">
+                    {group.label} — {blockLabel(supportBlock)}
+                  </span>
+                  <span className="schematic-group-counts">
+                    {counts.noteblocks} note blocks &middot; {counts.repeaters} repeaters &middot; {counts.dust} redstone &middot; {counts.supportBlocks} {blockLabel(supportBlock)}
+                  </span>
+                </div>
+              );
+            })()}
             {/* Sublanes wrapper — relative so the HarmonicRail SVG can be absolutely positioned */}
             <div
               className={isHarmonic ? 'schematic-sublanes' : undefined}
@@ -30,16 +41,23 @@ export default function SchematicGrid({ groups, cellSize }) {
               {group.sublanes.map((sublane, sublaneIndex) => {
                 const isFirstRow = isFirstGroup && sublaneIndex === 0;
                 const branchInfo = sublane.branchFrom
-                  ? { sourceId: sublane.branchFrom.sourceId, savedTicks: sublane.branchFrom.savedTicks }
+                  ? { sourceId: sublane.branchFrom.sourceId, savedTicks: sublane.branchFrom.savedTicks, savedCellCount: sublane.branchFrom.savedCellCount }
                   : null;
-                const cells = buildCells(sublane.notes, { branchInfo });
+                const branchTaps = sublane.branchTaps || [];
+                const cells = buildCells(sublane.notes, { branchInfo, branchTaps });
 
                 return (
                   <div key={sublane.id} className="schematic-row">
-                    {/* Connector column — empty for harmonic rows (HarmonicRail draws here) */}
+                    {/* Connector column — always redstone dust */}
                     <div className="schematic-connector" style={{ width: cs, height: cs, flexShrink: 0 }}>
-                      {!isHarmonic && <DustCell size={cs} />}
+                      <DustCell size={cs} />
                     </div>
+                    {/* Branch column (harmonic only) — dust with HarmonicRail SVG overlaid */}
+                    {isHarmonic && (
+                      <div style={{ width: cs, height: cs, flexShrink: 0 }}>
+                        <DustCell size={cs} />
+                      </div>
+                    )}
                     {cells.map((cell) => {
                       if (cell.type === 'note') {
                         return (
@@ -58,7 +76,7 @@ export default function SchematicGrid({ groups, cellSize }) {
                               }
                             }}
                           >
-                            <NoteCell block={cell.block} instrument={cell.instrument} size={cs} />
+                            <NoteCell block={cell.block} instrument={cell.instrument} useCount={cell.useCount} size={cs} />
                             <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
                               {cell.instrument}<br />
                               {cell.pitch || 'drum'}<br />
@@ -82,6 +100,21 @@ export default function SchematicGrid({ groups, cellSize }) {
                         return (
                           <div key={cell.key} className="schematic-cell">
                             <DustCell size={cs} />
+                          </div>
+                        );
+                      }
+                      if (cell.type === 'spacer') {
+                        return (
+                          <div key={cell.key} style={{ width: cell.count * cs + (cell.count - 1) * 2, flexShrink: 0 }} aria-hidden="true" />
+                        );
+                      }
+                      if (cell.type === 'branch-tap') {
+                        return (
+                          <div key={cell.key} className="schematic-cell schematic-cell-tip" tabIndex={0}>
+                            <BranchTapCell size={cs} />
+                            <span className={`cell-tooltip${isFirstRow ? ' cell-tooltip-below' : ''}`} role="tooltip">
+                              T-junction: child lane branches here
+                            </span>
                           </div>
                         );
                       }

@@ -773,6 +773,91 @@ button:disabled {
   color: var(--muted);
   padding: 2px 4px;
   margin-bottom: 1px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.schematic-group-title {
+  font-weight: 700;
+}
+
+.schematic-group-counts {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+/* ─── Block totals / raw resource summary ──────────────────────────────────── */
+.schematic-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 5px;
+  border-left: 3px solid var(--panel-dark);
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.schematic-totals-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.schematic-totals-heading {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.schematic-totals-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.totals-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(42, 70, 22, 0.2);
+  border-radius: 4px;
+  padding: 3px 7px 3px 4px;
+}
+
+.totals-chip svg {
+  flex-shrink: 0;
+  border-radius: 2px;
+  image-rendering: pixelated;
+}
+
+.totals-chip-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.totals-chip-count {
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.totals-chip-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.totals-chip-stacks {
+  font-size: 0.68rem;
+  color: var(--accent);
+  font-style: italic;
 }
 
 .schematic-cell {

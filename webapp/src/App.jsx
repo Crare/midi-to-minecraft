@@ -260,7 +260,7 @@ export default function App() {
           setZipFilename(getZipFilename(outputName, file.name));
       const totalNotes = sequences.reduce((sum, track) => sum + track.length, 0);
       setStatus(`Converted ${sequences.length} track(s), ${totalNotes} notes total.`);
-      playSuccessJingle();
+      setTimeout(() => playSuccessJingle(), 2000);
     } catch (error) {
       console.error(error);
       setStatus(`Conversion failed: ${error.message || String(error)}`);
@@ -296,7 +296,7 @@ export default function App() {
 
       <footer className="site-footer">
         <p>
-          Inspired by the <a href="https://github.com/colinthesealion" target="_blank" rel="noreferrer">MIDI to Minecraft project by colinthesealion</a>. Website created by{' '}
+          Inspired by the <a href="https://github.com/colinthesealion" target="_blank" rel="noreferrer">MIDI to Minecraft project by colinthesealion</a>. Website with visualization and schematic created by{' '}
           <a href="https://crare.github.io" target="_blank" rel="noreferrer">
             Crare
           </a>

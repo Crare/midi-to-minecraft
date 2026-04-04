@@ -1,12 +1,32 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
 import DragScrollArea from '../DragScrollArea';
 import SchematicGrid from './SchematicGrid';
-import { blockColor, blockLabel, buildLaneGroups } from './schematicData';
+import { blockColor, blockColorFor, blockLabel, buildLaneGroups, computeGroupBlockCounts, computeRawResources, getGroupSupportBlock } from './schematicData';
+import { MiniNoteBlock, MiniRepeater, MiniDust, MiniBlock } from './SchematicCells';
+
+function stackLabel(n) {
+  const s = Math.floor(n / 64);
+  const r = n % 64;
+  if (s === 0) return '< 1 stack';
+  if (r === 0) return `${s} stack${s !== 1 ? 's' : ''}`;
+  return `${s}×64 + ${r}`;
+}
+
+function TotalsChip({ icon, count, label }) {
+  return (
+    <div className="totals-chip">
+      {icon}
+      <div className="totals-chip-info">
+        <span className="totals-chip-count">{count.toLocaleString()}</span>
+        {' '}<span className="totals-chip-label">{label}</span>
+        <span className="totals-chip-stacks">{stackLabel(count)}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function SchematicPanel({ trackEvents }) {
   const [open, setOpen] = useState(false);
-  const [combineTracks, setCombineTracks] = useState(false);
-  const [groupByInstrument, setGroupByInstrument] = useState(false);
   const [cellSize, setCellSize] = useState(28);
   const [indicatorX, setIndicatorX] = useState(0);
 
@@ -14,14 +34,30 @@ export default function SchematicPanel({ trackEvents }) {
   const indicatorDragRef = useRef({ active: false, startClientX: 0, startX: 0 });
 
   const groups = useMemo(
-    () => buildLaneGroups(trackEvents, combineTracks, groupByInstrument),
-    [trackEvents, combineTracks, groupByInstrument],
+    () => buildLaneGroups(trackEvents),
+    [trackEvents],
   );
   const totalNotes = useMemo(
     () => groups.reduce((s, g) => s + g.sublanes.reduce((ss, sl) => ss + sl.notes.length, 0), 0),
     [groups],
   );
   const totalRows = useMemo(() => groups.reduce((s, g) => s + g.sublanes.length, 0), [groups]);
+
+  const totalBlockCounts = useMemo(() => {
+    const totals = { noteblocks: 0, repeaters: 0, dust: 0, supportBlocks: 0 };
+    const supportMap = new Map(); // blockId → count
+    groups.forEach((g) => {
+      const c = computeGroupBlockCounts(g);
+      totals.noteblocks += c.noteblocks;
+      totals.repeaters += c.repeaters;
+      totals.dust += c.dust;
+      totals.supportBlocks += c.supportBlocks;
+      const bid = getGroupSupportBlock(g);
+      supportMap.set(bid, (supportMap.get(bid) ?? 0) + c.noteblocks);
+    });
+    const raw = computeRawResources(totals);
+    return { ...totals, raw, supportMap };
+  }, [groups]);
   const hasData = trackEvents.length > 0;
 
   useEffect(() => {
@@ -68,23 +104,6 @@ export default function SchematicPanel({ trackEvents }) {
       {open ? (
         <div className="panel-body">
           <div className="schematic-controls">
-            <label className="option-row">
-              <input
-                type="checkbox"
-                checked={combineTracks}
-                onChange={(e) => setCombineTracks(e.target.checked)}
-              />
-              <span>Combine all tracks into minimal lanes</span>
-            </label>
-            <label className="option-row">
-              <input
-                type="checkbox"
-                checked={groupByInstrument}
-                disabled={combineTracks}
-                onChange={(e) => setGroupByInstrument(e.target.checked)}
-              />
-              <span>Group by instrument (show harmonics with vertical redstone)</span>
-            </label>
             <label className="option-row option-row-stacked">
               <span>Cell size</span>
               <select value={cellSize} onChange={(e) => setCellSize(Number(e.target.value))}>
@@ -113,6 +132,40 @@ export default function SchematicPanel({ trackEvents }) {
               </div>
             ))}
           </div>
+
+          {/* Block totals and raw resource summary */}
+          {groups.length > 0 && (() => {
+            const { noteblocks, repeaters, dust, raw, supportMap } = totalBlockCounts;
+            const supportEntries = [...supportMap.entries()];
+            return (
+              <div className="schematic-totals">
+                <div className="schematic-totals-section">
+                  <h3 className="schematic-totals-heading">Blocks needed</h3>
+                  <div className="schematic-totals-chips">
+                    <TotalsChip icon={<MiniNoteBlock size={18} />} count={noteblocks} label="note blocks" />
+                    <TotalsChip icon={<MiniRepeater size={18} />} count={repeaters} label="repeaters" />
+                    <TotalsChip icon={<MiniDust size={18} />} count={dust} label="redstone dust" />
+                    {supportEntries.map(([bid, n]) => (
+                      <TotalsChip key={bid} icon={<MiniBlock color={blockColorFor(bid)} size={18} />} count={n} label={blockLabel(bid)} />
+                    ))}
+                  </div>
+                </div>
+                <div className="schematic-totals-section">
+                  <h3 className="schematic-totals-heading">Raw resources</h3>
+                  <div className="schematic-totals-chips">
+                    <TotalsChip icon={<MiniBlock color="#6b4a1e" size={18} />} count={raw.logs} label={`logs (${raw.planks.toLocaleString()} planks)`} />
+                    <TotalsChip icon={<MiniDust size={18} />} count={raw.redstoneDust} label={raw.redstoneBlocks > 0
+                      ? `redstone dust = ${raw.redstoneBlocks} block${raw.redstoneBlocks !== 1 ? 's' : ''}${raw.redstoneRemainder > 0 ? ` + ${raw.redstoneRemainder}` : ''}`
+                      : 'redstone dust'} />
+                    <TotalsChip icon={<MiniBlock color="#8f9497" size={18} />} count={raw.stone} label="stone" />
+                    {supportEntries.map(([bid, n]) => (
+                      <TotalsChip key={bid} icon={<MiniBlock color={blockColorFor(bid)} size={18} />} count={n} label={`${blockLabel(bid)} (support)`} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           <DragScrollArea className="schematic-scroll">
             <div ref={contentRef} className="schematic-content">

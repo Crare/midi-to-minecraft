@@ -352,12 +352,12 @@ export async function playPlacementSound(placement) {
 
 export async function playSuccessJingle() {
   const context = await prepareAudioPlayback();
-  const beat = 130;
+  const beat = 250; // ms
   const notes = [
-    { delay: 0,        instrument: 'pling', note: 6  },
-    { delay: beat,     instrument: 'pling', note: 10 },
-    { delay: beat * 2, instrument: 'pling', note: 13 },
-    { delay: beat * 3, instrument: 'bell',  note: 18 },
+    { delay: beat,        instrument: 'pling', note: 6  },
+    { delay: beat * 2,     instrument: 'pling', note: 10 },
+    { delay: beat * 3, instrument: 'pling', note: 13 },
+    { delay: beat * 4, instrument: 'bell',  note: 18 },
   ];
   notes.forEach(({ delay, instrument, note }) => {
     if (delay === 0) {

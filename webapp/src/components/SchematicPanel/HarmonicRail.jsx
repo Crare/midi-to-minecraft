@@ -9,7 +9,7 @@ export default function HarmonicRail({ count, cs }) {
     <svg
       width={cs}
       height={totalH}
-      style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none', zIndex: 1 }}
+      style={{ position: 'absolute', left: cs + 2, top: 0, pointerEvents: 'none', zIndex: 1 }}
       aria-hidden="true"
     >
       {/* Vertical backbone */}
