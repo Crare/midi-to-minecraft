@@ -379,9 +379,25 @@ export function buildTickGrid(trackEvents) {
         const plays = instAtTick.get(instrument)?.has(tick) ?? false;
         const instNoteCount = instAtTick.get(instrument)?.get(tick)?.length ?? 0;
         instrSegments.get(instrument).push(plays ? (gapReps.get(instrument) ?? []) : []);
-        instrAnchors.get(instrument).push(
-          instNoteCount >= 2 ? { kind: 'split-branch' } : { kind: 'split-pass' },
-        );
+        if (instNoteCount >= 2) {
+          // Main row of splitting instrument: signal in from left, out right and down to sub-rows.
+          instrAnchors.get(instrument).push({
+            kind: 'split-branch',
+            connects: { left: true, right: true, up: false, down: true },
+          });
+        } else if (instNoteCount === 1) {
+          // Plays one note: signal flows straight through horizontally.
+          instrAnchors.get(instrument).push({
+            kind: 'split-pass',
+            connects: { left: true, right: true, up: false, down: false },
+          });
+        } else {
+          // Doesn't play here: no signal, show nothing.
+          instrAnchors.get(instrument).push({
+            kind: 'split-pass',
+            connects: { left: false, right: false, up: false, down: false },
+          });
+        }
         if (plays) gapReps.set(instrument, []); // consumed
       });
     }
@@ -443,7 +459,14 @@ export function buildTickGrid(trackEvents) {
 
       const subAnchorCells = anchorArr.map((cell, ai) => {
         const anchor = anchors[ai];
-        if (anchor.kind === 'split' && activeTicks.has(anchor.tick)) return { kind: 'split-branch' };
+        if (anchor.kind === 'split' && activeTicks.has(anchor.tick)) {
+          // Sub-row picks up from vertical bus above; may continue down if not the last sub-row.
+          const hasBelow = (byTick?.get(anchor.tick)?.length ?? 0) > subIdx + 1;
+          return {
+            kind: 'split-branch',
+            connects: { left: false, right: true, up: true, down: hasBelow },
+          };
+        }
         if (anchor.kind === 'note' && activeTicks.has(anchor.tick)) {
           return { kind: 'note', note: byTick?.get(anchor.tick)?.[subIdx] ?? null, tick: anchor.tick };
         }

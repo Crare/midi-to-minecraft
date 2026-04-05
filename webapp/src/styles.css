@@ -649,6 +649,77 @@ button:disabled {
   margin-bottom: 0.35rem;
 }
 
+.schematic-tutorial {
+  border: 1px solid rgba(42, 70, 22, 0.25);
+  border-radius: 6px;
+  margin: 0.75rem 0 0.5rem;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.schematic-tutorial-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  gap: 0.5rem;
+}
+
+.schematic-tutorial-toggle:hover {
+  color: var(--fg);
+}
+
+.schematic-tutorial-toggle-arrow {
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.schematic-tutorial-body {
+  padding: 0 0.75rem 0.75rem;
+}
+
+.schematic-tutorial-note {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.schematic-tutorial-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.schematic-tutorial-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1 1 240px;
+}
+
+.schematic-tutorial-figure img {
+  max-width: 100%;
+  border-radius: 4px;
+  border: 1px solid rgba(42, 70, 22, 0.3);
+  display: block;
+}
+
+.schematic-tutorial-figure figcaption {
+  font-size: 0.73rem;
+  color: var(--muted);
+  text-align: center;
+}
+
 .schematic-legend {
   display: flex;
   flex-wrap: wrap;

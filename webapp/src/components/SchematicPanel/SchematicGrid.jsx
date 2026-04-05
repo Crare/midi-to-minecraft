@@ -2,7 +2,7 @@ import { Fragment, useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { playPlacementSound } from '../../audio/noteblockAudio';
 import { blockLabel, getUseCount } from './schematicData';
-import { NoteCell, RepeaterCell, DustCell, SplitPassCell, SplitBranchCell, CELL } from './SchematicCells';
+import { NoteCell, RepeaterCell, DustCell, SplitPassCell, SplitBranchCell, SplitWireCell, CELL } from './SchematicCells';
 
 // ── Portal tooltip hook ───────────────────────────────────────────────────────
 // overflow-x:auto on the scroll container coerces overflow-y:visible → auto,
@@ -119,10 +119,16 @@ function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPres
     return <div className="schematic-cell schematic-cell--empty" style={{ width: cs, height: cs }} aria-hidden="true" />;
   }
   if (cell.kind === 'split-pass') {
-    return <div className="schematic-cell" aria-hidden="true"><SplitPassCell size={cs} /></div>;
+    const c = cell.connects ?? {};
+    // No connections at all → truly empty cell (instrument not active here).
+    if (!c.left && !c.right && !c.up && !c.down) {
+      return <div className="schematic-cell schematic-cell--empty" style={{ width: cs, height: cs }} aria-hidden="true" />;
+    }
+    return <div className="schematic-cell" aria-hidden="true"><SplitWireCell connects={c} size={cs} /></div>;
   }
   if (cell.kind === 'split-branch') {
-    return <div className="schematic-cell" aria-hidden="true"><SplitBranchCell size={cs} /></div>;
+    const c = cell.connects ?? { left: true, right: true, up: false, down: true };
+    return <div className="schematic-cell" aria-hidden="true"><SplitWireCell connects={c} size={cs} /></div>;
   }
   if (cell.kind === 'note') {
     if (!cell.note) {
