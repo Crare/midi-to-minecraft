@@ -2,7 +2,7 @@
 
 > Based on the original [midi-to-minecraft](https://github.com/colinthesealion/midi-to-minecraft/tree/master) by colinthesealion.
 
-**Live app: [crare.github.io/midi-to-minecraft](https://crare.github.io/midi-to-minecraft)**
+**Live app: [crare.github.io/midi-to-minecraft](https://crare.github.io/midi-to-minecraft?ref=readme)**
 
 Convert `.midi` files into Minecraft note block build data and visualize, play back, and plan your build — all in the browser.
 
