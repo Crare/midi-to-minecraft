@@ -11,7 +11,6 @@
 
 - try prod build
 
-- add analytics with goatcounter
 
 - i think the horizontal scroll and play-head are not keeping up with the sounds playing of the song. they are not in sync.
 
@@ -21,8 +20,4 @@
 - in the visualization show track length in time and minecraft ticks.
 
 - add export schematic as excel file.
-
-- add horizontal indicator, and add highlight on last pressed noteblock on the schematic. to make it easier to find where you left of.
-
-- add in schematic statistics: how big area you need at least to make the schematic. how long and wide the area needs to be.
 

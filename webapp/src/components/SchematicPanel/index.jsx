@@ -168,15 +168,15 @@ export default function SchematicPanel({ trackEvents }) {
                 </p>
                 <div className="schematic-tutorial-images">
                   <figure className="schematic-tutorial-figure">
-                    <img src="/assets/example_schematic.png" alt="Example schematic view" />
+                    <img src={`${import.meta.env.BASE_URL}assets/example_schematic.png`} alt="Example schematic view" />
                     <figcaption>Schematic view (top-down)</figcaption>
                   </figure>
                   <figure className="schematic-tutorial-figure">
-                    <img src="/assets/example_minecraft1.png" alt="Example Minecraft wiring 1" />
+                    <img src={`${import.meta.env.BASE_URL}assets/example_minecraft1.png`} alt="Example Minecraft wiring 1" />
                     <figcaption>In-game wiring example 1</figcaption>
                   </figure>
                   <figure className="schematic-tutorial-figure">
-                    <img src="/assets/example_minecraft2.png" alt="Example Minecraft wiring 2" />
+                    <img src={`${import.meta.env.BASE_URL}assets/example_minecraft2.png`} alt="Example Minecraft wiring 2" />
                     <figcaption>In-game wiring example 2</figcaption>
                   </figure>
                 </div>
