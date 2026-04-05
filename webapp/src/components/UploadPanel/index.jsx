@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import CollapsiblePanel from '../CollapsiblePanel';
 
 export default function UploadPanel({ busy, status, onFileSelected, onConvertRequest }) {
   const [file, setFile] = useState(null);
@@ -6,8 +7,7 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
 
   return (
-    <section className="panel controls">
-      <h2>1) Upload MIDI</h2>
+    <CollapsiblePanel title="1) Upload MIDI" className="controls" defaultOpen={true}>
       <div className="control-row">
         <input
           type="file"
@@ -53,6 +53,6 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
         {busy ? <span className="spinner" aria-hidden="true" /> : null}
         <span>{status}</span>
       </p>
-    </section>
+    </CollapsiblePanel>
   );
 }

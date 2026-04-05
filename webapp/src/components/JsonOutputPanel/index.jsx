@@ -1,5 +1,6 @@
 import DownloadRow from './DownloadRow';
 import { useEffect, useState } from 'react';
+import CollapsiblePanel from '../CollapsiblePanel';
 
 export default function JsonOutputPanel({ downloadFiles, zipFilename }) {
   const [outputsOpen, setOutputsOpen] = useState(false);
@@ -13,35 +14,22 @@ export default function JsonOutputPanel({ downloadFiles, zipFilename }) {
   }, [downloadFiles]);
 
   return (
-    <section className="panel outputs">
-      <button
-        type="button"
-        className="panel-header panel-header-toggle"
-        onClick={() => {
-          if (downloadFiles.length > 0) {
-            setOutputsOpen((open) => !open);
-          }
-        }}
-        aria-expanded={outputsOpen}
-        disabled={downloadFiles.length === 0}
-      >
-        <h2>2) JSON Output</h2>
-        <span className="panel-header-meta">
-          {downloadFiles.length === 0 ? 'No output yet' : outputsOpen ? 'Hide' : 'Show ZIP'}
-        </span>
-      </button>
-      <div className="panel-body">
-        <p className="hint output-summary">
-          {downloadFiles.length === 0
-            ? 'No output yet.'
-            : `${downloadFiles.length} file(s) packaged into ${zipFilename}.`}
-        </p>
-        {outputsOpen ? (
-          <div className="downloads">
-            <DownloadRow filename={zipFilename} files={downloadFiles} />
-          </div>
-        ) : null}
+    <CollapsiblePanel
+      title="2) JSON Output"
+      meta={downloadFiles.length === 0 ? 'No output yet' : outputsOpen ? 'Hide' : 'Show ZIP'}
+      open={outputsOpen}
+      onOpenChange={(v) => { if (downloadFiles.length > 0) setOutputsOpen(v); }}
+      disabled={downloadFiles.length === 0}
+      className="outputs"
+    >
+      <p className="hint output-summary">
+        {downloadFiles.length === 0
+          ? 'No output yet.'
+          : `${downloadFiles.length} file(s) packaged into ${zipFilename}.`}
+      </p>
+      <div className="downloads">
+        <DownloadRow filename={zipFilename} files={downloadFiles} />
       </div>
-    </section>
+    </CollapsiblePanel>
   );
 }

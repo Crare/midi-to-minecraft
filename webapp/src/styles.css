@@ -64,10 +64,25 @@ main {
   min-width: 0;
 }
 
-.site-footer {
-  padding: 0 1rem 1.5rem;
+.example-panel__images {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.example-panel__images img {
+  max-height: 220px;
+  width: auto;
+  border-radius: 6px;
+  border: 2px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  object-fit: cover;
+}
+
+.site-footer {  padding: 0 1rem 1.5rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.82);
+  color: #333;
 }
 
 .site-footer p {
@@ -76,7 +91,7 @@ main {
 }
 
 .site-footer a {
-  color: #f2f6db;
+  color: #222;
   font-weight: 700;
 }
 

@@ -1,4 +1,5 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
+import CollapsiblePanel from '../CollapsiblePanel';
 import DragScrollArea from '../DragScrollArea';
 import SchematicGrid from './SchematicGrid';
 import { blockColor, blockColorFor, blockLabel, buildTickGrid, computeTickGridBlockCounts, computeRawResources, computeSchematicDimensions } from './schematicData';
@@ -110,26 +111,21 @@ export default function SchematicPanel({ trackEvents }) {
   }
 
   return (
-    <section className="panel schematic-panel">
-      <button
-        type="button"
-        className="panel-header panel-header-toggle"
-        onClick={() => { if (hasData) setOpen((o) => !o); }}
-        aria-expanded={open}
-        disabled={!hasData}
-      >
-        <h2>4) Build Schematic (Top-Down)</h2>
-        <span className="panel-header-meta">
-          {!hasData
-            ? 'No tracks yet'
-            : open
-              ? 'Hide'
-              : `Show ${totalRows} lane(s), ${totalNotes} note(s)`}
-        </span>
-      </button>
+    <CollapsiblePanel
+      title="4) Build Schematic (Top-Down)"
+      meta={
+        !hasData
+          ? 'No tracks yet'
+          : open
+            ? 'Hide'
+            : `Show ${totalRows} lane(s), ${totalNotes} note(s)`
+      }
+      open={open}
+      onOpenChange={(v) => { if (hasData) setOpen(v); }}
+      disabled={!hasData}
+      className="schematic-panel"
+    >
 
-      {open ? (
-        <div className="panel-body">
           <div className="schematic-controls">
             <label className="option-row option-row-stacked">
               <span>Cell size</span>
@@ -298,8 +294,6 @@ export default function SchematicPanel({ trackEvents }) {
               )}
             </div>
           </DragScrollArea>
-        </div>
-      ) : null}
-    </section>
+    </CollapsiblePanel>
   );
 }

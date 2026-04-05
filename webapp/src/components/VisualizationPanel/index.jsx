@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { playPlacementSound, playPlacementSoundSync, prepareAudioPlayback } from '../../audio/noteblockAudio';
+import CollapsiblePanel from '../CollapsiblePanel';
 import DragScrollArea from '../DragScrollArea';
 import TrackRow from './TrackRow';
 import {
@@ -367,29 +368,20 @@ export default function VisualizationPanel({ trackEvents }) {
   }, [tracksOpen]);
 
   return (
-    <section className="panel visualization">
-      <button
-        type="button"
-        className="panel-header panel-header-toggle"
-        onClick={() => {
-          if (visibleTracks.length > 0) {
-            setTracksOpen((open) => !open);
-          }
-        }}
-        aria-expanded={tracksOpen}
-        disabled={visibleTracks.length === 0}
-      >
-        <h2>3) Track Visualization</h2>
-        <span className="panel-header-meta">
-          {visibleTracks.length === 0
-            ? 'No tracks yet'
-            : tracksOpen
-              ? 'Hide'
-              : `Show ${visibleTracks.length} lane(s)`}
-        </span>
-      </button>
-      {tracksOpen ? (
-        <div className="panel-body">
+    <CollapsiblePanel
+      title="3) Track Visualization"
+      meta={
+        visibleTracks.length === 0
+          ? 'No tracks yet'
+          : tracksOpen
+            ? 'Hide'
+            : `Show ${visibleTracks.length} lane(s)`
+      }
+      open={tracksOpen}
+      onOpenChange={(v) => { if (visibleTracks.length > 0) setTracksOpen(v); }}
+      disabled={visibleTracks.length === 0}
+      className="visualization"
+    >
         <div className="playback-controls">
           <label className="option-row option-row-stacked">
             <span>Playback</span>
@@ -544,8 +536,6 @@ export default function VisualizationPanel({ trackEvents }) {
               </DragScrollArea>
             </div>
           </div>
-        </div>
-      ) : null}
-    </section>
+    </CollapsiblePanel>
   );
 }

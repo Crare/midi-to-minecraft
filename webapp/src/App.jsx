@@ -1,5 +1,6 @@
 import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
+import CollapsiblePanel from './components/CollapsiblePanel';
 import JsonOutputPanel from './components/JsonOutputPanel';
 import SchematicPanel from './components/SchematicPanel';
 import UploadPanel from './components/UploadPanel';
@@ -280,6 +281,14 @@ export default function App() {
       </header>
 
       <main>
+        <CollapsiblePanel title="Example Output" defaultOpen={true}>
+          <div className="example-panel__images">
+            <img src="/assets/example_schematic.png" alt="Example schematic view" />
+            <img src="/assets/example_minecraft1.png" alt="Example in Minecraft" />
+            <img src="/assets/example_minecraft2.png" alt="Example in Minecraft 2" />
+          </div>
+        </CollapsiblePanel>
+
         <UploadPanel
           busy={busy}
           status={status}
@@ -304,6 +313,9 @@ export default function App() {
         </p>
         <p>
           This site uses <a href="https://www.goatcounter.com" target="_blank" rel="noreferrer">GoatCounter</a> to count anonymous page visits. No personal data is collected.
+        </p>
+        <p>
+          Licensed under the <a href="https://github.com/Crare/midi-to-minecraft/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT License</a>.
         </p>
       </footer>
     </>
