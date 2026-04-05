@@ -1,6 +1,6 @@
 import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
-import CollapsiblePanel from './components/CollapsiblePanel';
+import ExamplePanel from './components/ExamplePanel';
 import JsonOutputPanel from './components/JsonOutputPanel';
 import SchematicPanel from './components/SchematicPanel';
 import UploadPanel from './components/UploadPanel';
@@ -281,13 +281,7 @@ export default function App() {
       </header>
 
       <main>
-        <CollapsiblePanel title="Example Output" defaultOpen={true}>
-          <div className="example-panel__images">
-            <img src="/assets/example_schematic.png" alt="Example schematic view" />
-            <img src="/assets/example_minecraft1.png" alt="Example in Minecraft" />
-            <img src="/assets/example_minecraft2.png" alt="Example in Minecraft 2" />
-          </div>
-        </CollapsiblePanel>
+        <ExamplePanel />
 
         <UploadPanel
           busy={busy}

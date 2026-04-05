@@ -33,7 +33,9 @@ export default function CollapsiblePanel({
         disabled={disabled}
       >
         <h2>{title}</h2>
-        {meta !== undefined && <span className="panel-header-meta">{meta}</span>}
+        <span className="panel-header-meta">
+          {meta !== undefined ? meta : (open ? 'Hide' : 'Show')}
+        </span>
       </button>
       {open ? <div className="panel-body">{children}</div> : null}
     </section>
