@@ -128,7 +128,7 @@ function NoteBlockCell({ cell, cs, instrument, block, isLastPressed, onPress }) 
 // ── Anchor cell ───────────────────────────────────────────────────────────────
 function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPress }) {
   if (!cell || cell.kind === 'inactive') {
-    return <div style={{ width: cs, height: cs }} aria-hidden="true" />;
+    return <div className="schematic-cell schematic-cell--empty" style={{ width: cs, height: cs }} aria-hidden="true" />;
   }
   if (cell.kind === 'split-pass') {
     return <div className="schematic-cell" aria-hidden="true"><SplitPassCell size={cs} /></div>;
@@ -138,7 +138,7 @@ function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPres
   }
   if (cell.kind === 'note') {
     if (!cell.note) {
-      return <div style={{ width: cs, height: cs }} aria-hidden="true" />;
+      return <div className="schematic-cell schematic-cell--empty" style={{ width: cs, height: cs }} aria-hidden="true" />;
     }
     return <NoteBlockCell cell={cell} cs={cs} instrument={instrument} block={block} isLastPressed={isLastPressed} onPress={onPress} />;
   }
@@ -146,101 +146,101 @@ function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPres
 }
 
 // ── Main grid component ───────────────────────────────────────────────────────
-// ALL rows (across all instruments) share one CSS grid so anchor columns align.
-// Instrument-label rows span all columns.
+// Each instrument has its own CSS grid (compact — only ticks it plays appear).
+// Instrument sections are separated by a group label and optional divider.
 export default function SchematicGrid({ grid, cellSize, onColumnClick, onRowClick }) {
   const cs = cellSize ?? CELL;
   const [lastPressed, setLastPressed] = useState(null);
   if (!grid || grid.instruments.length === 0) return null;
 
-  const { instruments, anchors } = grid;
-  const totalCols = 1 + anchors.length * 2; // connector + (seg + anchor) × N
-  const gridTemplate = makeGridTemplate(anchors.length, cs);
+  const { instruments } = grid;
 
   return (
-    <div
-      className="schematic-grid"
-      style={{ display: 'grid', gridTemplateColumns: gridTemplate, alignItems: 'center' }}
-    >
-      {/* ── Top ruler row — click tick to jump vertical indicator ── */}
-      <div
-        className="schematic-ruler-corner"
-        style={{ width: cs, height: 10, position: 'sticky', left: 0, zIndex: 6 }}
-      />
-      {anchors.map((_anchor, ai) => (
-        <Fragment key={ai}>
-          <div style={{ height: 10 }} />
-          <button
-            type="button"
-            className="schematic-ruler-tick"
-            style={{ width: cs }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.stopPropagation(); onColumnClick?.(e.currentTarget); }}
-            aria-label={`Move column marker to position ${ai + 1}`}
-          />
-        </Fragment>
-      ))}
-      {instruments.map((inst, instIndex) => (
-        <div key={inst.id} style={{ display: 'contents' }}>
-          {/* Group separator — spans all columns */}
-          {instIndex > 0 && (
-            <div
-              className="schematic-group-separator"
-              style={{ gridColumn: `1 / ${totalCols + 1}` }}
-            />
-          )}
-          {/* Group label — spans all columns */}
-          <div
-            className="schematic-group-label"
-            style={{ gridColumn: `1 / ${totalCols + 1}` }}
-          >
-            <span className="schematic-group-title">
-              {inst.label} — {blockLabel(inst.block)}
-            </span>
-          </div>
+    <div className="schematic-multi-grid">
+      {instruments.map((inst, instIndex) => {
+        const anchors = inst.anchors ?? [];
+        const gridTemplate = makeGridTemplate(anchors.length, cs);
 
-          {/* Instrument rows */}
-          {inst.rows.map((row) => (
-            <div key={row.id} style={{ display: 'contents' }}>
-              {/* Connector dust — sticky column 1, click to jump horizontal indicator */}
-              <button
-                type="button"
-                className="schematic-connector schematic-connector--sticky"
-                style={{ width: cs, height: cs }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => { e.stopPropagation(); onRowClick?.(e.currentTarget); }}
-                aria-label="Move row marker here"
-              >
-                <DustCell size={cs} />
-              </button>
+        return (
+          <div key={inst.id} className="schematic-instrument-section">
+            {/* Group separator */}
+            {instIndex > 0 && <div className="schematic-group-separator schematic-group-separator--full" />}
 
-              {anchors.map((anchor, ai) => {
-                const seg = row.segments[ai] ?? [];
-                return (
-                  <Fragment key={ai}>
-                    {/* Segment cell */}
-                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                      {seg.map((cell, ri) => (
-                        <SegRepCell key={ri} cell={cell} cs={cs} />
-                      ))}
-                    </div>
-                    {/* Anchor cell */}
-                    <AnchorCell
-                      anchor={anchor}
-                      cell={row.anchorCells[ai]}
-                      cs={cs}
-                      instrument={inst.label}
-                      block={inst.block}
-                      isLastPressed={lastPressed === `${row.id}:${ai}`}
-                      onPress={() => setLastPressed(`${row.id}:${ai}`)}
-                    />
-                  </Fragment>
-                );
-              })}
+            {/* Group label */}
+            <div className="schematic-group-label schematic-group-label--full">
+              <span className="schematic-group-title">
+                {inst.label} — {blockLabel(inst.block)}
+              </span>
             </div>
-          ))}
-        </div>
-      ))}
+
+            {/* Per-instrument grid */}
+            <div
+              className="schematic-grid"
+              style={{ display: 'grid', gridTemplateColumns: gridTemplate, alignItems: 'center' }}
+            >
+              {/* Ruler row */}
+              <div
+                className="schematic-ruler-corner"
+                style={{ width: cs, height: 10, position: 'sticky', left: 0, zIndex: 6 }}
+              />
+              {anchors.map((_anchor, ai) => (
+                <Fragment key={ai}>
+                  <div className="schematic-ruler-segment" style={{ height: 10 }} />
+                  <button
+                    type="button"
+                    className="schematic-ruler-tick"
+                    style={{ width: cs }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); onColumnClick?.(e.currentTarget); }}
+                    aria-label={`Move column marker to position ${ai + 1}`}
+                  />
+                </Fragment>
+              ))}
+
+              {/* Instrument rows */}
+              {inst.rows.map((row) => (
+                <div key={row.id} style={{ display: 'contents' }}>
+                  {/* Connector dust — sticky column 1 */}
+                  <button
+                    type="button"
+                    className="schematic-connector schematic-connector--sticky"
+                    style={{ width: cs, height: cs }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); onRowClick?.(e.currentTarget); }}
+                    aria-label="Move row marker here"
+                  >
+                    <DustCell size={cs} />
+                  </button>
+
+                  {anchors.map((anchor, ai) => {
+                    const seg = row.segments[ai] ?? [];
+                    return (
+                      <Fragment key={ai}>
+                        {/* Segment cell */}
+                        <div className="schematic-segment">
+                          {seg.map((cell, ri) => (
+                            <SegRepCell key={ri} cell={cell} cs={cs} />
+                          ))}
+                        </div>
+                        {/* Anchor cell */}
+                        <AnchorCell
+                          anchor={anchor}
+                          cell={row.anchorCells[ai]}
+                          cs={cs}
+                          instrument={inst.label}
+                          block={inst.block}
+                          isLastPressed={lastPressed === `${row.id}:${ai}`}
+                          onPress={() => setLastPressed(`${row.id}:${ai}`)}
+                        />
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

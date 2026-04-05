@@ -686,11 +686,12 @@ button:disabled {
 
 .schematic-grid {
   display: grid; /* column template is set inline — overrides flex */
-  row-gap: 2px;
-  column-gap: 2px;
+  row-gap: 1px;
+  column-gap: 1px;
   width: max-content;
   padding: 4px 0;
   align-items: center;
+  background: rgba(0, 0, 0, 0.18); /* gap color — shows as grid lines */
 }
 
 .schematic-row {
@@ -715,6 +716,27 @@ button:disabled {
 }
 
 .schematic-group-separator {
+  height: 8px;
+}
+
+/* Per-instrument compact layout */
+.schematic-multi-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.schematic-instrument-section {
+  display: block;
+}
+
+.schematic-group-label--full {
+  display: block;
+  width: max-content;
+}
+
+.schematic-group-separator--full {
+  display: block;
   height: 8px;
 }
 
@@ -846,6 +868,10 @@ button:disabled {
   background: var(--panel);
 }
 
+.schematic-ruler-segment {
+  background: var(--panel);
+}
+
 .schematic-ruler-tick {
   height: 10px;
   padding: 0;
@@ -974,6 +1000,21 @@ button:disabled {
   flex-shrink: 0;
   position: relative;
   image-rendering: pixelated;
+  background: var(--panel);
+}
+
+.schematic-cell--empty {
+  background: var(--panel);
+}
+
+/* Segment containers (flex rows of repeater cells) — dark bg so gaps between
+   repeaters render cleanly; empty segments collapse to zero width so no solid
+   dark stripe appears between anchors that have nothing in between. */
+.schematic-segment {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: var(--panel);
 }
 
 .schematic-cell-tip {
