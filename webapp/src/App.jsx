@@ -302,6 +302,9 @@ export default function App() {
           </a>
           .
         </p>
+        <p>
+          This site uses <a href="https://www.goatcounter.com" target="_blank" rel="noreferrer">GoatCounter</a> to count anonymous page visits. No personal data is collected.
+        </p>
       </footer>
     </>
   );
