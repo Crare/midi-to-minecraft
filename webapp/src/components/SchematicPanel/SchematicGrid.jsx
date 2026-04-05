@@ -51,18 +51,6 @@ function TooltipPortal({ pos, children }) {
   );
 }
 
-// ── CSS grid column template ──────────────────────────────────────────────────
-// Layout: [connector cs] then for each anchor: [segment auto] [anchor cs]
-// The shared grid means all rows (across all instruments) align at anchor columns.
-function makeGridTemplate(anchorCount, cs) {
-  const parts = [`${cs}px`];
-  for (let i = 0; i < anchorCount; i++) {
-    parts.push('auto');    // segment (fits to widest content in that segment column)
-    parts.push(`${cs}px`); // anchor (note / split — fixed width)
-  }
-  return parts.join(' ');
-}
-
 // ── Segment repeater cell with portal tooltip ─────────────────────────────────
 function SegRepCell({ cell, cs }) {
   const { ref, pos, show, hide } = usePortalTooltip();
@@ -138,7 +126,8 @@ function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPres
   }
   if (cell.kind === 'note') {
     if (!cell.note) {
-      return <div className="schematic-cell schematic-cell--empty" style={{ width: cs, height: cs }} aria-hidden="true" />;
+      // No note at this tick for this instrument — show wire passing through.
+      return <div className="schematic-cell schematic-cell--passthrough" aria-hidden="true"><DustCell size={cs} /></div>;
     }
     return <NoteBlockCell cell={cell} cs={cs} instrument={instrument} block={block} isLastPressed={isLastPressed} onPress={onPress} />;
   }
@@ -146,61 +135,58 @@ function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPres
 }
 
 // ── Main grid component ───────────────────────────────────────────────────────
-// Each instrument has its own CSS grid (compact — only ticks it plays appear).
-// Instrument sections are separated by a group label and optional divider.
+// All instruments share ONE <table> so every tick column aligns across instruments.
+// The <thead> shows absolute tick numbers. Instrument groups are separated by
+// label rows that span all columns. Segments are padded with dust so all note
+// columns land at the same x position.
 export default function SchematicGrid({ grid, cellSize, onColumnClick, onRowClick }) {
   const cs = cellSize ?? CELL;
   const [lastPressed, setLastPressed] = useState(null);
   if (!grid || grid.instruments.length === 0) return null;
 
-  const { instruments } = grid;
+  const { instruments, anchors } = grid;
+  const totalCols = 1 + anchors.length * 2; // connector + (seg + anchor) × N
 
   return (
-    <div className="schematic-multi-grid">
-      {instruments.map((inst, instIndex) => {
-        const anchors = inst.anchors ?? [];
-        const gridTemplate = makeGridTemplate(anchors.length, cs);
-
-        return (
-          <div key={inst.id} className="schematic-instrument-section">
-            {/* Group separator */}
-            {instIndex > 0 && <div className="schematic-group-separator schematic-group-separator--full" />}
-
-            {/* Group label */}
-            <div className="schematic-group-label schematic-group-label--full">
-              <span className="schematic-group-title">
-                {inst.label} — {blockLabel(inst.block)}
-              </span>
-            </div>
-
-            {/* Per-instrument grid */}
-            <div
-              className="schematic-grid"
-              style={{ display: 'grid', gridTemplateColumns: gridTemplate, alignItems: 'center' }}
-            >
-              {/* Ruler row */}
-              <div
-                className="schematic-ruler-corner"
-                style={{ width: cs, height: 10, position: 'sticky', left: 0, zIndex: 6 }}
-              />
-              {anchors.map((_anchor, ai) => (
-                <Fragment key={ai}>
-                  <div className="schematic-ruler-segment" style={{ height: 10 }} />
+    <table className="schematic-table">
+      <thead>
+        <tr>
+          <th className="schematic-th-corner" style={{ width: cs, minWidth: cs }} />
+          {anchors.map((anchor, ai) => (
+            <Fragment key={ai}>
+              <th className="schematic-th-seg" />
+              <th className="schematic-th-anchor" style={{ width: cs, minWidth: cs }}>
+                {anchor.kind === 'note' && (
                   <button
                     type="button"
-                    className="schematic-ruler-tick"
-                    style={{ width: cs }}
+                    className="schematic-tick-btn"
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => { e.stopPropagation(); onColumnClick?.(e.currentTarget); }}
-                    aria-label={`Move column marker to position ${ai + 1}`}
-                  />
-                </Fragment>
-              ))}
+                    aria-label={`Tick ${anchor.tick} — click to move column marker`}
+                  >
+                    {anchor.tick}
+                  </button>
+                )}
+              </th>
+            </Fragment>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {instruments.map((inst) => (
+          <Fragment key={inst.id}>
+            {/* Instrument label row — spans all columns */}
+            <tr className="schematic-instrument-label-row">
+              <td colSpan={totalCols} className="schematic-instrument-label-cell">
+                {inst.label} — {blockLabel(inst.block)}
+              </td>
+            </tr>
 
-              {/* Instrument rows */}
-              {inst.rows.map((row) => (
-                <div key={row.id} style={{ display: 'contents' }}>
-                  {/* Connector dust — sticky column 1 */}
+            {/* Data rows */}
+            {inst.rows.map((row) => (
+              <tr key={row.id}>
+                {/* Connector dust — sticky first column */}
+                <td className="schematic-td-connector" style={{ width: cs }}>
                   <button
                     type="button"
                     className="schematic-connector schematic-connector--sticky"
@@ -211,18 +197,24 @@ export default function SchematicGrid({ grid, cellSize, onColumnClick, onRowClic
                   >
                     <DustCell size={cs} />
                   </button>
+                </td>
 
-                  {anchors.map((anchor, ai) => {
-                    const seg = row.segments[ai] ?? [];
-                    return (
-                      <Fragment key={ai}>
-                        {/* Segment cell */}
+                {anchors.map((anchor, ai) => {
+                  const seg = row.segments[ai] ?? [];
+                  return (
+                    <Fragment key={ai}>
+                      {/* Segment cell — repeaters + dust padding */}
+                      <td className="schematic-td-seg">
                         <div className="schematic-segment">
                           {seg.map((cell, ri) => (
-                            <SegRepCell key={ri} cell={cell} cs={cs} />
+                            cell.kind === 'dust'
+                              ? <DustCell key={ri} size={cs} />
+                              : <SegRepCell key={ri} cell={cell} cs={cs} />
                           ))}
                         </div>
-                        {/* Anchor cell */}
+                      </td>
+                      {/* Anchor cell — note block or pass-through */}
+                      <td className="schematic-td-anchor" style={{ width: cs }}>
                         <AnchorCell
                           anchor={anchor}
                           cell={row.anchorCells[ai]}
@@ -232,15 +224,15 @@ export default function SchematicGrid({ grid, cellSize, onColumnClick, onRowClic
                           isLastPressed={lastPressed === `${row.id}:${ai}`}
                           onPress={() => setLastPressed(`${row.id}:${ai}`)}
                         />
-                      </Fragment>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+                      </td>
+                    </Fragment>
+                  );
+                })}
+              </tr>
+            ))}
+          </Fragment>
+        ))}
+      </tbody>
+    </table>
   );
 }

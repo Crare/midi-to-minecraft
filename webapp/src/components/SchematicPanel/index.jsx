@@ -1,7 +1,7 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
 import DragScrollArea from '../DragScrollArea';
 import SchematicGrid from './SchematicGrid';
-import { blockColor, blockColorFor, blockLabel, buildTickGrid, computeTickGridBlockCounts, computeRawResources } from './schematicData';
+import { blockColor, blockColorFor, blockLabel, buildTickGrid, computeTickGridBlockCounts, computeRawResources, computeSchematicDimensions } from './schematicData';
 import { MiniNoteBlock, MiniRepeater, MiniDust, MiniBlock } from './SchematicCells';
 
 function stackLabel(n) {
@@ -50,6 +50,8 @@ export default function SchematicPanel({ trackEvents }) {
     const raw = computeRawResources(c);
     return { ...c, raw };
   }, [grid]);
+
+  const dimensions = useMemo(() => computeSchematicDimensions(grid), [grid]);
   const hasData = trackEvents.length > 0;
 
   useEffect(() => {
@@ -186,6 +188,28 @@ export default function SchematicPanel({ trackEvents }) {
                     {supportEntries.map(([bid, n]) => (
                       <TotalsChip key={bid} icon={<MiniBlock color={blockColorFor(bid)} size={18} />} count={n} label={`${blockLabel(bid)} (support)`} />
                     ))}
+                  </div>
+                </div>
+                <div className="schematic-totals-section">
+                  <h3 className="schematic-totals-heading">Minimum build area</h3>
+                  <div className="schematic-dimensions">
+                    <span className="schematic-dim-chip">
+                      <span className="schematic-dim-axis">X</span>
+                      <span className="schematic-dim-value">{dimensions.x}</span>
+                      <span className="schematic-dim-unit">blocks long</span>
+                    </span>
+                    <span className="schematic-dim-sep">×</span>
+                    <span className="schematic-dim-chip">
+                      <span className="schematic-dim-axis">Z</span>
+                      <span className="schematic-dim-value">{dimensions.z}</span>
+                      <span className="schematic-dim-unit">blocks wide</span>
+                    </span>
+                    <span className="schematic-dim-sep">×</span>
+                    <span className="schematic-dim-chip">
+                      <span className="schematic-dim-axis">Y</span>
+                      <span className="schematic-dim-value">{dimensions.y}</span>
+                      <span className="schematic-dim-unit">blocks tall</span>
+                    </span>
                   </div>
                 </div>
               </div>

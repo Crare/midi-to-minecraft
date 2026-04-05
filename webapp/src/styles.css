@@ -684,14 +684,107 @@ button:disabled {
   cursor: grabbing;
 }
 
-.schematic-grid {
-  display: grid; /* column template is set inline — overrides flex */
-  row-gap: 1px;
-  column-gap: 1px;
+/* ─── Per-instrument schematic table ───────────────────────────────────────── */
+.schematic-table {
+  border-collapse: collapse;
   width: max-content;
-  padding: 4px 0;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.18); /* gap color — shows as grid lines */
+  table-layout: auto;
+}
+
+.schematic-table th,
+.schematic-table td {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0;
+  vertical-align: middle;
+}
+
+/* Sticky top-left corner in thead */
+.schematic-th-corner {
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  background: var(--panel);
+}
+
+/* Segment column header — no content, minimal width */
+.schematic-th-seg {
+  background: var(--panel);
+  border-right-color: transparent;
+}
+
+/* Anchor column header — tick number */
+.schematic-th-anchor {
+  background: var(--panel);
+  text-align: center;
+  vertical-align: bottom;
+  border-bottom: 2px solid rgba(240, 192, 64, 0.5);
+}
+
+/* Tick-number button inside thead anchor cell */
+.schematic-tick-btn {
+  display: block;
+  width: 100%;
+  padding: 3px 0 2px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  font-family: monospace;
+  color: #000;
+  text-align: center;
+  background: rgba(240, 192, 64, 0.12);
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.schematic-tick-btn:hover {
+  background: rgba(240, 192, 64, 0.35);
+  color: #000;
+}
+
+/* Sticky connector column in tbody */
+.schematic-td-connector {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: var(--panel);
+  padding: 0;
+}
+
+/* Segment data cell — contains inline flex of repeater SVGs */
+.schematic-td-seg {
+  padding: 0;
+  background: var(--panel);
+  border-right-color: transparent;
+}
+
+/* Anchor data cell — note block or split indicator */
+.schematic-td-anchor {
+  padding: 0;
+}
+
+/* Pass-through cell — instrument wire running through a tick it doesn't play */
+.schematic-cell--passthrough {
+  opacity: 0.35;
+}
+
+/* Instrument label row — spans all columns, acts as a group header */
+.schematic-instrument-label-row td {
+  background: var(--panel-dark, #c8d8a8);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 3px 6px;
+  border-top: 2px solid rgba(0, 0, 0, 0.2);
+  position: sticky;
+  left: 0;
+}
+
+/* Keep legacy class for any non-table references */
+.schematic-grid {
+  width: max-content;
 }
 
 .schematic-row {
@@ -860,7 +953,7 @@ button:disabled {
   display: contents;
 }
 
-/* ─── Top ruler row (click to jump vertical indicator) ─────────────────────── */
+/* Legacy ruler classes — kept for any remaining references */
 .schematic-ruler-corner {
   position: sticky;
   left: 0;
@@ -868,32 +961,8 @@ button:disabled {
   background: var(--panel);
 }
 
-.schematic-ruler-segment {
-  background: var(--panel);
-}
-
-.schematic-ruler-tick {
-  height: 10px;
-  padding: 0;
-  background: rgba(240, 192, 64, 0.2);
-  border: 0;
-  border-bottom: 2px solid rgba(240, 192, 64, 0.55);
-  border-radius: 0;
-  cursor: pointer;
-  box-shadow: none;
-  display: block;
-}
-
-.schematic-ruler-tick:hover {
-  background: rgba(240, 192, 64, 0.5);
-  border-bottom-color: #f0c040;
-}
-
-/* ─── Sticky connector column (click to jump horizontal indicator) ─────────── */
+/* ─── Connector button (sticky is now on the <td>, not the button) ─────────── */
 .schematic-connector--sticky {
-  position: sticky;
-  left: 0;
-  z-index: 5;
   background: var(--panel);
   padding: 0;
   border: 0;
@@ -956,6 +1025,51 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+/* Minimum build area dimensions */
+.schematic-dimensions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.2rem;
+}
+
+.schematic-dim-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(42, 70, 22, 0.2);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
+.schematic-dim-axis {
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.schematic-dim-value {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--ink);
+}
+
+.schematic-dim-unit {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.schematic-dim-sep {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 300;
 }
 
 .totals-chip {

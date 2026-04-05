@@ -275,26 +275,27 @@ export function computeRawResources({ noteblocks, repeaters, dust }) {
 
 // ─── Tick-grid builder ────────────────────────────────────────────────────────
 //
-// Build a compact per-instrument tick grid.
+// Build a shared multi-instrument tick grid aligned on a global tick set.
 //
-// Each instrument has its OWN anchor sequence — only the ticks where that instrument
-// plays appear as anchor columns. This eliminates the wasted column space that arose
-// when a sparse instrument (bass, snare) was forced to share a grid with a dense
-// instrument (harp). Repeater segments between anchors carry the full time gap.
+// All instruments share the same anchor columns (one per unique tick across all
+// instruments). Instruments that don't play at a given tick get a dust pass-through
+// cell. Segments between anchors are padded with dust cells (after the repeaters)
+// so all instruments' note columns land at the same horizontal pixel position.
 //
 // Returned structure:
 // {
-//   instruments: [ { id, label, block, anchors, rows: [ rowDef, ... ] } ],
+//   instruments: [ { id, label, block, rows: [ rowDef, ... ] } ],
+//   anchors:     [ { kind: 'split'|'note', tick, index } ],
 // }
 //
 // rowDef: { id, isSub,
 //   segments: [ [repCell, ...], ... ],   // N+1 segments (before/between/after anchors)
-//   anchorCells: [ anchorCell, ... ],    // N anchor cells (parallel to this inst's anchors[])
+//   anchorCells: [ anchorCell, ... ],    // N anchor cells (parallel to anchors[])
 // }
 //
-// repCell: { kind: 'repeater', ticks }
+// repCell: { kind: 'repeater', ticks } | { kind: 'dust' }
 // anchorCell:
-//   { kind: 'note', note, tick }          — note block (note may be null = silent)
+//   { kind: 'note', note, tick }          — note block (note may be null = pass-through)
 //   { kind: 'split-pass' }                — vertical wire column, no branch
 //   { kind: 'split-branch' }              — vertical wire column with horizontal branch
 //   { kind: 'inactive' }                  — sub-row not active here
@@ -321,9 +322,14 @@ export function buildTickGrid(trackEvents) {
     })));
   });
 
-  if (instrumentTicks.size === 0) return { instruments: [] };
+  if (instrumentTicks.size === 0) return { instruments: [], anchors: [] };
 
-  // ── 3. Group simultaneous notes per instrument per tick ──────────────────
+  // ── 3. Unique sorted global ticks ─────────────────────────────────────────
+  const tickSet = new Set();
+  instrumentTicks.forEach((evts) => evts.forEach((e) => tickSet.add(e.absoluteTick)));
+  const globalTicks = [...tickSet].sort((a, b) => a - b);
+
+  // ── 4. Group simultaneous notes per instrument per tick ──────────────────
   const instAtTick = new Map(); // instrument → Map(tick → [event,...])
   instrumentTicks.forEach((evts, instrument) => {
     const byTick = new Map();
@@ -334,83 +340,158 @@ export function buildTickGrid(trackEvents) {
     instAtTick.set(instrument, byTick);
   });
 
-  // ── 4. Build per-instrument anchors + rows ────────────────────────────────
-  const instruments = [];
+  // ── 5. Build shared anchors + per-instrument segment/anchor data ──────────
+  const instrLastTick = new Map();
+  instrumentTicks.forEach((_, instrument) => instrLastTick.set(instrument, -1));
 
+  const instrSegments = new Map(); // instrument → segments[]
+  const instrAnchors  = new Map(); // instrument → anchorCell[]
   instrumentTicks.forEach((_, instrument) => {
-    const byTick = instAtTick.get(instrument);
-    // Sorted list of ticks this instrument plays at.
-    const ownTicks = [...byTick.keys()].sort((a, b) => a - b);
-    if (ownTicks.length === 0) return;
+    instrSegments.set(instrument, []);
+    instrAnchors.set(instrument, []);
+  });
 
-    const anchors = [];
-    const mainSegments = [];  // segments for main row (one per anchor + trailing)
-    const mainAnchorCells = [];
-    let lastTick = -1;
+  const anchors = []; // shared global anchor list
 
-    ownTicks.forEach((tick) => {
-      const notes = byTick.get(tick) ?? [];
-      const isSplit = notes.length >= 2;
-
-      // Gap from last played tick (or first occurrence).
-      const gap = lastTick < 0 ? tick : tick - lastTick;
-      const gapReps = gap > 0
+  globalTicks.forEach((tick) => {
+    // Compute gap repeaters for instruments that play at this tick.
+    const gapReps = new Map();
+    instrumentTicks.forEach((_, instrument) => {
+      const plays = instAtTick.get(instrument)?.has(tick) ?? false;
+      if (!plays) { gapReps.set(instrument, null); return; }
+      const last = instrLastTick.get(instrument);
+      const gap = last < 0 ? tick : tick - last;
+      gapReps.set(instrument, gap > 0
         ? decomposeDelay(gap).map((t) => ({ kind: 'repeater', ticks: t }))
-        : [];
-
-      if (isSplit) {
-        // Split anchor before note anchor: carry the gap into the split segment.
-        anchors.push({ kind: 'split', tick, index: anchors.length });
-        mainSegments.push(gapReps);   // repeaters before the split column
-        mainAnchorCells.push({ kind: 'split-branch' });
-
-        // Note anchor follows immediately (no gap repeaters — already emitted).
-        anchors.push({ kind: 'note', tick, isSplit: true, index: anchors.length });
-        mainSegments.push([]);         // empty segment between split and note columns
-        mainAnchorCells.push({ kind: 'note', note: notes[0] ?? null, tick });
-      } else {
-        anchors.push({ kind: 'note', tick, isSplit: false, index: anchors.length });
-        mainSegments.push(gapReps);
-        mainAnchorCells.push({ kind: 'note', note: notes[0] ?? null, tick });
-      }
-
-      lastTick = tick;
+        : []);
     });
-    mainSegments.push([]); // trailing segment
 
-    const rows = [{ id: `${instrument}-main`, isSub: false, segments: mainSegments, anchorCells: mainAnchorCells }];
+    // Determine if any instrument splits (≥2 simultaneous notes) here.
+    let isSplitTick = false;
+    instAtTick.forEach((byTick) => {
+      if ((byTick.get(tick)?.length ?? 0) >= 2) isSplitTick = true;
+    });
 
-    // Sub-rows for simultaneous notes beyond the first.
+    // ── emit split anchor (if needed) ────────────────────────────────────────
+    if (isSplitTick) {
+      anchors.push({ kind: 'split', tick, index: anchors.length });
+      instrumentTicks.forEach((_, instrument) => {
+        const plays = instAtTick.get(instrument)?.has(tick) ?? false;
+        const instNoteCount = instAtTick.get(instrument)?.get(tick)?.length ?? 0;
+        instrSegments.get(instrument).push(plays ? (gapReps.get(instrument) ?? []) : []);
+        instrAnchors.get(instrument).push(
+          instNoteCount >= 2 ? { kind: 'split-branch' } : { kind: 'split-pass' },
+        );
+        if (plays) gapReps.set(instrument, []); // consumed
+      });
+    }
+
+    // ── emit note anchor ─────────────────────────────────────────────────────
+    anchors.push({ kind: 'note', tick, isSplit: isSplitTick, index: anchors.length });
+    instrumentTicks.forEach((_, instrument) => {
+      const plays = instAtTick.get(instrument)?.has(tick) ?? false;
+      const notes  = instAtTick.get(instrument)?.get(tick) ?? [];
+      instrSegments.get(instrument).push(plays ? (gapReps.get(instrument) ?? []) : []);
+      instrAnchors.get(instrument).push({ kind: 'note', notes, tick });
+      if (notes.length > 0) instrLastTick.set(instrument, tick);
+    });
+  });
+
+  // Trailing segment — empty for all instruments.
+  instrumentTicks.forEach((_, instrument) => instrSegments.get(instrument).push([]));
+
+  // ── Pad all segments to uniform width within each segment column ──────────
+  // After repeaters, add dust cells so every row in a segment column has the
+  // same width. This makes all note-anchor columns land at the same x position.
+  const segmentCount = instrSegments.values().next().value?.length ?? 0;
+  for (let si = 0; si < segmentCount; si++) {
+    let maxLen = 0;
+    instrumentTicks.forEach((_, instrument) => {
+      maxLen = Math.max(maxLen, instrSegments.get(instrument)[si].length);
+    });
+    if (maxLen > 0) {
+      instrumentTicks.forEach((_, instrument) => {
+        const seg = instrSegments.get(instrument)[si];
+        while (seg.length < maxLen) seg.push({ kind: 'dust' });
+      });
+    }
+  }
+
+  // ── 6. Build instrument rows ───────────────────────────────────────────────
+  const instruments = [];
+  instrumentTicks.forEach((_, instrument) => {
+    const byTick    = instAtTick.get(instrument);
+    const segments  = instrSegments.get(instrument);
+    const anchorArr = instrAnchors.get(instrument);
+
     let maxSimul = 1;
-    byTick.forEach((notes) => { maxSimul = Math.max(maxSimul, notes.length); });
+    byTick?.forEach((notes) => { maxSimul = Math.max(maxSimul, notes.length); });
+
+    const mainAnchorCells = anchorArr.map((cell) => {
+      if (cell.kind !== 'note') return { ...cell };
+      return { kind: 'note', note: cell.notes[0] ?? null, tick: cell.tick };
+    });
+    const rows = [{ id: `${instrument}-main`, isSub: false, segments, anchorCells: mainAnchorCells }];
 
     for (let subIdx = 1; subIdx < maxSimul; subIdx++) {
       const activeTicks = new Set(
-        [...byTick.entries()]
+        [...(byTick?.entries() ?? [])]
           .filter(([, notes]) => notes.length > subIdx)
           .map(([t]) => t),
       );
       if (activeTicks.size === 0) continue;
 
-      const subAnchorCells = anchors.map((anchor) => {
-        if (anchor.kind === 'split' && activeTicks.has(anchor.tick)) {
-          return { kind: 'split-branch' };
-        }
+      const subAnchorCells = anchorArr.map((cell, ai) => {
+        const anchor = anchors[ai];
+        if (anchor.kind === 'split' && activeTicks.has(anchor.tick)) return { kind: 'split-branch' };
         if (anchor.kind === 'note' && activeTicks.has(anchor.tick)) {
-          return { kind: 'note', note: byTick.get(anchor.tick)?.[subIdx] ?? null, tick: anchor.tick };
+          return { kind: 'note', note: byTick?.get(anchor.tick)?.[subIdx] ?? null, tick: anchor.tick };
         }
         return { kind: 'inactive' };
       });
 
-      const emptySeg = mainSegments.map(() => []);
+      // Sub-rows have empty segments (they only appear at their active anchors).
+      const emptySeg = segments.map(() => []);
       rows.push({ id: `${instrument}-sub-${subIdx}`, isSub: true, segments: emptySeg, anchorCells: subAnchorCells });
     }
 
-    const firstBlock = [...byTick.values()].flat().find((e) => e.block)?.block ?? 'minecraft:dirt';
-    instruments.push({ id: `inst-${instrument}`, label: instrument, block: firstBlock, anchors, rows });
+    const firstBlock = [...(byTick?.values() ?? [])].flat().find((e) => e.block)?.block ?? 'minecraft:dirt';
+    instruments.push({ id: `inst-${instrument}`, label: instrument, block: firstBlock, rows });
   });
 
-  return { instruments };
+  return { instruments, anchors };
+}
+
+// Compute the minimum real-world Minecraft block dimensions for the schematic.
+//
+// Layout in Minecraft space:
+//   X (length) — one block per cell along a row:
+//       1 connector + Σ segment widths + anchor count (note/split columns)
+//   Z (width)  — one block per schematic row (each lane is 1 block deep)
+//   Y (height) — always 3:
+//       Y=0 slab/support  |  Y=1 repeaters/dust/note blocks  |  Y=2 redstone on top
+//
+// Returns { x, z, y } — each is the minimum number of blocks in that dimension.
+export function computeSchematicDimensions(grid) {
+  if (!grid || grid.instruments.length === 0) return { x: 0, z: 0, y: 3 };
+
+  // Take the first main row — all rows are padded to the same width.
+  const firstInst = grid.instruments[0];
+  const mainRow = firstInst.rows[0];
+  const anchorCount = grid.anchors.length;
+
+  // X = connector (1) + each segment's cell count + each anchor (1)
+  let x = 1; // connector
+  for (let ai = 0; ai <= anchorCount; ai++) {
+    const seg = mainRow.segments[ai] ?? [];
+    x += seg.length; // segment cells (repeaters + dust padding)
+    if (ai < anchorCount) x += 1; // anchor cell (note block or split indicator)
+  }
+
+  // Z = total number of schematic rows across all instruments
+  const z = grid.instruments.reduce((s, inst) => s + inst.rows.length, 0);
+
+  return { x, z, y: 3 };
 }
 
 // Count block totals for the tick-grid model.
@@ -418,21 +499,26 @@ export function computeTickGridBlockCounts(grid) {
   let noteblocks = 0, repeaters = 0, dust = 0;
   const supportMap = new Map();
   grid.instruments.forEach((inst) => {
-    const splitCount = (inst.anchors ?? []).filter((a) => a.kind === 'split').length;
     inst.rows.forEach((row) => {
       row.anchorCells.forEach((cell) => {
         if (cell.kind === 'note' && cell.note) {
           noteblocks++;
           const b = cell.note.block ?? inst.block;
           supportMap.set(b, (supportMap.get(b) ?? 0) + 1);
+        } else if (cell.kind === 'note' && !cell.note) {
+          dust++; // pass-through dust at non-playing anchor
         }
       });
       row.segments.forEach((seg) => {
-        seg.forEach((cell) => { if (cell.kind === 'repeater') repeaters++; });
+        seg.forEach((cell) => {
+          if (cell.kind === 'repeater') repeaters++;
+          else if (cell.kind === 'dust') dust++;
+        });
       });
       dust++; // connector dust per row
     });
     // Each split anchor adds vertical dust for all rows of the instrument.
+    const splitCount = grid.anchors.filter((a) => a.kind === 'split').length;
     dust += splitCount * inst.rows.length;
   });
   return { noteblocks, repeaters, dust, supportBlocks: noteblocks, supportMap };
