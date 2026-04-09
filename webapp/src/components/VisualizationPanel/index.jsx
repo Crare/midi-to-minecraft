@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { playPlacementSound, playPlacementSoundSync, prepareAudioPlayback } from '../../audio/noteblockAudio';
+import { List } from 'react-window';
+import { playPlacementSoundSync, prepareAudioPlayback } from '../../audio/noteblockAudio';
 import CollapsiblePanel from '../CollapsiblePanel';
 import DragScrollArea from '../DragScrollArea';
 import TrackRow from './TrackRow';
@@ -11,6 +12,7 @@ import {
   getMaxTrackTick,
   findFirstNoteIndexAtOrAfter,
 } from './visualizationData';
+import ErrorBoundary from '../ErrorBoundary';
 
 export default function VisualizationPanel({ trackEvents }) {
   const [tracksOpen, setTracksOpen] = useState(false);
@@ -52,10 +54,11 @@ export default function VisualizationPanel({ trackEvents }) {
   const playbackStartMsRef = useRef(0);
   const playbackStartTickRef = useRef(0);
 
-  const visibleTracks = useMemo(
-    () => buildVisualizationTracks(trackEvents, viewMode).filter((track) => track.notes.length > 0),
-    [trackEvents, viewMode]
-  );
+  const visibleTracks = useMemo(() => {
+    const safeEvents = Array.isArray(trackEvents) ? trackEvents : [];
+    const tracks = buildVisualizationTracks(safeEvents, viewMode);
+    return Array.isArray(tracks) ? tracks.filter((track) => Array.isArray(track.notes) && track.notes.length > 0) : [];
+  }, [trackEvents, viewMode]);
 
   const playbackTracks = useMemo(() => {
     if (playbackScope === playbackScopes.single && selectedPlaybackTrackId) {
@@ -368,174 +371,186 @@ export default function VisualizationPanel({ trackEvents }) {
   }, [tracksOpen]);
 
   return (
-    <CollapsiblePanel
-      title="3) Track Visualization"
-      meta={
-        visibleTracks.length === 0
-          ? 'No tracks yet'
-          : tracksOpen
-            ? 'Hide'
-            : `Show ${visibleTracks.length} lane(s)`
-      }
-      open={tracksOpen}
-      onOpenChange={(v) => { if (visibleTracks.length > 0) setTracksOpen(v); }}
-      disabled={visibleTracks.length === 0}
-      className="visualization"
-    >
-        <div className="playback-controls">
-          <label className="option-row option-row-stacked">
-            <span>Playback</span>
-            <select
-              value={playbackScope}
-              onChange={(event) => setPlaybackScope(event.target.value)}
-              disabled={visibleTracks.length === 0}
-            >
-              <option value={playbackScopes.all}>All tracks</option>
-              <option value={playbackScopes.single}>Single track</option>
-            </select>
-          </label>
-          {playbackScope === playbackScopes.single ? (
+    <ErrorBoundary>
+      <CollapsiblePanel
+        title="3) Track Visualization"
+        meta={
+          visibleTracks.length === 0
+            ? 'No tracks yet'
+            : tracksOpen
+              ? 'Hide'
+              : `Show ${visibleTracks.length} lane(s)`
+        }
+        open={tracksOpen}
+        onOpenChange={(v) => { if (visibleTracks.length > 0) setTracksOpen(v); }}
+        disabled={visibleTracks.length === 0}
+        className="visualization"
+      >
+          <div className="playback-controls">
             <label className="option-row option-row-stacked">
-              <span>Track</span>
+              <span>Playback</span>
               <select
-                value={selectedPlaybackTrackId}
-                onChange={(event) => setSelectedPlaybackTrackId(event.target.value)}
+                value={playbackScope}
+                onChange={(event) => setPlaybackScope(event.target.value)}
                 disabled={visibleTracks.length === 0}
               >
-                {visibleTracks.map((track) => (
-                  <option key={track.id} value={track.id}>
-                    {track.title} ({track.subtitle})
-                  </option>
-                ))}
+                <option value={playbackScopes.all}>All tracks</option>
+                <option value={playbackScopes.single}>Single track</option>
               </select>
             </label>
-          ) : null}
-          <div className="playback-actions">
-            <button type="button" className="icon-btn" title="Play" onClick={() => void startPlayback()} disabled={visibleTracks.length === 0 || isPlaying} aria-label="Play">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><polygon points="3,1 15,8 3,15" /></svg>
-            </button>
-            <button type="button" className="icon-btn" title="Stop" onClick={() => stopPlayback()} disabled={!isPlaying && playheadTick === 0} aria-label="Stop">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="1" width="4" height="14" /><rect x="10" y="1" width="4" height="14" /></svg>
-            </button>
-            <button type="button" className="icon-btn" title="Go to start" onClick={() => {
-              stopPlayback(0);
-            }} disabled={visibleTracks.length === 0} aria-label="Go to start">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1" ry="1" /></svg>
-            </button>
-          </div>
-          <div className="playback-meta">Position: {playheadTick.toFixed(1)} ticks</div>
-        </div>
-        <div className="viz-toggles">
-          <label className="option-row option-row-stacked">
-            <span>Group by</span>
-            <select
-              value={viewMode}
-              onChange={(e) => setViewMode(e.target.value)}
-              disabled={visibleTracks.length === 0 && trackEvents.length === 0}
-            >
-              <option value={viewModes.instrument}>Instrument</option>
-              <option value={viewModes.track}>Original tracks</option>
-            </select>
-          </label>
-          <label className="viz-toggle-label">
-            <input type="checkbox" checked={showColor} onChange={(e) => setShowColor(e.target.checked)} />
-            Color
-          </label>
-          <label className="viz-toggle-label">
-            <input type="checkbox" checked={showNumber} onChange={(e) => setShowNumber(e.target.checked)} />
-            Number
-          </label>
-          <label className="viz-toggle-label">
-            <input type="checkbox" checked={showSupport} onChange={(e) => setShowSupport(e.target.checked)} />
-            Support
-          </label>
-        </div>
-        <p className="hint output-summary">
-          {visibleTracks.length === 0
-            ? 'No tracks to visualize.'
-            : `${visibleTracks.length} ${viewMode === viewModes.track ? 'track' : 'instrument'} lane(s) ready. Scroll horizontally for long tracks.`}
-        </p>
-        <div className="track-area">
-            <div className="track-scroll-column">
-              <div className="track-scroll-proxy-top" ref={topScrollRef}>
-                <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
-              </div>
-              <div className="track-headers">
-                {visibleTracks.map((track) => (
-                  <div
-                    key={track.id}
-                    className={
-                      playbackScope === playbackScopes.single &&
-                      selectedPlaybackTrackId &&
-                      track.id !== selectedPlaybackTrackId
-                        ? 'track-header track-row-dimmed'
-                        : 'track-header'
-                    }
-                  >
-                    <button
-                      type="button"
-                      className="icon-btn track-mute-btn"
-                      title={mutedTracks.has(track.id) ? 'Unmute' : 'Mute'}
-                      onClick={(e) => { e.stopPropagation(); toggleMuteCallbacks.get(track.id)?.(); }}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      aria-label={mutedTracks.has(track.id) ? 'Unmute track' : 'Mute track'}
-                    >
-                      <svg viewBox="0 0 16 16" aria-hidden="true">
-                        {mutedTracks.has(track.id) ? (
-                          <path d="M 3 3 L 13 13 M 13 3 L 3 13" stroke="currentColor" strokeWidth="2" fill="none" />
-                        ) : (
-                          <>
-                            <path d="M 3 5 L 8 2 L 8 14 L 3 11 Z" fill="currentColor" />
-                            <path d="M 10 4 Q 12 6 12 8 Q 12 10 10 12" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                          </>
-                        )}
-                      </svg>
-                    </button>
-                    <span className="track-index">{track.title}</span>
-                    <span className="track-count">{track.subtitle}</span>
-                  </div>
-                ))}
-              </div>
-              <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
-                <button
-                  ref={playheadRef}
-                  type="button"
-                  className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
-                  style={{ left: '0px' }}
-                  onPointerDown={onPlayheadPointerDown}
-                  onPointerMove={onPlayheadPointerMove}
-                  onPointerUp={onPlayheadPointerUp}
-                  onPointerCancel={finishPlayheadDrag}
-                  aria-label="Drag play position"
+            {playbackScope === playbackScopes.single ? (
+              <label className="option-row option-row-stacked">
+                <span>Track</span>
+                <select
+                  value={selectedPlaybackTrackId}
+                  onChange={(event) => setSelectedPlaybackTrackId(event.target.value)}
+                  disabled={visibleTracks.length === 0}
                 >
-                  <span className="playhead-line" aria-hidden="true" />
-                  <span className="playhead-head" aria-hidden="true" />
-                </button>
-                <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
-                  <div className="track-wrap">
-                    {visibleTracks.reduce((acc, track) => {
-                      if (mutedTracks.has(track.id)) return acc;
-                      const renderedIndex = acc.length;
-                      acc.push(
-                        <TrackRow
-                          key={track.id}
-                          notes={track.notes}
-                          showColor={showColor}
-                          showNumber={showNumber}
-                          showSupport={showSupport}
-                          noteTooltipDirection={renderedIndex === 0 ? 'bottom' : 'top'}
-                          unitSize={trackUnitSize}
-                          scrollLeft={scrollLeft}
-                          containerWidth={scrollContainerWidth}
-                        />
-                      );
-                      return acc;
-                    }, [])}
-                  </div>
-                </div>
-              </DragScrollArea>
+                  {visibleTracks.map((track) => (
+                    <option key={track.id} value={track.id}>
+                      {track.title} ({track.subtitle})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            <div className="playback-actions">
+              <button type="button" className="icon-btn" title="Play" onClick={() => void startPlayback()} disabled={visibleTracks.length === 0 || isPlaying} aria-label="Play">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><polygon points="3,1 15,8 3,15" /></svg>
+              </button>
+              <button type="button" className="icon-btn" title="Stop" onClick={() => stopPlayback()} disabled={!isPlaying && playheadTick === 0} aria-label="Stop">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="1" width="4" height="14" /><rect x="10" y="1" width="4" height="14" /></svg>
+              </button>
+              <button type="button" className="icon-btn" title="Go to start" onClick={() => {
+                stopPlayback(0);
+              }} disabled={visibleTracks.length === 0} aria-label="Go to start">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1" ry="1" /></svg>
+              </button>
             </div>
+            <div className="playback-meta">Position: {playheadTick.toFixed(1)} ticks</div>
           </div>
-    </CollapsiblePanel>
+          <div className="viz-toggles">
+            <label className="option-row option-row-stacked">
+              <span>Group by</span>
+              <select
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value)}
+                disabled={visibleTracks.length === 0 && trackEvents.length === 0}
+              >
+                <option value={viewModes.instrument}>Instrument</option>
+                <option value={viewModes.track}>Original tracks</option>
+              </select>
+            </label>
+            <label className="viz-toggle-label">
+              <input type="checkbox" checked={showColor} onChange={(e) => setShowColor(e.target.checked)} />
+              Color
+            </label>
+            <label className="viz-toggle-label">
+              <input type="checkbox" checked={showNumber} onChange={(e) => setShowNumber(e.target.checked)} />
+              Number
+            </label>
+            <label className="viz-toggle-label">
+              <input type="checkbox" checked={showSupport} onChange={(e) => setShowSupport(e.target.checked)} />
+              Support
+            </label>
+          </div>
+          <p className="hint output-summary">
+            {visibleTracks.length === 0
+              ? 'No tracks to visualize.'
+              : `${visibleTracks.length} ${viewMode === viewModes.track ? 'track' : 'instrument'} lane(s) ready. Scroll horizontally for long tracks.`}
+          </p>
+          <div className="track-area">
+              <div className="track-scroll-column">
+                <div className="track-scroll-proxy-top" ref={topScrollRef}>
+                  <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
+                </div>
+                <div className="track-headers">
+                  {visibleTracks.map((track) => (
+                    <div
+                      key={track.id}
+                      className={
+                        playbackScope === playbackScopes.single &&
+                        selectedPlaybackTrackId &&
+                        track.id !== selectedPlaybackTrackId
+                          ? 'track-header track-row-dimmed'
+                          : 'track-header'
+                      }
+                    >
+                      <button
+                        type="button"
+                        className="icon-btn track-mute-btn"
+                        title={mutedTracks.has(track.id) ? 'Unmute' : 'Mute'}
+                        onClick={(e) => { e.stopPropagation(); toggleMuteCallbacks.get(track.id)?.(); }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        aria-label={mutedTracks.has(track.id) ? 'Unmute track' : 'Mute track'}
+                      >
+                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                          {mutedTracks.has(track.id) ? (
+                            <path d="M 3 3 L 13 13 M 13 3 L 3 13" stroke="currentColor" strokeWidth="2" fill="none" />
+                          ) : (
+                            <>
+                              <path d="M 3 5 L 8 2 L 8 14 L 3 11 Z" fill="currentColor" />
+                              <path d="M 10 4 Q 12 6 12 8 Q 12 10 10 12" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                            </>
+                          )}
+                        </svg>
+                      </button>
+                      <span className="track-index">{track.title}</span>
+                      <span className="track-count">{track.subtitle}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}> */}
+                  <button
+                    ref={playheadRef}
+                    type="button"
+                    className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
+                    style={{ left: '0px' }}
+                    onPointerDown={onPlayheadPointerDown}
+                    onPointerMove={onPlayheadPointerMove}
+                    onPointerUp={onPlayheadPointerUp}
+                    onPointerCancel={finishPlayheadDrag}
+                    aria-label="Drag play position"
+                  >
+                    <span className="playhead-line" aria-hidden="true" />
+                    <span className="playhead-head" aria-hidden="true" />
+                  </button>
+                  <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
+                    <div className="track-wrap">
+                      {Array.isArray(visibleTracks) && visibleTracks.length > 0 && (
+                        <List
+                          height={Math.min(visibleTracks.length * 44, 400)}
+                          itemCount={visibleTracks.length}
+                          itemSize={44}
+                          width={"100%"}
+                        >
+                          {({ index, style }) => {
+                            const track = visibleTracks[index];
+                            if (!track || !track.id || !Array.isArray(track.notes)) return null;
+                            if (mutedTracks.has(track.id)) return null;
+                            return (
+                              <div style={style} key={track.id}>
+                                <TrackRow
+                                  notes={track.notes}
+                                  showColor={showColor}
+                                  showNumber={showNumber}
+                                  showSupport={showSupport}
+                                  noteTooltipDirection={index === 0 ? 'bottom' : 'top'}
+                                  unitSize={trackUnitSize}
+                                  scrollLeft={scrollLeft}
+                                  containerWidth={scrollContainerWidth}
+                                />
+                              </div>
+                            );
+                          }}
+                        </List>
+                      )}
+                    </div>
+                  </div>
+                {/* </DragScrollArea> */}
+              </div>
+            </div>
+      </CollapsiblePanel>
+    </ErrorBoundary>
   );
 }

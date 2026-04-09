@@ -301,6 +301,10 @@ export function computeRawResources({ noteblocks, repeaters, dust }) {
 //   { kind: 'inactive' }                  — sub-row not active here
 
 export function buildTickGrid(trackEvents) {
+  // Defensive: ensure trackEvents is always an array
+  if (!Array.isArray(trackEvents) || trackEvents.length === 0) {
+    return { instruments: [], anchors: [] };
+  }
   // ── 1. Gather events per instrument ─────────────────────────────────────────
   const instrumentMap = new Map();
   trackEvents.forEach((track) => {

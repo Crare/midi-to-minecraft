@@ -1,16 +1,8 @@
 # TODO
 
-- github action to build and publish to crare.github.io/midi-to-minecraft
-    - with audit and outdated checks
-    - with tests run
-- tests
-
 - convert the app to typescript
 
 - optimize the app
-
-- try prod build
-
 
 - i think the horizontal scroll and play-head are not keeping up with the sounds playing of the song. they are not in sync.
 
