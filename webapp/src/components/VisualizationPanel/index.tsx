@@ -1,62 +1,17 @@
-// Helper component for react-window List row rendering
-interface TrackRowRendererProps {
-  index: number;
-  style: React.CSSProperties;
-  visibleTracks: any[];
-  mutedTracks: Set<string>;
-  showColor: boolean;
-  showNumber: boolean;
-  showSupport: boolean;
-  trackUnitSize: number;
-  scrollLeft: number;
-  containerWidth: number;
-}
-
-function trackRowRendererFactory(
-  visibleTracks: any[],
-  mutedTracks: Set<string>,
-  showColor: boolean,
-  showNumber: boolean,
-  showSupport: boolean,
-  trackUnitSize: number,
-  scrollLeft: number,
-  containerWidth: number,
-) {
-  return ({ index, style }: { index: number; style: React.CSSProperties }) => {
-    const track = visibleTracks[index];
-    if (!track || !track.id || !Array.isArray(track.notes)) return null;
-    if (mutedTracks.has(track.id)) return null;
-    return (
-      <div style={style} key={track.id}>
-        <TrackRow
-          notes={track.notes}
-          showColor={showColor}
-          showNumber={showNumber}
-          showSupport={showSupport}
-          noteTooltipDirection={index === 0 ? 'bottom' : 'top'}
-          unitSize={trackUnitSize}
-          scrollLeft={scrollLeft}
-          containerWidth={containerWidth}
-        />
-      </div>
-    );
-  };
-}
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { List } from 'react-window';
 import { playPlacementSoundSync, prepareAudioPlayback } from '../../audio/noteblockAudio';
 import CollapsiblePanel from '../CollapsiblePanel';
 import DragScrollArea from '../DragScrollArea';
+import ErrorBoundary from '../ErrorBoundary';
 import TrackRow from './TrackRow';
 import {
-  playbackScopes,
-  viewModes,
-  redstoneTickDurationMs,
   buildVisualizationTracks,
-  getMaxTrackTick,
   findFirstNoteIndexAtOrAfter,
+  getMaxTrackTick,
+  playbackScopes,
+  redstoneTickDurationMs,
+  viewModes,
 } from './visualizationData';
-import ErrorBoundary from '../ErrorBoundary';
 
 interface VisualizationPanelProps {
   trackEvents: any[];
@@ -608,24 +563,26 @@ export default function VisualizationPanel({ trackEvents }: VisualizationPanelPr
                 style={{ '--timeline-unit-count': timelineUnitCount } as React.CSSProperties}
               >
                 <div className="track-wrap">
-                  {Array.isArray(visibleTracks) && visibleTracks.length > 0 && (
-                    <List
-                      height={Math.min(visibleTracks.length * 44, 400)}
-                      itemCount={visibleTracks.length}
-                      itemSize={44}
-                      width={'100%'}
-                      children={trackRowRendererFactory(
-                        visibleTracks,
-                        mutedTracks,
-                        showColor,
-                        showNumber,
-                        showSupport,
-                        trackUnitSize,
-                        scrollLeft,
-                        scrollContainerWidth,
-                      )}
-                    />
-                  )}
+                  {Array.isArray(visibleTracks) &&
+                    visibleTracks.length > 0 &&
+                    visibleTracks.map((track: any, index: number) => {
+                      if (!track || !track.id || !Array.isArray(track.notes)) return null;
+                      if (mutedTracks.has(track.id)) return null;
+                      return (
+                        <div key={track.id} style={{ height: 44 }}>
+                          <TrackRow
+                            notes={track.notes}
+                            showColor={showColor}
+                            showNumber={showNumber}
+                            showSupport={showSupport}
+                            noteTooltipDirection={index === 0 ? 'bottom' : 'top'}
+                            unitSize={trackUnitSize}
+                            scrollLeft={scrollLeft}
+                            containerWidth={scrollContainerWidth}
+                          />
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </DragScrollArea>

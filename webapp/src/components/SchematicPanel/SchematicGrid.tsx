@@ -1,12 +1,13 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { List } from 'react-window';
+// import type { ListChildComponentProps } from 'react-window';
+// import { List } from 'react-window';
 import { AnchorCell, CELL, DustCell, SegRepCell } from './SchematicCells';
 import { blockLabel } from './schematicData';
 
 // Portal tooltip hook
 
-function TooltipPortal({
+export function TooltipPortal({
   pos,
   children,
 }: {
@@ -66,7 +67,7 @@ export default function SchematicGrid({
     const item = virtualRows[index];
     if (item.type === 'label') {
       return (
-        <tr style={style} className="schematic-instrument-label-row">
+        <tr key={index} style={style} className="schematic-instrument-label-row">
           <td colSpan={totalCols} className="schematic-instrument-label-cell">
             {item.inst.label} — {blockLabel(item.inst.block)}
           </td>
@@ -126,7 +127,7 @@ export default function SchematicGrid({
 
   const rowHeight = cs + 8;
 
-  // Helper component to render virtualized <tr> rows inside <tbody>
+  // Non-virtualized fallback: render all rows directly
   function VirtualizedRows({
     virtualRows,
     rowHeight,
@@ -137,16 +138,7 @@ export default function SchematicGrid({
     Row: (props: { index: number; style: React.CSSProperties }) => JSX.Element;
   }) {
     if (!Array.isArray(virtualRows) || virtualRows.length === 0) return null;
-    return (
-      <List
-        height={Math.min(virtualRows.length * rowHeight, 500)}
-        itemCount={virtualRows.length}
-        itemSize={rowHeight}
-        width={'100%'}
-      >
-        {({ index, style }) => Row({ index, style })}
-      </List>
-    );
+    return <>{virtualRows.map((_, idx) => Row({ index: idx, style: { height: rowHeight } }))}</>;
   }
 
   return (

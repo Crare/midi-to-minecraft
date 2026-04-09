@@ -1,4 +1,7 @@
-import { blockColorFor, blockLabel } from './schematicData';
+import { playPlacementSound } from '../../audio/noteblockAudio';
+import { usePortalTooltip } from '../../hooks/usePortalTooltip';
+import { blockColorFor, blockLabel, getUseCount } from './schematicData';
+import { TooltipPortal } from './SchematicGrid';
 
 export const CELL = 28;
 

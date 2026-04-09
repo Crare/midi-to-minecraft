@@ -206,7 +206,8 @@ function buildTrackEvents(
         id: `instrument-${instrument}-${laneIndex}`,
         title: instrument,
         events: lane.events,
-      });
+        notes: Array.isArray(lane.events) ? lane.events : [], // Always provide notes array
+      } as TrackEvent & { notes: NoteEvent[] });
     });
   });
   return tracks;

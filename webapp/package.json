@@ -12,15 +12,15 @@
   "dependencies": {
     "@tonejs/midi": "^2.0.28",
     "jszip": "^3.10.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "react-window": "^2.2.7"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^5.4.10",
-    "@types/react": "^18.2.62",
-    "@types/react-dom": "^18.2.19",
-    "prettier": "^3.8.1"
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "prettier": "^3.8.1",
+    "vite": "^8.0.8"
   }
 }
