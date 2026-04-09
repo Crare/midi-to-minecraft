@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.28",
@@ -17,6 +18,9 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "@types/react": "^18.2.62",
+    "@types/react-dom": "^18.2.19",
+    "prettier": "^3.8.1"
   }
 }

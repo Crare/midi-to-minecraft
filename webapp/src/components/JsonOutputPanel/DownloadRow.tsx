@@ -1,7 +1,12 @@
 import JSZip from 'jszip';
 import { useEffect, useState } from 'react';
 
-export default function DownloadRow({ filename, files }) {
+interface DownloadRowProps {
+  filename: string;
+  files: { name: string; data: unknown }[];
+}
+
+export default function DownloadRow({ filename, files }: DownloadRowProps) {
   const [href, setHref] = useState('');
 
   useEffect(() => {
@@ -10,14 +15,11 @@ export default function DownloadRow({ filename, files }) {
 
     async function buildArchive() {
       const zip = new JSZip();
-
       files.forEach((file) => {
         zip.file(file.name.replace(/^.*\//, ''), JSON.stringify(file.data, null, 2));
       });
-
       const blob = await zip.generateAsync({ type: 'blob' });
       if (!active) return;
-
       objectUrl = URL.createObjectURL(blob);
       setHref(objectUrl);
     }
@@ -38,12 +40,15 @@ export default function DownloadRow({ filename, files }) {
         <div className="meta">{files.length} JSON file(s) in ZIP</div>
       </div>
       <a
-        className="button-link"
-        href={href || undefined}
+        href={href}
         download={filename}
-        aria-disabled={!href}
+        className="button"
+        style={{
+          pointerEvents: href ? 'auto' : 'none',
+          opacity: href ? 1 : 0.5,
+        }}
       >
-        Download
+        Download ZIP
       </a>
     </div>
   );

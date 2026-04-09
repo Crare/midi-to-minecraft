@@ -20,7 +20,7 @@ export function formatInstrumentName(instrument) {
 export function getMaxTrackTick(tracks) {
   return tracks.reduce(
     (maxTick, track) => Math.max(maxTick, ...track.notes.map((note) => note.startTick ?? 0), 0),
-    0
+    0,
   );
 }
 
@@ -49,7 +49,11 @@ export function buildVisualizationTracks(trackEvents, mode = 'instrument') {
       track.events.forEach((event) => {
         const key = String(event.trackIndex);
         if (!groups.has(key)) {
-          groups.set(key, { id: `original-track-${event.trackIndex}`, title: event.trackName, events: [] });
+          groups.set(key, {
+            id: `original-track-${event.trackIndex}`,
+            title: event.trackName,
+            events: [],
+          });
         }
         groups.get(key).events.push(event);
       });

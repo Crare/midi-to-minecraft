@@ -1,6 +1,13 @@
 // Rendered as an absolutely-positioned SVG that spans all sub-lane rows of a group.
 // Draws a vertical backbone redstone line plus one horizontal branch per sub-lane.
-export default function HarmonicRail({ count, cs }) {
+import React from 'react';
+
+interface HarmonicRailProps {
+  count: number;
+  cs: number;
+}
+
+const HarmonicRail: React.FC<HarmonicRailProps> = ({ count, cs }) => {
   const rowH = cs + 2; // each row is cs tall + 2px gap
   const totalH = count * cs + (count - 1) * 2;
   const midX = Math.round(cs / 2);
@@ -30,4 +37,6 @@ export default function HarmonicRail({ count, cs }) {
       })}
     </svg>
   );
-}
+};
+
+export default HarmonicRail;

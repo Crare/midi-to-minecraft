@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "expo.vscode-expo-tools",
+    "oderwat.indent-rainbow",
+    "ms-vscode.vscode-typescript-next",
+    "esbenp.prettier-vscode",
+    "rvest.vs-code-prettier-eslint",
+    "dbaeumer.vscode-eslint",
+    "yoavbls.pretty-ts-errors",
+    "vscode-icons-team.vscode-icons",
+    "donjayamanne.githistory"
+  ]
+}

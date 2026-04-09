@@ -1,8 +1,20 @@
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 import CollapsiblePanel from '../CollapsiblePanel';
 
-export default function UploadPanel({ busy, status, onFileSelected, onConvertRequest }) {
-  const [file, setFile] = useState(null);
+interface UploadPanelProps {
+  busy: boolean;
+  status: string;
+  onFileSelected: (filename: string) => void;
+  onConvertRequest: (args: { file: File; outputName: string; trimLeadingSilence: boolean }) => void;
+}
+
+export default function UploadPanel({
+  busy,
+  status,
+  onFileSelected,
+  onConvertRequest,
+}: UploadPanelProps) {
+  const [file, setFile] = useState<File | null>(null);
   const [outputName, setOutputName] = useState('output.json');
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
 
@@ -12,7 +24,7 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
         <input
           type="file"
           accept=".mid,.midi,audio/midi,audio/x-midi"
-          onChange={(event) => {
+          onChange={(event: ChangeEvent<HTMLInputElement>) => {
             const nextFile = event.target.files?.[0] || null;
             setFile(nextFile);
             if (nextFile) onFileSelected(nextFile.name);

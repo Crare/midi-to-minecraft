@@ -123,7 +123,7 @@ const tonalProfiles = {
     ],
     attack: 0.015,
     decay: 0.65,
-    gain: 0.10,
+    gain: 0.1,
     filter: { type: 'bandpass', frequency: 1200, q: 1.5 },
   },
   trumpet_exposed: {
@@ -227,7 +227,7 @@ function playTonalSound(context, placement) {
     context.destination,
     profile.attack,
     profile.decay,
-    profile.gain
+    profile.gain,
   );
   const target = createOptionalFilter(context, gainNode, profile.filter);
   const baseFrequency = minecraftFrequency(placement.note || 0);
@@ -268,7 +268,7 @@ function playNoiseBurst(context, options) {
     context.destination,
     options.attack,
     options.decay,
-    options.gain
+    options.gain,
   );
 
   source.connect(filter);
@@ -354,10 +354,10 @@ export async function playSuccessJingle() {
   const context = await prepareAudioPlayback();
   const beat = 250; // ms
   const notes = [
-    { delay: beat,        instrument: 'pling', note: 6  },
-    { delay: beat * 2,     instrument: 'pling', note: 10 },
+    { delay: beat, instrument: 'pling', note: 6 },
+    { delay: beat * 2, instrument: 'pling', note: 10 },
     { delay: beat * 3, instrument: 'pling', note: 13 },
-    { delay: beat * 4, instrument: 'bell',  note: 18 },
+    { delay: beat * 4, instrument: 'bell', note: 18 },
   ];
   notes.forEach(({ delay, instrument, note }) => {
     if (delay === 0) {

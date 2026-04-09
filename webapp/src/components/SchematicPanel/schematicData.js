@@ -1,21 +1,21 @@
 // ─── Block colors (top-down view of the instrument support block) ──────────────
 export const blockColor = {
-  'minecraft:dirt':         '#7f5a34',
-  'minecraft:sand':         '#d4be7d',
-  'minecraft:glass':        '#8cd9e9',
-  'minecraft:stone':        '#8f9497',
-  'minecraft:gold_block':   '#f3cf3f',
-  'minecraft:clay':         '#b9a6a2',
-  'minecraft:packed_ice':   '#bce8ff',
-  'minecraft:white_wool':   '#f4f2e9',
-  'minecraft:bone_block':   '#e3dcc2',
-  'minecraft:iron_block':   '#c4cbd0',
-  'minecraft:soul_sand':    '#6f5b45',
-  'minecraft:pumpkin':      '#d27720',
-  'minecraft:emerald_block':'#3cc76f',
-  'minecraft:hay_block':    '#d6c66a',
-  'minecraft:glowstone':    '#f2cb6c',
-  'minecraft:acacia_log':   '#8b5a2b',
+  'minecraft:dirt': '#7f5a34',
+  'minecraft:sand': '#d4be7d',
+  'minecraft:glass': '#8cd9e9',
+  'minecraft:stone': '#8f9497',
+  'minecraft:gold_block': '#f3cf3f',
+  'minecraft:clay': '#b9a6a2',
+  'minecraft:packed_ice': '#bce8ff',
+  'minecraft:white_wool': '#f4f2e9',
+  'minecraft:bone_block': '#e3dcc2',
+  'minecraft:iron_block': '#c4cbd0',
+  'minecraft:soul_sand': '#6f5b45',
+  'minecraft:pumpkin': '#d27720',
+  'minecraft:emerald_block': '#3cc76f',
+  'minecraft:hay_block': '#d6c66a',
+  'minecraft:glowstone': '#f2cb6c',
+  'minecraft:acacia_log': '#8b5a2b',
 };
 
 export function blockColorFor(blockId) {
@@ -66,7 +66,14 @@ export function eventsToPlacements(events) {
     const startTick = lastTick + delay;
     lastTime = event.time;
     lastTick = startTick;
-    return { delay, startTick, block: event.block, instrument: event.instrument, note: event.note, pitch: event.pitch };
+    return {
+      delay,
+      startTick,
+      block: event.block,
+      instrument: event.instrument,
+      note: event.note,
+      pitch: event.pitch,
+    };
   });
 }
 
@@ -134,7 +141,12 @@ export function buildCells(notes, { branchInfo = null, branchTaps = [] } = {}) {
         cells.push({ type: 'spacer', count: spacerCount, key: 'spacer' });
       }
       // T-junction — standalone cell between the last shared repeater and the note block.
-      cells.push({ type: 'branch-start', sourceId: branchInfo.sourceId, savedTicks: branchInfo.savedTicks, key: 'branch-start' });
+      cells.push({
+        type: 'branch-start',
+        sourceId: branchInfo.sourceId,
+        savedTicks: branchInfo.savedTicks,
+        key: 'branch-start',
+      });
       if (delay > 0) {
         decomposeDelay(delay).forEach((t, ti) => {
           cells.push({ type: 'repeater', ticks: t, key: `rep-0-${ti}` });
@@ -317,13 +329,16 @@ export function buildTickGrid(trackEvents) {
   instrumentMap.forEach((events, instrument) => {
     if (events.length === 0) return;
     const sorted = [...events].sort((a, b) => a.time - b.time || a.note - b.note);
-    instrumentTicks.set(instrument, sorted.map((ev) => ({
-      absoluteTick: Math.round(ev.time * 10),
-      block: ev.block,
-      instrument: ev.instrument,
-      note: ev.note,
-      pitch: ev.pitch,
-    })));
+    instrumentTicks.set(
+      instrument,
+      sorted.map((ev) => ({
+        absoluteTick: Math.round(ev.time * 10),
+        block: ev.block,
+        instrument: ev.instrument,
+        note: ev.note,
+        pitch: ev.pitch,
+      })),
+    );
   });
 
   if (instrumentTicks.size === 0) return { instruments: [], anchors: [] };
@@ -349,7 +364,7 @@ export function buildTickGrid(trackEvents) {
   instrumentTicks.forEach((_, instrument) => instrLastTick.set(instrument, -1));
 
   const instrSegments = new Map(); // instrument → segments[]
-  const instrAnchors  = new Map(); // instrument → anchorCell[]
+  const instrAnchors = new Map(); // instrument → anchorCell[]
   instrumentTicks.forEach((_, instrument) => {
     instrSegments.set(instrument, []);
     instrAnchors.set(instrument, []);
@@ -362,12 +377,16 @@ export function buildTickGrid(trackEvents) {
     const gapReps = new Map();
     instrumentTicks.forEach((_, instrument) => {
       const plays = instAtTick.get(instrument)?.has(tick) ?? false;
-      if (!plays) { gapReps.set(instrument, null); return; }
+      if (!plays) {
+        gapReps.set(instrument, null);
+        return;
+      }
       const last = instrLastTick.get(instrument);
       const gap = last < 0 ? tick : tick - last;
-      gapReps.set(instrument, gap > 0
-        ? decomposeDelay(gap).map((t) => ({ kind: 'repeater', ticks: t }))
-        : []);
+      gapReps.set(
+        instrument,
+        gap > 0 ? decomposeDelay(gap).map((t) => ({ kind: 'repeater', ticks: t })) : [],
+      );
     });
 
     // Determine if any instrument splits (≥2 simultaneous notes) here.
@@ -410,7 +429,7 @@ export function buildTickGrid(trackEvents) {
     anchors.push({ kind: 'note', tick, isSplit: isSplitTick, index: anchors.length });
     instrumentTicks.forEach((_, instrument) => {
       const plays = instAtTick.get(instrument)?.has(tick) ?? false;
-      const notes  = instAtTick.get(instrument)?.get(tick) ?? [];
+      const notes = instAtTick.get(instrument)?.get(tick) ?? [];
       instrSegments.get(instrument).push(plays ? (gapReps.get(instrument) ?? []) : []);
       instrAnchors.get(instrument).push({ kind: 'note', notes, tick });
       if (notes.length > 0) instrLastTick.set(instrument, tick);
@@ -440,24 +459,26 @@ export function buildTickGrid(trackEvents) {
   // ── 6. Build instrument rows ───────────────────────────────────────────────
   const instruments = [];
   instrumentTicks.forEach((_, instrument) => {
-    const byTick    = instAtTick.get(instrument);
-    const segments  = instrSegments.get(instrument);
+    const byTick = instAtTick.get(instrument);
+    const segments = instrSegments.get(instrument);
     const anchorArr = instrAnchors.get(instrument);
 
     let maxSimul = 1;
-    byTick?.forEach((notes) => { maxSimul = Math.max(maxSimul, notes.length); });
+    byTick?.forEach((notes) => {
+      maxSimul = Math.max(maxSimul, notes.length);
+    });
 
     const mainAnchorCells = anchorArr.map((cell) => {
       if (cell.kind !== 'note') return { ...cell };
       return { kind: 'note', note: cell.notes[0] ?? null, tick: cell.tick };
     });
-    const rows = [{ id: `${instrument}-main`, isSub: false, segments, anchorCells: mainAnchorCells }];
+    const rows = [
+      { id: `${instrument}-main`, isSub: false, segments, anchorCells: mainAnchorCells },
+    ];
 
     for (let subIdx = 1; subIdx < maxSimul; subIdx++) {
       const activeTicks = new Set(
-        [...(byTick?.entries() ?? [])]
-          .filter(([, notes]) => notes.length > subIdx)
-          .map(([t]) => t),
+        [...(byTick?.entries() ?? [])].filter(([, notes]) => notes.length > subIdx).map(([t]) => t),
       );
       if (activeTicks.size === 0) continue;
 
@@ -472,17 +493,27 @@ export function buildTickGrid(trackEvents) {
           };
         }
         if (anchor.kind === 'note' && activeTicks.has(anchor.tick)) {
-          return { kind: 'note', note: byTick?.get(anchor.tick)?.[subIdx] ?? null, tick: anchor.tick };
+          return {
+            kind: 'note',
+            note: byTick?.get(anchor.tick)?.[subIdx] ?? null,
+            tick: anchor.tick,
+          };
         }
         return { kind: 'inactive' };
       });
 
       // Sub-rows have empty segments (they only appear at their active anchors).
       const emptySeg = segments.map(() => []);
-      rows.push({ id: `${instrument}-sub-${subIdx}`, isSub: true, segments: emptySeg, anchorCells: subAnchorCells });
+      rows.push({
+        id: `${instrument}-sub-${subIdx}`,
+        isSub: true,
+        segments: emptySeg,
+        anchorCells: subAnchorCells,
+      });
     }
 
-    const firstBlock = [...(byTick?.values() ?? [])].flat().find((e) => e.block)?.block ?? 'minecraft:dirt';
+    const firstBlock =
+      [...(byTick?.values() ?? [])].flat().find((e) => e.block)?.block ?? 'minecraft:dirt';
     instruments.push({ id: `inst-${instrument}`, label: instrument, block: firstBlock, rows });
   });
 
@@ -523,7 +554,9 @@ export function computeSchematicDimensions(grid) {
 
 // Count block totals for the tick-grid model.
 export function computeTickGridBlockCounts(grid) {
-  let noteblocks = 0, repeaters = 0, dust = 0;
+  let noteblocks = 0,
+    repeaters = 0,
+    dust = 0;
   const supportMap = new Map();
   grid.instruments.forEach((inst) => {
     inst.rows.forEach((row) => {
@@ -575,10 +608,7 @@ export function buildLaneGroups(trackEvents) {
       if (branches[i]) {
         const srcIdx = branches[i].sourceIndex;
         const savedTicks = branches[i].savedTicks;
-        const savedCellCount = countCellsToTick(
-          subLanes[srcIdx].notes,
-          savedTicks,
-        );
+        const savedCellCount = countCellsToTick(subLanes[srcIdx].notes, savedTicks);
         sl.branchFrom = {
           sourceId: subLanes[srcIdx].id,
           savedTicks,

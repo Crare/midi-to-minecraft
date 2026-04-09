@@ -16,12 +16,12 @@ Convert `.midi` files into Minecraft note block build data and visualize, play b
 
 ## Screenshots
 
-| Track Visualization | Build Schematic |
-|---|---|
+| Track Visualization                                                          | Build Schematic                                                |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | ![Track visualization](webapp/public/assets/example_track_visualization.png) | ![Build schematic](webapp/public/assets/example_schematic.png) |
 
-| In-game build (1) | In-game build (2) |
-|---|---|
+| In-game build (1)                                                 | In-game build (2)                                                 |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- |
 | ![In-game example 1](webapp/public/assets/example_minecraft1.png) | ![In-game example 2](webapp/public/assets/example_minecraft2.png) |
 
 ## Project Layout

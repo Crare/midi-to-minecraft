@@ -31,7 +31,7 @@ const noteColorByStep = [
   '#AE00A9',
 ];
 
-const supportColorByBlock = {
+const supportColorByBlock: Record<string, string> = {
   acacia_log: '#8b5a2b',
   sand: '#d4be7d',
   glass: '#8cd9e9',
@@ -54,11 +54,10 @@ const supportColorByBlock = {
   dirt: '#7f5a34',
 };
 
-const supportSpriteCache = new Map();
+const supportSpriteCache = new Map<string, string>();
 
-function supportSpriteForBlock(blockId) {
+function supportSpriteForBlock(blockId: string) {
   if (supportSpriteCache.has(blockId)) return supportSpriteCache.get(blockId);
-
   const blockName = (blockId || 'minecraft:dirt').replace('minecraft:', '');
   const color = supportColorByBlock[blockName] || '#8a8a8a';
   const dark = '#4c4c4c';
@@ -73,7 +72,7 @@ function supportSpriteForBlock(blockId) {
   return uri;
 }
 
-function getMinecraftTuningInfo(useCount) {
+function getMinecraftTuningInfo(useCount: number) {
   const normalizedUseCount = ((useCount % 24) + 24) % 24;
   const noteStep = normalizedUseCount % 12;
   return {
@@ -84,7 +83,7 @@ function getMinecraftTuningInfo(useCount) {
   };
 }
 
-function getNoteblockTooltip(placement) {
+function getNoteblockTooltip(placement: any) {
   const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
   return [
     `Instrument: ${placement.instrument}`,
@@ -102,6 +101,30 @@ function getNoteblockTooltip(placement) {
 
 const noteblockImg = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
 
+interface Placement {
+  pitch?: string;
+  note: number;
+  instrument: string;
+  block: string;
+}
+
+interface Note {
+  placements: Placement[];
+  redstoneTickDelay: number;
+}
+
+interface TrackRowProps {
+  notes: Note[];
+  showColor?: boolean;
+  showNumber?: boolean;
+  showSupport?: boolean;
+  noteTooltipDirection?: 'top' | 'bottom';
+  isPlaybackDimmed?: boolean;
+  unitSize?: number;
+  scrollLeft?: number;
+  containerWidth?: number;
+}
+
 function TrackRow({
   notes,
   showColor = true,
@@ -109,37 +132,24 @@ function TrackRow({
   showSupport = true,
   noteTooltipDirection = 'top',
   isPlaybackDimmed = false,
-  // Virtualization props — VisualizationPanel supplies these.
-  // containerWidth = Infinity renders all notes (no virtualization).
   unitSize = 34,
   scrollLeft = 0,
   containerWidth = Infinity,
-}) {
-  // Each visual unit is unitSize wide with a 2px flex-gap between units.
+}: TrackRowProps) {
   const CELL = unitSize + 2;
-
-  // Pre-compute the cumulative unit-start index for every note.
-  // spacerUnits = redstoneTickDelay (synchronous: 1 unit = 1 tick)
   const noteLayout = useMemo(() => {
     let cum = 0;
     return notes.map((note) => {
       const spacerUnits = Math.max(0, note.redstoneTickDelay);
       const unitStart = cum;
-      cum += spacerUnits + 1; // delay spacer units + 1 noteblock unit
+      cum += spacerUnits + 1;
       return { unitStart, spacerUnits, unitEnd: cum };
     });
   }, [notes]);
-
   const totalUnits = noteLayout.length > 0 ? noteLayout[noteLayout.length - 1].unitEnd : 0;
-
-  // --- Determine the visible slice ---
-  // Overscan: one full container width on each side for smooth scrolling.
   const overscan = Number.isFinite(containerWidth) ? containerWidth : 0;
   const visStart = scrollLeft - overscan;
   const visEnd = scrollLeft + (Number.isFinite(containerWidth) ? containerWidth : 1e9) + overscan;
-
-  // Binary search: first note whose pixel-end (unitEnd * CELL - 2) is past visStart.
-  // unitEnd * CELL - 2 > visStart  →  unitEnd > (visStart + 2) / CELL
   const threshStart = (visStart + 2) / CELL;
   let startIdx = 0;
   {
@@ -152,8 +162,6 @@ function TrackRow({
     }
     startIdx = lo;
   }
-
-  // Binary search: first note whose pixel-start (unitStart * CELL) is at or past visEnd.
   const threshEnd = visEnd / CELL;
   let endIdx = noteLayout.length;
   {
@@ -166,24 +174,14 @@ function TrackRow({
     }
     endIdx = lo;
   }
-
-  // Spacer widths.  The flex gap is 2px between every pair of adjacent items.
-  // A spacer of N units has width = N * CELL - 2  (so the gap after it positions
-  // the next real element at exactly N * CELL pixels from the track start).
   const beforeUnitCount = noteLayout[startIdx]?.unitStart ?? totalUnits;
   const afterUnitStart = noteLayout[endIdx]?.unitStart ?? totalUnits;
   const afterUnitCount = totalUnits - afterUnitStart;
-
   const beforeSpacerWidth = beforeUnitCount > 0 ? beforeUnitCount * CELL - 2 : 0;
   const afterSpacerWidth = afterUnitCount > 0 ? afterUnitCount * CELL - 2 : 0;
-
-  const rowClassName = [
-    'track-row',
-    isPlaybackDimmed ? 'track-row-dimmed' : '',
-  ]
+  const rowClassName = ['track-row', isPlaybackDimmed ? 'track-row-dimmed' : '']
     .filter(Boolean)
     .join(' ');
-
   return (
     <div className={rowClassName}>
       <div className="track-line">
@@ -194,7 +192,6 @@ function TrackRow({
           const noteIndex = startIdx + i;
           const note = notes[noteIndex];
           const spacerWidth = layout.spacerUnits > 0 ? layout.spacerUnits * CELL - 2 : 0;
-
           return (
             <Fragment key={`frag-${noteIndex}`}>
               {spacerWidth > 0 && (
@@ -202,7 +199,9 @@ function TrackRow({
               )}
               <div className="note-unit">
                 {note.placements.map((placement, pi) => {
-                  const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
+                  const tuningInfo = placement.pitch
+                    ? getMinecraftTuningInfo(placement.note)
+                    : null;
                   const tooltipLines = getNoteblockTooltip(placement).split('\n');
                   return (
                     <div
@@ -212,7 +211,9 @@ function TrackRow({
                       tabIndex={0}
                       aria-label={getNoteblockTooltip(placement).replace(/\n/g, ', ')}
                       onPointerDown={(event) => event.stopPropagation()}
-                      onClick={() => { void playPlacementSound(placement); }}
+                      onClick={() => {
+                        void playPlacementSound(placement);
+                      }}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
