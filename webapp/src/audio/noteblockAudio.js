@@ -352,7 +352,7 @@ export async function playPlacementSound(placement) {
 
 export async function playSuccessJingle() {
   const context = await prepareAudioPlayback();
-  const beat = 250; // ms
+  const beat = 150; // ms
   const notes = [
     { delay: beat, instrument: 'pling', note: 6 },
     { delay: beat * 2, instrument: 'pling', note: 10 },

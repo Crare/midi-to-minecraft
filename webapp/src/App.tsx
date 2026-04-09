@@ -58,7 +58,7 @@ export default function App() {
       setZipFilename(getZipFilename(outputName, file.name));
       const totalNotes = sequences.reduce((sum, track) => sum + track.length, 0);
       setStatus(`Converted ${sequences.length} track(s), ${totalNotes} notes total.`);
-      setTimeout(() => playSuccessJingle(), 2000);
+      setTimeout(() => playSuccessJingle(), 500);
     } catch (error: any) {
       console.error(error);
       setStatus(`Conversion failed: ${error.message || String(error)}`);

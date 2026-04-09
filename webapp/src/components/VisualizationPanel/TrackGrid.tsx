@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Grid } from 'react-window';
 import { TrackRowGridCell } from './TrackRowGridCell';
+import { useContainerWidth } from './useContainerWidth';
 
 interface TrackGridProps {
   visibleTracks: any[];
@@ -9,7 +10,6 @@ interface TrackGridProps {
   showNumber: boolean;
   showSupport: boolean;
   trackUnitSize: number;
-  scrollContainerWidth: number;
   timelineUnitCount: number;
   trackScrollRef: React.RefObject<HTMLDivElement>;
   topScrollRef: React.RefObject<HTMLDivElement>;
@@ -31,7 +31,6 @@ export default function TrackGrid({
   showNumber,
   showSupport,
   trackUnitSize,
-  scrollContainerWidth,
   timelineUnitCount,
   trackScrollRef,
   topScrollRef,
@@ -45,8 +44,19 @@ export default function TrackGrid({
   selectedPlaybackTrackId,
   toggleMuteCallbacks,
 }: TrackGridProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerWidth = useContainerWidth(containerRef);
+  // Max columns we’ll ever render — cap based on screen width and unit size
+  const maxColumns = Math.floor(scrollContainerWidth / (trackUnitSize + 2));
+  const effectiveColumnCount = Math.min(
+    timelineUnitCount,
+    maxColumns, // Prevent massive horizontal overflow!
+  );
+
+  // console.log('visibleTracks', visibleTracks);
+
   return (
-    <div className="track-area">
+    <div className="track-area" ref={containerRef}>
       <div className="track-scroll-column">
         <div className="track-scroll-proxy-top" ref={topScrollRef}>
           <div
@@ -119,15 +129,23 @@ export default function TrackGrid({
         </button>
         <div
           className="track-stage"
-          style={{ '--timeline-unit-count': timelineUnitCount } as React.CSSProperties}
+          style={
+            {
+              '--timeline-unit-count': timelineUnitCount,
+              width: scrollContainerWidth, // Keep this from parent
+              maxWidth: `${scrollContainerWidth}px`,
+              overflowX: 'auto',
+              scrollbarWidth: 'none', // Remove scrollbar if needed
+            } as React.CSSProperties
+          }
         >
           <div className="track-wrap">
             {Array.isArray(visibleTracks) && visibleTracks.length > 0 && (
               <Grid
-                columnCount={Math.max(...visibleTracks.map((t) => t.notes.length))}
+                columnCount={timelineUnitCount}
                 columnWidth={trackUnitSize + 2}
                 style={{
-                  height: Math.min(visibleTracks.length * 48, 400),
+                  height: visibleTracks.length * 48,
                   width: scrollContainerWidth,
                   overflowX: 'auto',
                 }}
@@ -135,12 +153,14 @@ export default function TrackGrid({
                 rowHeight={48}
                 cellComponent={TrackRowGridCell}
                 cellProps={{
-                  tracks: visibleTracks,
-                  mutedTracks,
-                  showColor,
-                  showNumber,
-                  showSupport,
-                  trackUnitSize,
+                  cellProps: {
+                    tracks: visibleTracks,
+                    mutedTracks,
+                    showColor,
+                    showNumber,
+                    showSupport,
+                    trackUnitSize,
+                  },
                 }}
               />
             )}

@@ -1,7 +1,0 @@
-<svg width="28" height="28" viewBox="0 0 28 28" aria-label="Branch start">
-  <rect width="28" height="28" fill="#e67e22" opacity="0.2" />
-  <rect x="0" y="11" width="28" height="6" fill="#e67e22" />
-  <rect x="11" y="0" width="6" height="14" fill="#e67e22" />
-  <text x="27" y="10" text-anchor="end" font-size="5" fill="#7f3e00" font-family="monospace">SAVEDTICKS</text>
-</svg>
-<!-- Replace SAVEDTICKS as needed -->
