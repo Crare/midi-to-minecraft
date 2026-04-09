@@ -26,6 +26,7 @@ export default function App() {
   const [trackEvents, setTrackEvents] = useState<TrackEvent[]>([]);
   const [downloadFiles, setDownloadFiles] = useState<{ name: string; data: Placement[] }[]>([]);
   const [zipFilename, setZipFilename] = useState<string>('output.zip');
+  const [exampleOpen, setExampleOpen] = useState<boolean>(true);
 
   const onConvertRequest = async ({ file, outputName, trimLeadingSilence }: ConvertRequest) => {
     if (!file || busy) return;
@@ -77,12 +78,15 @@ export default function App() {
       </header>
 
       <main>
-        <ExamplePanel />
+        <ExamplePanel open={exampleOpen} onOpenChange={setExampleOpen} />
 
         <UploadPanel
           busy={busy}
           status={status}
-          onFileSelected={(filename: string) => setStatus(`Selected: ${filename}`)}
+          onFileSelected={(filename: string) => {
+            setStatus(`Selected: ${filename}`);
+            setExampleOpen(false);
+          }}
           onConvertRequest={onConvertRequest}
         />
 

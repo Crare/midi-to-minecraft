@@ -4,7 +4,6 @@
 
 - schematic expands to right out of window.
 
-- collapse example when uploaded new file.
 - fix icons in schematic
 - dragging horizontally doesnt work in schematic
 - dragging horizontally doesnt work in visualization
@@ -20,8 +19,6 @@
 - in the visualization show track length in time and minecraft ticks.
 
 - add export schematic as excel file.
-
-- use svgs for each cell
 
 - use some common ui-library like material-ui
 

@@ -1,8 +1,18 @@
 import CollapsiblePanel from '../common/CollapsiblePanel';
 
-export default function ExamplePanel() {
+interface ExamplePanelProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export default function ExamplePanel({ open, onOpenChange }: ExamplePanelProps) {
   return (
-    <CollapsiblePanel title="Example Output" defaultOpen={true}>
+    <CollapsiblePanel
+      title="Example Output"
+      open={open}
+      onOpenChange={onOpenChange}
+      defaultOpen={true}
+    >
       <div className="example-panel__layout">
         <p className="example-panel__description">
           Upload any MIDI file and convert it into a Minecraft note block sequence. Get a JSON file
