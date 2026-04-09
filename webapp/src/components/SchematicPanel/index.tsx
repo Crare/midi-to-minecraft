@@ -1,19 +1,19 @@
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CollapsiblePanel from '../CollapsiblePanel';
 import DragScrollArea from '../DragScrollArea';
+import ErrorBoundary from '../ErrorBoundary';
+import { MiniBlock, MiniDust, MiniNoteBlock, MiniRepeater } from './SchematicCells';
 import SchematicGrid from './SchematicGrid';
+import TotalsChip from './TotalsChip';
 import {
   blockColor,
   blockColorFor,
   blockLabel,
   buildTickGrid,
-  computeTickGridBlockCounts,
   computeRawResources,
   computeSchematicDimensions,
+  computeTickGridBlockCounts,
 } from './schematicData';
-import { MiniNoteBlock, MiniRepeater, MiniDust, MiniBlock } from './SchematicCells';
-import ErrorBoundary from '../ErrorBoundary';
-import TotalsChip from './TotalsChip';
 
 interface SchematicPanelProps {
   trackEvents: any[];
@@ -227,7 +227,7 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
                   <h3 className="schematic-totals-heading">Blocks needed</h3>
                   <div className="schematic-totals-chips">
                     <TotalsChip
-                      icon={<MiniNoteBlock size={18} />}
+                      icon={<MiniNoteBlock block="minecraft:dirt" size={18} />}
                       count={noteblocks}
                       label="note blocks"
                     />

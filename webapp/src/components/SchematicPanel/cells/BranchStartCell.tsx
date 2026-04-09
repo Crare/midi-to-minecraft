@@ -1,3 +1,4 @@
+import branchStartCellSvg from '../../../../public/assets/icons/branch-start-cell.svg';
 export const CELL = 28;
 
 export function BranchStartCell({
@@ -16,7 +17,7 @@ export function BranchStartCell({
       aria-label={`Branch from ${sourceId}, saves ${savedTicks} ticks`}
     >
       <img
-        src={require('../../../../public/assets/icons/branch-start-cell.svg')}
+        src={branchStartCellSvg}
         width={s}
         height={s}
         style={{ display: 'block', width: s, height: s }}

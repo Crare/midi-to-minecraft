@@ -1,3 +1,4 @@
+import noteCellSvg from '../../../../public/assets/icons/note-cell.svg';
 import { blockColorFor, blockLabel } from '../schematicData';
 
 export const CELL = 28;
@@ -22,7 +23,7 @@ export function NoteCell({
       aria-label={`${instrument} on ${blockLabel(block)}`}
     >
       <img
-        src={require('../../../../public/assets/icons/note-cell.svg')}
+        src={noteCellSvg}
         width={s}
         height={s}
         style={{ display: 'block', width: s, height: s, background: col }}

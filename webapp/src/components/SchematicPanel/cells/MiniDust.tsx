@@ -1,9 +1,10 @@
+import miniDustSvg from '../../../../public/assets/icons/mini-dust.svg';
 const MINI = 18;
 
 export function MiniDust({ size = MINI }: { size?: number }) {
   return (
     <img
-      src={require('../../../../public/assets/icons/mini-dust.svg')}
+      src={miniDustSvg}
       width={size}
       height={size}
       style={{

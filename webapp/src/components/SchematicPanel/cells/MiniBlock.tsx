@@ -1,9 +1,10 @@
+import miniBlockSvg from '../../../../public/assets/icons/mini-block.svg';
 const MINI = 18;
 
 export function MiniBlock({ color, size = MINI }: { color: string; size?: number }) {
   return (
     <img
-      src={require('../../../../public/assets/icons/mini-block.svg')}
+      src={miniBlockSvg}
       width={size}
       height={size}
       style={{

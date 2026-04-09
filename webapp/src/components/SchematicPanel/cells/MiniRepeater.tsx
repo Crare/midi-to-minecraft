@@ -1,9 +1,10 @@
 const MINI = 18;
 
+import miniRepeaterSvg from '../../../../public/assets/icons/mini-repeater.svg';
 export function MiniRepeater({ size = MINI }: { size?: number }) {
   return (
     <img
-      src={require('../../../../public/assets/icons/mini-repeater.svg')}
+      src={miniRepeaterSvg}
       width={size}
       height={size}
       style={{

@@ -1,10 +1,11 @@
+import branchTapCellSvg from '../../../../public/assets/icons/branch-tap-cell.svg';
 export const CELL = 28;
 
 export function BranchTapCell({ size }: { size?: number }) {
   const s = size ?? CELL;
   return (
     <img
-      src={require('../../../../public/assets/icons/branch-tap-cell.svg')}
+      src={branchTapCellSvg}
       width={s}
       height={s}
       style={{ display: 'block', flexShrink: 0 }}

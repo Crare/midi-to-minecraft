@@ -1,3 +1,4 @@
+import repeaterCellSvg from '../../../../public/assets/icons/repeater-cell.svg';
 export const CELL = 28;
 
 export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) {
@@ -8,7 +9,7 @@ export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) 
       aria-label={`Repeater ${ticks}t`}
     >
       <img
-        src={require('../../../../public/assets/icons/repeater-cell.svg')}
+        src={repeaterCellSvg}
         width={s}
         height={s}
         style={{ display: 'block', width: s, height: s }}

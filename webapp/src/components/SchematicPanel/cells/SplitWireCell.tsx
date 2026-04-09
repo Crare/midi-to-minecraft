@@ -1,3 +1,4 @@
+import splitWireCellSvg from '../../../../public/assets/icons/split-wire-cell.svg';
 export const CELL = 28;
 
 export function SplitWireCell({
@@ -10,7 +11,7 @@ export function SplitWireCell({
   const s = size ?? CELL;
   return (
     <img
-      src={require('../../../../public/assets/icons/split-wire-cell.svg')}
+      src={splitWireCellSvg}
       width={s}
       height={s}
       style={{ display: 'block', flexShrink: 0 }}

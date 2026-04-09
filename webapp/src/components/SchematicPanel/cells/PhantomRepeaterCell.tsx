@@ -1,3 +1,4 @@
+import phantomRepeaterCellSvg from '../../../../public/assets/icons/phantom-repeater-cell.svg';
 export const CELL = 28;
 
 export function PhantomRepeaterCell({ ticks, size }: { ticks: number; size?: number }) {
@@ -15,7 +16,7 @@ export function PhantomRepeaterCell({ ticks, size }: { ticks: number; size?: num
       aria-label={`Shared path ${ticks}t`}
     >
       <img
-        src={require('../../../../public/assets/icons/phantom-repeater-cell.svg')}
+        src={phantomRepeaterCellSvg}
         width={s}
         height={s}
         style={{ display: 'block', width: s, height: s }}
