@@ -19,5 +19,6 @@ Refer to these files for guidance when working on or extending agents in specifi
 
 ## Gotchas about the project
 
-- webapp lives in /webapp/-folder, not in root. run yarn in /webapp/ and install packages in /webapp/ and not in root!
+- webapp lives in /webapp/-folder, not in root. run `yarn` in /webapp/ and install packages in /webapp/ and not in root!
 - use yarn instead of npm.
+- check build works with `yarn build`

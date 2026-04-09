@@ -1,0 +1,9 @@
+<svg width="28" height="28" viewBox="0 0 28 28" aria-label="Repeater">
+  <rect width="28" height="28" fill="#b9b3a8" />
+  <rect x="2" y="2" width="24" height="24" fill="#ddd7ca" />
+  <rect x="2" y="11" width="24" height="6" fill="#b94141" />
+  <rect x="18" y="5" width="4" height="4" fill="#d63737" />
+  <rect x="6" y="19" width="4" height="4" fill="#d63737" />
+  <text x="14" y="10" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="#222" font-family="monospace">TICKS</text>
+</svg>
+<!-- Replace TICKS as needed -->
