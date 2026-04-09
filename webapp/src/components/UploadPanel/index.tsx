@@ -1,5 +1,5 @@
+import CollapsiblePanel from '@components/common/CollapsiblePanel';
 import { ChangeEvent, useState } from 'react';
-import CollapsiblePanel from '../common/CollapsiblePanel';
 
 interface UploadPanelProps {
   busy: boolean;

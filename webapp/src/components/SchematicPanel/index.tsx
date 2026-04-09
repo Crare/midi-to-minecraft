@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import CollapsiblePanel from '../common/CollapsiblePanel';
-import ErrorBoundary from '../common/ErrorBoundary';
+import CollapsiblePanel from '@components/common/CollapsiblePanel';
+import ErrorBoundary from '@components/common/ErrorBoundary';
+import { useContainerWidth } from '@hooks/useContainerWidth';
+import { useEffect, useMemo, useRef as useReactRef, useRef, useState } from 'react';
 import HowToWireTutorial from './HowToWireTutorial';
 import { MiniBlock, MiniDust, MiniNoteBlock, MiniRepeater } from './SchematicCells';
 import SchematicGridArea from './SchematicGridArea';
@@ -28,7 +29,9 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
   const [indicatorY, setIndicatorY] = useState(30);
   const [processing, setProcessing] = useState(false);
 
-  const contentRef = useRef<HTMLDivElement | null>(null);
+  const panelContainerRef = useReactRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const panelWidth = useContainerWidth(panelContainerRef);
   const indicatorDragRef = useRef({ active: false, startClientX: 0, startX: 0 });
   const hIndicatorDragRef = useRef({ active: false, startClientY: 0, startY: 0 });
 
@@ -140,7 +143,7 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
 
   return (
     <ErrorBoundary>
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }} ref={panelContainerRef}>
         {processing && (
           <div
             style={{
@@ -306,6 +309,7 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
             onColumnClick={onColumnClick}
             onRowClick={onRowClick}
             contentRef={contentRef}
+            maxWidth={panelWidth}
           />
         </CollapsiblePanel>
       </div>

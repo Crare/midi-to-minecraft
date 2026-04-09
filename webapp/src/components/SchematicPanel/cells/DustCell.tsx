@@ -1,4 +1,4 @@
-import { CELL } from '../../../constants';
+import { CELL } from '@components/constants';
 
 const dustCellSvg = `${import.meta.env.BASE_URL}assets/icons/dust-cell.svg`;
 /**

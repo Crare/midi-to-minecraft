@@ -1,6 +1,6 @@
+import { playPlacementSound } from '@audio/noteblockAudio';
+import { noteColorByStep, notePitchNames, supportColorByBlock } from '@components/constants';
 import { Fragment, memo, useMemo } from 'react';
-import { playPlacementSound } from '../../audio/noteblockAudio';
-import { noteColorByStep, notePitchNames, supportColorByBlock } from '../../constants';
 
 const supportSpriteCache = new Map<string, string>();
 

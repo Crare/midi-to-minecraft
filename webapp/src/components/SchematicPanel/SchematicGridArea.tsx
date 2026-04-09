@@ -1,5 +1,5 @@
+import DragScrollArea from '@components/common/DragScrollArea';
 import React from 'react';
-import DragScrollArea from '../common/DragScrollArea';
 import SchematicGrid from './SchematicGrid';
 
 interface SchematicGridAreaProps {
@@ -32,14 +32,23 @@ export default function SchematicGridArea({
   onColumnClick,
   onRowClick,
   contentRef,
-}: SchematicGridAreaProps) {
+  maxWidth,
+}: SchematicGridAreaProps & { maxWidth?: number }) {
   return (
     <DragScrollArea className="schematic-scroll">
-      <div className="schematic-content-x-scroll">
+      <div
+        className="schematic-content-x-scroll"
+        style={maxWidth ? { maxWidth, width: '100%' } : {}}
+      >
         <div
           ref={contentRef}
           className="schematic-content"
-          style={{ minWidth: 'fit-content', width: 'max-content' }}
+          style={{
+            minWidth: 'fit-content',
+            width: 'max-content',
+            maxWidth: maxWidth ? maxWidth : undefined,
+            overflowX: 'auto',
+          }}
         >
           {grid?.instruments?.length > 0 && (
             <>

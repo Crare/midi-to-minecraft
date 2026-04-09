@@ -13,7 +13,15 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": "./src",
+    "paths": {
+      "@hooks/*": ["hooks/*"],
+      "@components/*": ["components/*"],
+      "@midi/*": ["midi/*"],
+      "@audio/*": ["audio/*"],
+      "@assets/*": ["public/assets/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules"]

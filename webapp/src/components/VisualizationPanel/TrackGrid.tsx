@@ -1,7 +1,7 @@
+import { useContainerWidth } from '@hooks/useContainerWidth';
 import React, { useRef } from 'react';
 import { Grid } from 'react-window';
 import { TrackRowGridCell } from './TrackRowGridCell';
-import { useContainerWidth } from './useContainerWidth';
 
 interface TrackGridProps {
   visibleTracks: any[];

@@ -1,4 +1,4 @@
-import CollapsiblePanel from '../common/CollapsiblePanel';
+import CollapsiblePanel from '@components/common/CollapsiblePanel';
 
 interface ExamplePanelProps {
   open: boolean;

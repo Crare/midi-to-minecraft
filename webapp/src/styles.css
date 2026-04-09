@@ -809,6 +809,20 @@ button:disabled {
   text-align: center;
 }
 
+.schematic-panel {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.schematic-panel .panel-body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: auto;
+  min-width: 0;
+}
+
 .schematic-legend {
   display: flex;
   flex-wrap: wrap;

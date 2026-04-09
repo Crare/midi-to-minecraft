@@ -1,13 +1,13 @@
-import { Midi } from '@tonejs/midi';
-import type { Note } from '@tonejs/midi/dist/Note';
-import type { Track } from '@tonejs/midi/dist/Track';
 import {
   blockByPatchId,
   blockByPercussiveNote,
   defaultInstrumentBlock,
   defaultPercussiveBlock,
   instrumentByBlock,
-} from '../constants';
+} from '@components/constants';
+import { Midi } from '@tonejs/midi';
+import type { Note } from '@tonejs/midi/dist/Note';
+import type { Track } from '@tonejs/midi/dist/Track';
 import { NoteEvent } from './types';
 
 export function midiToPitchClass(noteNumber: number): string {

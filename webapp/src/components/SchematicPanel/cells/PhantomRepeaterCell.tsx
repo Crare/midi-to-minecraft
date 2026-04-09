@@ -1,4 +1,4 @@
-import { CELL } from '../../../constants';
+import { CELL } from '@components/constants';
 
 const phantomRepeaterCellSvg = `${import.meta.env.BASE_URL}assets/icons/phantom-repeater-cell.svg`;
 

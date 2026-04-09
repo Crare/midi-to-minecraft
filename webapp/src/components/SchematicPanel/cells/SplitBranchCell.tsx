@@ -1,4 +1,4 @@
-import { CELL } from '../../../constants';
+import { CELL } from '@components/constants';
 
 const splitBranchCellSvg = `${import.meta.env.BASE_URL}assets/icons/split-branch-cell.svg`;
 

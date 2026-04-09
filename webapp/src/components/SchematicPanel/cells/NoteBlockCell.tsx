@@ -1,7 +1,7 @@
-import { playPlacementSound } from '../../../audio/noteblockAudio';
-import { usePortalTooltip } from '../../../hooks/usePortalTooltip';
-import { blockLabel, getUseCount } from '../schematicData';
-import { TooltipPortal } from '../SchematicGrid';
+import { playPlacementSound } from '@audio/noteblockAudio';
+import { blockLabel, getUseCount } from '@components/SchematicPanel/schematicData';
+import { TooltipPortal } from '@components/SchematicPanel/SchematicGrid';
+import { usePortalTooltip } from '@hooks/usePortalTooltip';
 import { NoteCell } from './NoteCell';
 
 /**

@@ -1,5 +1,5 @@
-import { usePortalTooltip } from '../../../hooks/usePortalTooltip';
-import { TooltipPortal } from '../SchematicGrid';
+import { TooltipPortal } from '@components/SchematicPanel/SchematicGrid';
+import { usePortalTooltip } from '@hooks/usePortalTooltip';
 import { RepeaterCell } from './RepeaterCell';
 
 /**
