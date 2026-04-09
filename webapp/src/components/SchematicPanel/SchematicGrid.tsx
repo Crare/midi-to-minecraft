@@ -42,7 +42,7 @@ export default function SchematicGrid({
   onColumnClick,
   onRowClick,
 }: SchematicGridProps) {
-  const cs = cellSize ?? CELL;
+  const cs = cellSize ?? 32;
   const [lastPressed, setLastPressed] = useState<string | null>(null);
   if (!grid || !Array.isArray(grid.instruments) || grid.instruments.length === 0) return null;
 
