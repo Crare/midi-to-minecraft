@@ -13,28 +13,28 @@ export default function ExamplePanel() {
         <div className="example-panel__images">
           <figure className="example-panel__figure">
             <img
-              src={`${import.meta.env.BASE_URL}assets/example_track_visualization.png`}
+              src={`${import.meta.env.BASE_URL}assets/examples/example_track_visualization.png`}
               alt="Track visualization"
             />
             <figcaption>Track visualization with playback</figcaption>
           </figure>
           <figure className="example-panel__figure">
             <img
-              src={`${import.meta.env.BASE_URL}assets/example_schematic.png`}
+              src={`${import.meta.env.BASE_URL}assets/examples/example_schematic.png`}
               alt="Top-down build schematic"
             />
             <figcaption>Top-down build schematic</figcaption>
           </figure>
           <figure className="example-panel__figure">
             <img
-              src={`${import.meta.env.BASE_URL}assets/example_minecraft1.png`}
+              src={`${import.meta.env.BASE_URL}assets/examples/example_minecraft1.png`}
               alt="In-game build example"
             />
             <figcaption>In Minecraft — example build 1</figcaption>
           </figure>
           <figure className="example-panel__figure">
             <img
-              src={`${import.meta.env.BASE_URL}assets/example_minecraft2.png`}
+              src={`${import.meta.env.BASE_URL}assets/examples/example_minecraft2.png`}
               alt="In-game build example 2"
             />
             <figcaption>In Minecraft — example build 2</figcaption>
