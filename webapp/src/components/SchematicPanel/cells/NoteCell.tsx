@@ -1,7 +1,6 @@
+import { CELL } from '../../../constants';
 import { blockColorFor, blockLabel } from '../schematicData';
-const noteCellSvg = '/assets/icons/note-cell.svg';
-
-export const CELL = 28;
+const noteCellSvg = '/midi-to-minecraft/assets/icons/note-cell.svg';
 
 export function NoteCell({
   block,

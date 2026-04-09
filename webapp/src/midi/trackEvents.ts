@@ -7,7 +7,7 @@ import {
   defaultInstrumentBlock,
   defaultPercussiveBlock,
   instrumentByBlock,
-} from './constants';
+} from '../constants';
 import { NoteEvent } from './types';
 
 export function midiToPitchClass(noteNumber: number): string {

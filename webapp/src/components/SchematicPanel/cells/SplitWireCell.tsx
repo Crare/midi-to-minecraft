@@ -1,5 +1,6 @@
-const splitWireCellSvg = '/assets/icons/split-wire-cell.svg';
-export const CELL = 28;
+import { CELL } from '../../../constants';
+
+const splitWireCellSvg = '/midi-to-minecraft/assets/icons/split-wire-cell.svg';
 
 export function SplitWireCell({
   connects = {},

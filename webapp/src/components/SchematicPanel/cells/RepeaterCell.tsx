@@ -1,5 +1,6 @@
-const repeaterCellSvg = '/assets/icons/repeater-cell.svg';
-export const CELL = 28;
+import { CELL } from '../../../constants';
+
+const repeaterCellSvg = '/midi-to-minecraft/assets/icons/repeater-cell.svg';
 
 export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) {
   const s = size ?? CELL;

@@ -1,7 +1,7 @@
 import { CellComponentProps } from 'react-window';
 import { Fragment } from 'react/jsx-runtime';
 import { playPlacementSound } from '../../audio/noteblockAudio';
-import { noteColorByStep, notePitchNames } from '../../midi/constants';
+import { noteColorByStep, notePitchNames } from '../../constants';
 
 function supportSpriteForBlock(blockId) {
   const blockName = (blockId || 'minecraft:dirt').replace('minecraft:', '');

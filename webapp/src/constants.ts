@@ -1,6 +1,8 @@
 export const defaultInstrumentBlock = 'minecraft:dirt';
 export const defaultPercussiveBlock = 'minecraft:sand';
 
+export const CELL = 28;
+
 export const instrumentByBlock: Record<string, string> = {
   'minecraft:acacia_log': 'bass',
   'minecraft:sand': 'snare',

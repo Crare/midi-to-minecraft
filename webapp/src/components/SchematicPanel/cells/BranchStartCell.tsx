@@ -1,5 +1,6 @@
-const branchStartCellSvg = '/assets/icons/branch-start-cell.svg';
-export const CELL = 28;
+import { CELL } from '../../../constants';
+
+const branchStartCellSvg = '/midi-to-minecraft/assets/icons/branch-start-cell.svg';
 
 export function BranchStartCell({
   sourceId,

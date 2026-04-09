@@ -1,5 +1,6 @@
-const splitBranchCellSvg = '/assets/icons/split-branch-cell.svg';
-export const CELL = 28;
+import { CELL } from '../../../constants';
+
+const splitBranchCellSvg = '/midi-to-minecraft/assets/icons/split-branch-cell.svg';
 
 export function SplitBranchCell({ size }: { size?: number }) {
   const s = size ?? CELL;

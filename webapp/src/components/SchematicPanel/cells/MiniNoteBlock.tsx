@@ -1,5 +1,5 @@
 import { blockColorFor } from '../schematicData';
-const miniNoteBlockSvg = '/assets/icons/mini-note-block.svg';
+const miniNoteBlockSvg = '/midi-to-minecraft/assets/icons/mini-note-block.svg';
 
 const MINI = 18;
 

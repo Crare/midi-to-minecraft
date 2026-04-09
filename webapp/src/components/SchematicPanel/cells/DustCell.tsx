@@ -1,5 +1,6 @@
-const dustCellSvg = '/assets/icons/dust-cell.svg';
-export const CELL = 28;
+import { CELL } from '../../../constants';
+
+const dustCellSvg = '/midi-to-minecraft/assets/icons/dust-cell.svg';
 
 export function DustCell({ size }: { size?: number }) {
   const s = size ?? CELL;

@@ -1,5 +1,6 @@
-const branchTapCellSvg = '/assets/icons/branch-tap-cell.svg';
-export const CELL = 28;
+import { CELL } from '../../../constants';
+
+const branchTapCellSvg = '/midi-to-minecraft/assets/icons/branch-tap-cell.svg';
 
 export function BranchTapCell({ size }: { size?: number }) {
   const s = size ?? CELL;

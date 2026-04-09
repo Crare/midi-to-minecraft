@@ -1,4 +1,4 @@
-const miniDustSvg = '/src/assets/icons/mini-dust.svg';
+const miniDustSvg = '/midi-to-minecraft/assets/icons/mini-dust.svg';
 const MINI = 18;
 
 export function MiniDust({ size = MINI }: { size?: number }) {

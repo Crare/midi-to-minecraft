@@ -1,4 +1,4 @@
-const miniBlockSvg = '/assets/icons/mini-block.svg';
+const miniBlockSvg = '/midi-to-minecraft/assets/icons/mini-block.svg';
 const MINI = 18;
 
 export function MiniBlock({ color, size = MINI }: { color: string; size?: number }) {

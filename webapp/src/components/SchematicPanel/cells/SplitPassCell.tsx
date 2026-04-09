@@ -1,5 +1,6 @@
-const splitPassCellSvg = '/assets/icons/split-pass-cell.svg';
-export const CELL = 28;
+import { CELL } from '../../../constants';
+
+const splitPassCellSvg = '/midi-to-minecraft/assets/icons/split-pass-cell.svg';
 
 export function SplitPassCell({ size }: { size?: number }) {
   const s = size ?? CELL;
