@@ -1,7 +1,5 @@
 # TODO
 
-- remove unused .jsx files after typescript conversion
-
 - optimize the app
 
 - i think the horizontal scroll and play-head are not keeping up with the sounds playing of the song. they are not in sync.
@@ -16,10 +14,6 @@
 - use svgs for each cell
 
 - use some common style library like material-ui
-
-## AI
-
-- write specs and agents.md
 
 ## OPTIMIZE
 

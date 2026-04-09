@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Grid } from 'react-window';
 import { playPlacementSoundSync, prepareAudioPlayback } from '../../audio/noteblockAudio';
 import CollapsiblePanel from '../CollapsiblePanel';
-import DragScrollArea from '../DragScrollArea';
 import ErrorBoundary from '../ErrorBoundary';
-import TrackRow from './TrackRow';
+import { TrackRowGridCell } from './TrackRowGridCell';
 import {
   buildVisualizationTracks,
   findFirstNoteIndexAtOrAfter,
@@ -543,49 +543,55 @@ export default function VisualizationPanel({ trackEvents }: VisualizationPanelPr
                 </div>
               ))}
             </div>
-            <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
-              <button
-                ref={playheadRef}
-                type="button"
-                className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
-                style={{ left: '0px' }}
-                onPointerDown={onPlayheadPointerDown}
-                onPointerMove={onPlayheadPointerMove}
-                onPointerUp={onPlayheadPointerUp}
-                onPointerCancel={finishPlayheadDrag}
-                aria-label="Drag play position"
-              >
-                <span className="playhead-line" aria-hidden="true" />
-                <span className="playhead-head" aria-hidden="true" />
-              </button>
-              <div
-                className="track-stage"
-                style={{ '--timeline-unit-count': timelineUnitCount } as React.CSSProperties}
-              >
-                <div className="track-wrap">
-                  {Array.isArray(visibleTracks) &&
-                    visibleTracks.length > 0 &&
-                    visibleTracks.map((track: any, index: number) => {
-                      if (!track || !track.id || !Array.isArray(track.notes)) return null;
-                      if (mutedTracks.has(track.id)) return null;
-                      return (
-                        <div key={track.id} style={{ height: 44 }}>
-                          <TrackRow
-                            notes={track.notes}
-                            showColor={showColor}
-                            showNumber={showNumber}
-                            showSupport={showSupport}
-                            noteTooltipDirection={index === 0 ? 'bottom' : 'top'}
-                            unitSize={trackUnitSize}
-                            scrollLeft={scrollLeft}
-                            containerWidth={scrollContainerWidth}
-                          />
-                        </div>
-                      );
-                    })}
-                </div>
+            {/* <DragScrollArea
+              className="track-scroll-wrap"
+              containerRef={trackScrollRef as unknown as React.RefObject<HTMLDivElement>}
+            > */}
+            <button
+              ref={playheadRef}
+              type="button"
+              className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
+              style={{ left: '0px' }}
+              onPointerDown={onPlayheadPointerDown}
+              onPointerMove={onPlayheadPointerMove}
+              onPointerUp={onPlayheadPointerUp}
+              onPointerCancel={finishPlayheadDrag}
+              aria-label="Drag play position"
+            >
+              <span className="playhead-line" aria-hidden="true" />
+              <span className="playhead-head" aria-hidden="true" />
+            </button>
+            <div
+              className="track-stage"
+              style={{ '--timeline-unit-count': timelineUnitCount } as React.CSSProperties}
+            >
+              <div className="track-wrap">
+                {Array.isArray(visibleTracks) && visibleTracks.length > 0 && (
+                  <Grid
+                    columnCount={Math.max(...visibleTracks.map((t) => t.notes.length))}
+                    columnWidth={trackUnitSize + 2}
+                    style={{
+                      height: Math.min(visibleTracks.length * 48, 400),
+                      width: scrollContainerWidth,
+                      overflowX: 'auto',
+                    }}
+                    rowCount={visibleTracks.length}
+                    rowHeight={48}
+                    // width and style moved above
+                    cellComponent={TrackRowGridCell}
+                    cellProps={{
+                      tracks: visibleTracks,
+                      mutedTracks,
+                      showColor,
+                      showNumber,
+                      showSupport,
+                      trackUnitSize,
+                    }}
+                  />
+                )}
               </div>
-            </DragScrollArea>
+            </div>
+            {/* </DragScrollArea> */}
           </div>
         </div>
       </CollapsiblePanel>
