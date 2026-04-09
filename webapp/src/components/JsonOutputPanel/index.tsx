@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import CollapsiblePanel from '../CollapsiblePanel';
+import CollapsiblePanel from '../common/CollapsiblePanel';
 import DownloadRow from './DownloadRow';
 
 interface JsonOutputPanelProps {

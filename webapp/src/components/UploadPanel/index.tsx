@@ -1,5 +1,5 @@
-import { useState, ChangeEvent } from 'react';
-import CollapsiblePanel from '../CollapsiblePanel';
+import { ChangeEvent, useState } from 'react';
+import CollapsiblePanel from '../common/CollapsiblePanel';
 
 interface UploadPanelProps {
   busy: boolean;

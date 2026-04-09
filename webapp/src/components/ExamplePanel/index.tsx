@@ -1,4 +1,4 @@
-import CollapsiblePanel from '../CollapsiblePanel';
+import CollapsiblePanel from '../common/CollapsiblePanel';
 
 export default function ExamplePanel() {
   return (

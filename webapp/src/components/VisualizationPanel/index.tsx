@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { playPlacementSoundSync, prepareAudioPlayback } from '../../audio/noteblockAudio';
-import CollapsiblePanel from '../CollapsiblePanel';
-import ErrorBoundary from '../ErrorBoundary';
+import CollapsiblePanel from '../common/CollapsiblePanel';
+import ErrorBoundary from '../common/ErrorBoundary';
 import PlaybackControls from './PlaybackControls';
 import TrackGrid from './TrackGrid';
 import {

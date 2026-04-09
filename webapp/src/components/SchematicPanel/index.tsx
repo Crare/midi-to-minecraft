@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import CollapsiblePanel from '../CollapsiblePanel';
-import DragScrollArea from '../DragScrollArea';
-import ErrorBoundary from '../ErrorBoundary';
+import CollapsiblePanel from '../common/CollapsiblePanel';
+import DragScrollArea from '../common/DragScrollArea';
+import ErrorBoundary from '../common/ErrorBoundary';
 import { MiniBlock, MiniDust, MiniNoteBlock, MiniRepeater } from './SchematicCells';
 import SchematicGrid from './SchematicGrid';
 import TotalsChip from './TotalsChip';
