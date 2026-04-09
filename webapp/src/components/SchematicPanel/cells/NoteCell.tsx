@@ -1,5 +1,5 @@
 import { blockColorFor, blockLabel } from '../schematicData';
-import noteCellSvg from '/src/assets/icons/note-cell.svg';
+const noteCellSvg = '/assets/icons/note-cell.svg';
 
 export const CELL = 28;
 

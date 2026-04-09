@@ -1,4 +1,4 @@
-import splitBranchCellSvg from '../../../assets/icons/split-branch-cell.svg';
+const splitBranchCellSvg = '/assets/icons/split-branch-cell.svg';
 export const CELL = 28;
 
 export function SplitBranchCell({ size }: { size?: number }) {

@@ -1,4 +1,4 @@
-import dustCellSvg from '/src/assets/icons/dust-cell.svg';
+const dustCellSvg = '/assets/icons/dust-cell.svg';
 export const CELL = 28;
 
 export function DustCell({ size }: { size?: number }) {

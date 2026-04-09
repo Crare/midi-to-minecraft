@@ -1,4 +1,4 @@
-import miniDustSvg from '/src/assets/icons/mini-dust.svg';
+const miniDustSvg = '/src/assets/icons/mini-dust.svg';
 const MINI = 18;
 
 export function MiniDust({ size = MINI }: { size?: number }) {

@@ -1,4 +1,4 @@
-import splitWireCellSvg from '../../../assets/icons/split-wire-cell.svg';
+const splitWireCellSvg = '/assets/icons/split-wire-cell.svg';
 export const CELL = 28;
 
 export function SplitWireCell({

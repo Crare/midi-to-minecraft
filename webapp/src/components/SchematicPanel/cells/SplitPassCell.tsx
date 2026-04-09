@@ -1,4 +1,4 @@
-import splitPassCellSvg from '../../../assets/icons/split-pass-cell.svg';
+const splitPassCellSvg = '/assets/icons/split-pass-cell.svg';
 export const CELL = 28;
 
 export function SplitPassCell({ size }: { size?: number }) {

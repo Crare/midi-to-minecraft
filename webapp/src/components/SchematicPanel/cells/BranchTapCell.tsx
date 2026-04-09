@@ -1,4 +1,4 @@
-import branchTapCellSvg from '/src/assets/icons/branch-tap-cell.svg';
+const branchTapCellSvg = '/assets/icons/branch-tap-cell.svg';
 export const CELL = 28;
 
 export function BranchTapCell({ size }: { size?: number }) {
