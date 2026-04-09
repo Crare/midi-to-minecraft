@@ -145,7 +145,7 @@ export default function TrackGrid({
                 columnCount={timelineUnitCount}
                 columnWidth={trackUnitSize + 2}
                 style={{
-                  height: visibleTracks.length * 48,
+                  height: visibleTracks.length * 48 + 16,
                   width: scrollContainerWidth,
                   overflowX: 'auto',
                 }}

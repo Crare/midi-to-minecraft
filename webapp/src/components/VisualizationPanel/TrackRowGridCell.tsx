@@ -58,7 +58,7 @@ export function TrackRowGridCell({
   if (!note) return <div style={style} />;
   return (
     <div style={style}>
-      <div className="note-unit">
+      <div className="note-unit" style={{ marginTop: 8, marginBottom: 8 }}>
         {note.placements.map((placement: any, pi: number) => {
           const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
           const tooltipLines = getNoteblockTooltip(placement).split('\n');
