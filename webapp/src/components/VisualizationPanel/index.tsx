@@ -35,7 +35,9 @@ export default function VisualizationPanel({ trackEvents }: VisualizationPanelPr
   );
 
   const [scrollLeft, setScrollLeft] = useState(0);
-  const [scrollContainerWidth, setScrollContainerWidth] = useState(Infinity);
+  const [scrollContainerWidth, setScrollContainerWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024,
+  );
   const scrollRafRef = useRef(0);
 
   const trackScrollRef = useRef<HTMLDivElement>(null);
