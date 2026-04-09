@@ -5,7 +5,6 @@ import ExamplePanel from './components/ExamplePanel';
 import JsonOutputPanel from './components/JsonOutputPanel';
 import SchematicPanel from './components/SchematicPanel';
 import UploadPanel from './components/UploadPanel';
-import VisualizationPanel from './components/VisualizationPanel';
 import { eventsToPlacements } from './midi/placements';
 import {
   buildTrackEvents,
@@ -89,7 +88,7 @@ export default function App() {
 
         <JsonOutputPanel downloadFiles={downloadFiles} zipFilename={zipFilename} />
 
-        <VisualizationPanel trackEvents={trackEvents} />
+        {/* <VisualizationPanel trackEvents={trackEvents} /> */}
 
         <SchematicPanel trackEvents={trackEvents} />
       </main>

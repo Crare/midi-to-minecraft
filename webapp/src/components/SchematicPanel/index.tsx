@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CollapsiblePanel from '../common/CollapsiblePanel';
-import DragScrollArea from '../common/DragScrollArea';
 import ErrorBoundary from '../common/ErrorBoundary';
+import HowToWireTutorial from './HowToWireTutorial';
 import { MiniBlock, MiniDust, MiniNoteBlock, MiniRepeater } from './SchematicCells';
-import SchematicGrid from './SchematicGrid';
+import SchematicGridArea from './SchematicGridArea';
+import SchematicOptions from './SchematicOptions';
 import TotalsChip from './TotalsChip';
 import {
   blockColor,
@@ -174,17 +175,7 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
           disabled={!hasData}
           className="schematic-panel"
         >
-          <div className="schematic-controls">
-            <label className="option-row option-row-stacked">
-              <span>Cell size</span>
-              <select value={cellSize} onChange={(e) => setCellSize(Number(e.target.value))}>
-                <option value={20}>Small (20px)</option>
-                <option value={28}>Medium (28px)</option>
-                <option value={36}>Large (36px)</option>
-                <option value={48}>XL (48px)</option>
-              </select>
-            </label>
-          </div>
+          <SchematicOptions cellSize={cellSize} setCellSize={setCellSize} />
 
           <p className="hint output-summary">
             Top-down schematic. Background color = instrument block. Each repeater shows its
@@ -196,50 +187,7 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
           </p>
 
           {/* Tutorial */}
-          <div className="schematic-tutorial">
-            <button
-              type="button"
-              className="schematic-tutorial-toggle"
-              onClick={() => setTutorialOpen((o) => !o)}
-              aria-expanded={tutorialOpen}
-            >
-              <span className="schematic-tutorial-toggle-label">How to wire it in Minecraft</span>
-              <span className="schematic-tutorial-toggle-arrow">{tutorialOpen ? '▲' : '▼'}</span>
-            </button>
-            {tutorialOpen && (
-              <div className="schematic-tutorial-body">
-                <p className="schematic-tutorial-note">
-                  <strong>Note:</strong> The schematic is not an exact representation of how the
-                  redstone needs to be wired. It shows only the timeline and repeater delays. Wiring
-                  multiple note blocks to play at the same time requires more redstone, as shown in
-                  the example pictures below.
-                </p>
-                <div className="schematic-tutorial-images">
-                  <figure className="schematic-tutorial-figure">
-                    <img
-                      src={`${import.meta.env.BASE_URL}assets/example_schematic.png`}
-                      alt="Example schematic view"
-                    />
-                    <figcaption>Schematic view (top-down)</figcaption>
-                  </figure>
-                  <figure className="schematic-tutorial-figure">
-                    <img
-                      src={`${import.meta.env.BASE_URL}assets/example_minecraft1.png`}
-                      alt="Example Minecraft wiring 1"
-                    />
-                    <figcaption>In-game wiring example 1</figcaption>
-                  </figure>
-                  <figure className="schematic-tutorial-figure">
-                    <img
-                      src={`${import.meta.env.BASE_URL}assets/example_minecraft2.png`}
-                      alt="Example Minecraft wiring 2"
-                    />
-                    <figcaption>In-game wiring example 2</figcaption>
-                  </figure>
-                </div>
-              </div>
-            )}
-          </div>
+          <HowToWireTutorial tutorialOpen={tutorialOpen} setTutorialOpen={setTutorialOpen} />
 
           {/* Legend */}
           <div className="schematic-legend">
@@ -344,50 +292,21 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
               );
             })()}
 
-          <DragScrollArea className="schematic-scroll">
-            <div ref={contentRef} className="schematic-content">
-              {grid?.instruments?.length > 0 && (
-                <>
-                  <button
-                    type="button"
-                    className="schematic-indicator"
-                    style={{ left: `${indicatorX}px` }}
-                    onPointerDown={onIndicatorPointerDown}
-                    onPointerMove={onIndicatorPointerMove}
-                    onPointerUp={onIndicatorPointerUp}
-                    onPointerCancel={onIndicatorPointerUp}
-                    aria-label="Drag to mark column build progress"
-                  >
-                    <span className="schematic-indicator-line" aria-hidden="true" />
-                    <span className="schematic-indicator-head" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className="schematic-h-indicator"
-                    style={{ top: `${indicatorY}px` }}
-                    onPointerDown={onHIndicatorPointerDown}
-                    onPointerMove={onHIndicatorPointerMove}
-                    onPointerUp={onHIndicatorPointerUp}
-                    onPointerCancel={onHIndicatorPointerUp}
-                    aria-label="Drag to mark row build progress"
-                  >
-                    <span className="schematic-h-indicator-line" aria-hidden="true" />
-                    <span className="schematic-h-indicator-head" aria-hidden="true" />
-                  </button>
-                </>
-              )}
-              {grid.instruments.length === 0 ? (
-                <p className="hint">No notes to display.</p>
-              ) : (
-                <SchematicGrid
-                  grid={grid}
-                  cellSize={cellSize}
-                  onColumnClick={onColumnClick}
-                  onRowClick={onRowClick}
-                />
-              )}
-            </div>
-          </DragScrollArea>
+          <SchematicGridArea
+            grid={grid}
+            cellSize={cellSize}
+            indicatorX={indicatorX}
+            indicatorY={indicatorY}
+            onIndicatorPointerDown={onIndicatorPointerDown}
+            onIndicatorPointerMove={onIndicatorPointerMove}
+            onIndicatorPointerUp={onIndicatorPointerUp}
+            onHIndicatorPointerDown={onHIndicatorPointerDown}
+            onHIndicatorPointerMove={onHIndicatorPointerMove}
+            onHIndicatorPointerUp={onHIndicatorPointerUp}
+            onColumnClick={onColumnClick}
+            onRowClick={onRowClick}
+            contentRef={contentRef}
+          />
         </CollapsiblePanel>
       </div>
     </ErrorBoundary>

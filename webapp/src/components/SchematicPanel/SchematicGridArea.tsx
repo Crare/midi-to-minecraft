@@ -1,5 +1,5 @@
 import React from 'react';
-import DragScrollArea from '../DragScrollArea';
+import DragScrollArea from '../common/DragScrollArea';
 import SchematicGrid from './SchematicGrid';
 
 interface SchematicGridAreaProps {
