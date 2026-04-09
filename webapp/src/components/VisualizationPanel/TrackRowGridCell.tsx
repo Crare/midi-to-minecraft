@@ -1,5 +1,5 @@
 import { playPlacementSound } from '@audio/noteblockAudio';
-import { noteColorByStep, notePitchNames } from '@components/constants';
+import { noteColorByStep, notePitchNames } from '@constants';
 import { CellComponentProps } from 'react-window';
 import { Fragment } from 'react/jsx-runtime';
 

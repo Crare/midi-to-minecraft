@@ -13,6 +13,7 @@ export default defineConfig({
       '@midi': resolve(__dirname, 'src/midi'),
       '@audio': resolve(__dirname, 'src/audio'),
       '@assets': resolve(__dirname, 'public/assets'),
+      '@constants': resolve(__dirname, 'src/constants'),
     },
   },
 });

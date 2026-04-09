@@ -20,7 +20,8 @@
       "@components/*": ["components/*"],
       "@midi/*": ["midi/*"],
       "@audio/*": ["audio/*"],
-      "@assets/*": ["public/assets/*"]
+      "@assets/*": ["public/assets/*"],
+      "@constants": ["constants"]
     }
   },
   "include": ["src"],

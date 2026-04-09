@@ -1,4 +1,4 @@
-import { CELL } from '@components/constants';
+import { CELL } from '@constants';
 
 const branchStartCellSvg = `${import.meta.env.BASE_URL}assets/icons/branch-start-cell.svg`;
 

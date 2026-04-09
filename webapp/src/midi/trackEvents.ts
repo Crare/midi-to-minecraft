@@ -4,7 +4,7 @@ import {
   defaultInstrumentBlock,
   defaultPercussiveBlock,
   instrumentByBlock,
-} from '@components/constants';
+} from '@constants';
 import { Midi } from '@tonejs/midi';
 import type { Note } from '@tonejs/midi/dist/Note';
 import type { Track } from '@tonejs/midi/dist/Track';

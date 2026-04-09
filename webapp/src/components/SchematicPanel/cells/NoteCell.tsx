@@ -1,5 +1,5 @@
-import { CELL } from '@components/constants';
 import { blockColorFor, blockLabel } from '@components/SchematicPanel/schematicData';
+import { CELL } from '@constants';
 const noteCellSvg = `${import.meta.env.BASE_URL}assets/icons/note-cell.svg`;
 
 /**

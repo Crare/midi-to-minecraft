@@ -1,4 +1,4 @@
-import { CELL } from '@components/constants';
+import { CELL } from '@constants';
 
 const splitPassCellSvg = `${import.meta.env.BASE_URL}assets/icons/split-pass-cell.svg`;
 
