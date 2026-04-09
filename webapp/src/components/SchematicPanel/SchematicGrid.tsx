@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 // import type { ListChildComponentProps } from 'react-window';
 // import { List } from 'react-window';
-import { AnchorCell, CELL, DustCell, SegRepCell } from './SchematicCells';
+import { AnchorCell, DustCell, SegRepCell } from './SchematicCells';
 import { blockLabel } from './schematicData';
 
 // Portal tooltip hook
