@@ -1,6 +1,6 @@
 import { CELL } from '../../../constants';
 
-const splitPassCellSvg = '/midi-to-minecraft/assets/icons/split-pass-cell.svg';
+const splitPassCellSvg = `${import.meta.env.BASE_URL}assets/icons/split-pass-cell.svg`;
 
 /**
  * SplitPassCell renders a split pass (straight-through) cell as an image in the schematic grid.

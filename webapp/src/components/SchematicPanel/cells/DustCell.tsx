@@ -1,7 +1,6 @@
 import { CELL } from '../../../constants';
 
-const dustCellSvg = '/midi-to-minecraft/assets/icons/dust-cell.svg';
-
+const dustCellSvg = `${import.meta.env.BASE_URL}assets/icons/dust-cell.svg`;
 /**
  * DustCell renders a single redstone dust cell as an image in the schematic grid.
  * Used for passthrough and wiring cells. Purely visual, not interactive.

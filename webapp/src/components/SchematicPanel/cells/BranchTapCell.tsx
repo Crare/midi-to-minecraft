@@ -1,6 +1,6 @@
 import { CELL } from '../../../constants';
 
-const branchTapCellSvg = '/midi-to-minecraft/assets/icons/branch-tap-cell.svg';
+const branchTapCellSvg = `${import.meta.env.BASE_URL}assets/icons/branch-tap-cell.svg`;
 
 /**
  * BranchTapCell renders a tap point on a schematic branch, indicating where a branch connects to the main lane.

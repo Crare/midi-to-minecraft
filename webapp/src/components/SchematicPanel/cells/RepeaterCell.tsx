@@ -1,6 +1,6 @@
 import { CELL } from '../../../constants';
 
-const repeaterCellSvg = '/midi-to-minecraft/assets/icons/repeater-cell.svg';
+const repeaterCellSvg = `${import.meta.env.BASE_URL}assets/icons/repeater-cell.svg`;
 
 /**
  * RepeaterCell renders a repeater cell in the schematic grid, displaying the tick delay value.

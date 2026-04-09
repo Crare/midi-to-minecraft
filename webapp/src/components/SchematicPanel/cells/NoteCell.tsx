@@ -1,6 +1,6 @@
 import { CELL } from '../../../constants';
 import { blockColorFor, blockLabel } from '../schematicData';
-const noteCellSvg = '/midi-to-minecraft/assets/icons/note-cell.svg';
+const noteCellSvg = `${import.meta.env.BASE_URL}assets/icons/note-cell.svg`;
 
 /**
  * NoteCell renders the visual representation of a note block (noteblock) in the schematic grid.

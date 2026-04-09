@@ -1,6 +1,6 @@
 import { CELL } from '../../../constants';
 
-const phantomRepeaterCellSvg = '/midi-to-minecraft/assets/icons/phantom-repeater-cell.svg';
+const phantomRepeaterCellSvg = `${import.meta.env.BASE_URL}assets/icons/phantom-repeater-cell.svg`;
 
 /**
  * PhantomRepeaterCell renders a semi-transparent repeater cell for shared/phantom paths in the schematic grid.

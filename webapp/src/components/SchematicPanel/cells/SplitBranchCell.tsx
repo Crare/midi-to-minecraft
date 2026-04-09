@@ -1,6 +1,6 @@
 import { CELL } from '../../../constants';
 
-const splitBranchCellSvg = '/midi-to-minecraft/assets/icons/split-branch-cell.svg';
+const splitBranchCellSvg = `${import.meta.env.BASE_URL}assets/icons/split-branch-cell.svg`;
 
 /**
  * SplitBranchCell renders a split branch (T-junction) cell as an image in the schematic grid.
