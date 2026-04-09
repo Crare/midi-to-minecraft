@@ -2,6 +2,13 @@ import { CELL } from '../../../constants';
 
 const splitPassCellSvg = '/midi-to-minecraft/assets/icons/split-pass-cell.svg';
 
+/**
+ * SplitPassCell renders a split pass (straight-through) cell as an image in the schematic grid.
+ * Used to visually indicate a passthrough at a schematic split. Purely visual, not interactive.
+ *
+ * Props:
+ * - size: Cell size in pixels (optional)
+ */
 export function SplitPassCell({ size }: { size?: number }) {
   const s = size ?? CELL;
   return (

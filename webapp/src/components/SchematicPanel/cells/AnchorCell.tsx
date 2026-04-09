@@ -1,7 +1,21 @@
 import { DustCell } from './DustCell';
 import { NoteBlockCell } from './NoteBlockCell';
 import { SplitWireCell } from './SplitWireCell';
-
+/**
+ * AnchorCell is a schematic grid cell component responsible for rendering the main cell types
+ * that appear at anchor positions in the schematic grid. These include note blocks, split wires,
+ * passthrough dust, and empty cells. It determines the correct cell type to render based on the
+ * cell's kind and props, and handles visual state for selection and interaction.
+ *
+ * Props:
+ * - anchor: Anchor metadata for the column
+ * - cell: Cell data (kind, note, connects, etc.)
+ * - cs: Cell size in pixels
+ * - instrument: Instrument label for the cell (if note)
+ * - block: Block type for the cell (if note)
+ * - isLastPressed: Whether this cell is the last pressed/selected
+ * - onPress: Callback when the cell is pressed/selected
+ */
 export function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPress }: any) {
   if (!cell || cell.kind === 'inactive') {
     return (

@@ -1,3 +1,12 @@
+/* Ensure schematic grid area is horizontally scrollable and doesn't overflow viewport */
+.schematic-content-x-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  /* Prevent vertical scroll unless needed */
+  max-width: 100vw;
+}
 :root {
   --bg: #8f9396;
   --bg-dark: #666b70;

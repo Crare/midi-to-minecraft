@@ -2,6 +2,14 @@ import { CELL } from '../../../constants';
 
 const phantomRepeaterCellSvg = '/midi-to-minecraft/assets/icons/phantom-repeater-cell.svg';
 
+/**
+ * PhantomRepeaterCell renders a semi-transparent repeater cell for shared/phantom paths in the schematic grid.
+ * Used to indicate timing paths that are not physically built. Purely visual, not interactive.
+ *
+ * Props:
+ * - ticks: Number of ticks the repeater represents
+ * - size: Cell size in pixels (optional)
+ */
 export function PhantomRepeaterCell({ ticks, size }: { ticks: number; size?: number }) {
   const s = size ?? CELL;
   return (

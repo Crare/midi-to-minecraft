@@ -2,6 +2,13 @@ import { CELL } from '../../../constants';
 
 const branchTapCellSvg = '/midi-to-minecraft/assets/icons/branch-tap-cell.svg';
 
+/**
+ * BranchTapCell renders a tap point on a schematic branch, indicating where a branch connects to the main lane.
+ * Purely visual, not interactive.
+ *
+ * Props:
+ * - size: Cell size in pixels (optional)
+ */
 export function BranchTapCell({ size }: { size?: number }) {
   const s = size ?? CELL;
   return (

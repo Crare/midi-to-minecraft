@@ -2,6 +2,15 @@ import { CELL } from '../../../constants';
 
 const branchStartCellSvg = '/midi-to-minecraft/assets/icons/branch-start-cell.svg';
 
+/**
+ * BranchStartCell renders the start of a schematic branch, showing where a lane splits off to save repeaters.
+ * Displays the number of ticks saved. Purely visual, not interactive.
+ *
+ * Props:
+ * - sourceId: ID of the source lane/track
+ * - savedTicks: Number of ticks saved by branching
+ * - size: Cell size in pixels (optional)
+ */
 export function BranchStartCell({
   sourceId,
   savedTicks,

@@ -4,6 +4,18 @@ import { blockLabel, getUseCount } from '../schematicData';
 import { TooltipPortal } from '../SchematicGrid';
 import { NoteCell } from './NoteCell';
 
+/**
+ * NoteBlockCell renders a note block cell in the schematic grid, including tooltip and interaction.
+ * Handles playing the note sound, selection, and displays instrument/block info.
+ *
+ * Props:
+ * - cell: Cell data (must be kind 'note')
+ * - cs: Cell size in pixels
+ * - instrument: Instrument label
+ * - block: Block type
+ * - isLastPressed: Whether this cell is the last pressed/selected
+ * - onPress: Callback when the cell is pressed/selected
+ */
 export function NoteBlockCell({ cell, cs, instrument, block, isLastPressed, onPress }: any) {
   const { ref, pos, show, hide } = usePortalTooltip();
   const note = cell.note;

@@ -2,6 +2,16 @@ import { CELL } from '../../../constants';
 import { blockColorFor, blockLabel } from '../schematicData';
 const noteCellSvg = '/midi-to-minecraft/assets/icons/note-cell.svg';
 
+/**
+ * NoteCell renders the visual representation of a note block (noteblock) in the schematic grid.
+ * Shows the instrument, block color, and use count. Purely visual, not interactive.
+ *
+ * Props:
+ * - block: Block type
+ * - instrument: Instrument label
+ * - useCount: Note use count (optional)
+ * - size: Cell size in pixels (optional)
+ */
 export function NoteCell({
   block,
   instrument,

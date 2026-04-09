@@ -2,6 +2,14 @@ import { CELL } from '../../../constants';
 
 const repeaterCellSvg = '/midi-to-minecraft/assets/icons/repeater-cell.svg';
 
+/**
+ * RepeaterCell renders a repeater cell in the schematic grid, displaying the tick delay value.
+ * Used for timing and delay visualization in schematic segments. Purely visual, not interactive.
+ *
+ * Props:
+ * - ticks: Number of ticks the repeater represents
+ * - size: Cell size in pixels (optional)
+ */
 export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) {
   const s = size ?? CELL;
   return (
