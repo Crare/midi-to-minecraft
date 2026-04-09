@@ -1,4 +1,4 @@
-import phantomRepeaterCellSvg from '../../../../public/assets/icons/phantom-repeater-cell.svg';
+import phantomRepeaterCellSvg from '/src/assets/icons/phantom-repeater-cell.svg';
 export const CELL = 28;
 
 export function PhantomRepeaterCell({ ticks, size }: { ticks: number; size?: number }) {

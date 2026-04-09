@@ -1,0 +1,6 @@
+<svg width="18" height="18" viewBox="0 0 18 18" aria-label="Mini block">
+  <rect width="18" height="18" fill="#COLOR" />
+  <rect x="1" y="1" width="16" height="6" fill="rgba(255,255,255,0.22)" />
+  <rect x="0" y="15" width="18" height="3" fill="rgba(0,0,0,0.2)" />
+</svg>
+<!-- Replace #COLOR as needed -->

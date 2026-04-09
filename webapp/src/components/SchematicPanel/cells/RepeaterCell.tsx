@@ -1,4 +1,4 @@
-import repeaterCellSvg from '../../../../assets/icons/repeater-cell.svg';
+import repeaterCellSvg from '../../../assets/icons/repeater-cell.svg';
 export const CELL = 28;
 
 export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) {

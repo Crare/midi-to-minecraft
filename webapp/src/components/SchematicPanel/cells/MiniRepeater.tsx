@@ -1,6 +1,6 @@
 const MINI = 18;
 
-import miniRepeaterSvg from '../../../../public/assets/icons/mini-repeater.svg';
+import miniRepeaterSvg from '/src/assets/icons/mini-repeater.svg';
 export function MiniRepeater({ size = MINI }: { size?: number }) {
   return (
     <img

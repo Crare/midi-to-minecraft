@@ -1,4 +1,4 @@
-import branchStartCellSvg from '../../../../public/assets/icons/branch-start-cell.svg';
+import branchStartCellSvg from '/src/assets/icons/branch-start-cell.svg';
 export const CELL = 28;
 
 export function BranchStartCell({

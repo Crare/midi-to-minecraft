@@ -1,5 +1,5 @@
-import miniNoteBlockSvg from '../../../../public/assets/icons/mini-note-block.svg';
 import { blockColorFor } from '../schematicData';
+import miniNoteBlockSvg from '/src/assets/icons/mini-note-block.svg';
 
 const MINI = 18;
 

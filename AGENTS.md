@@ -4,6 +4,7 @@ The role of this file is to describe common mistakes and confusion points that a
 
 ## Guidelines
 
+- keep chat short and concise.
 - All code must be optimized, readable, secure, and testable. Prefer clarity over cleverness, avoid premature abstractions, never hardcode secrets, and ensure new logic can be covered by unit tests. Also keep the UI easy to read and understand and accessible.
 
 ## Reference Specifications
