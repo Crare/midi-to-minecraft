@@ -1,6 +1,6 @@
 import { blockColorFor, blockLabel } from '@components/SchematicPanel/schematicData';
 import { CELL } from '@constants';
-const noteCellSvg = `${import.meta.env.BASE_URL}assets/icons/note-cell.svg`;
+const noteCellSvg = 'assets/icons/note-cell.svg';
 
 /**
  * NoteCell renders the visual representation of a note block (noteblock) in the schematic grid.

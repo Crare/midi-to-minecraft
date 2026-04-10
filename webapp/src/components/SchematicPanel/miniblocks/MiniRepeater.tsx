@@ -1,6 +1,7 @@
-const MINI = 18;
+import { MINI } from '@constants';
 
-const miniRepeaterSvg = '/midi-to-minecraft/assets/icons/mini-repeater.svg';
+const miniRepeaterSvg = 'assets/icons/mini-repeater.svg';
+
 export function MiniRepeater({ size = MINI }: { size?: number }) {
   return (
     <img

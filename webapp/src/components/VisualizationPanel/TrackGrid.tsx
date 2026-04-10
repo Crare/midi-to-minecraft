@@ -1,7 +1,7 @@
 import { useContainerWidth } from '@hooks/useContainerWidth';
 import React, { useRef } from 'react';
 import { Grid } from 'react-window';
-import { TrackRowGridCell } from './TrackRowGridCell';
+import TrackRowGridCell from './TrackRowGridCell';
 
 interface TrackGridProps {
   visibleTracks: any[];
@@ -87,26 +87,23 @@ export default function TrackGrid({
                 onPointerDown={(e) => e.stopPropagation()}
                 aria-label={mutedTracks.has(track.id) ? 'Unmute track' : 'Mute track'}
               >
-                <svg viewBox="0 0 16 16" aria-hidden="true">
-                  {mutedTracks.has(track.id) ? (
-                    <path
-                      d="M 3 3 L 13 13 M 13 3 L 3 13"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                  ) : (
-                    <>
-                      <path d="M 3 5 L 8 2 L 8 14 L 3 11 Z" fill="currentColor" />
-                      <path
-                        d="M 10 4 Q 12 6 12 8 Q 12 10 10 12"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        fill="none"
-                      />
-                    </>
-                  )}
-                </svg>
+                {mutedTracks.has(track.id) ? (
+                  <img
+                    src="assets/icons/mute.svg"
+                    width="16"
+                    height="16"
+                    alt="Muted"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <img
+                    src="assets/icons/unmute.svg"
+                    width="16"
+                    height="16"
+                    alt="Unmuted"
+                    aria-hidden="true"
+                  />
+                )}
               </button>
               <span className="track-index">{track.title}</span>
               <span className="track-count">{track.subtitle}</span>

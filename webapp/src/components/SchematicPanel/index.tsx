@@ -1,21 +1,19 @@
 import CollapsiblePanel from '@components/common/CollapsiblePanel';
 import ErrorBoundary from '@components/common/ErrorBoundary';
 import { useContainerWidth } from '@hooks/useContainerWidth';
-import { useEffect, useMemo, useRef as useReactRef, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import BlocksNeededSummary from './BlocksNeededSummary';
 import HowToWireTutorial from './HowToWireTutorial';
-import { MiniBlock, MiniDust, MiniNoteBlock, MiniRepeater } from './SchematicCells';
-import SchematicGridArea from './SchematicGridArea';
-import SchematicOptions from './SchematicOptions';
-import TotalsChip from './TotalsChip';
 import {
   blockColor,
-  blockColorFor,
   blockLabel,
   buildTickGrid,
   computeRawResources,
   computeSchematicDimensions,
   computeTickGridBlockCounts,
 } from './schematicData';
+import SchematicGridArea from './SchematicGridArea';
+import SchematicOptions from './SchematicOptions';
 
 interface SchematicPanelProps {
   trackEvents: any[];
@@ -25,15 +23,10 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
   const [open, setOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
-  const [indicatorX, setIndicatorX] = useState(15);
-  const [indicatorY, setIndicatorY] = useState(30);
   const [processing, setProcessing] = useState(false);
 
-  const panelContainerRef = useReactRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const panelContainerRef = useRef<HTMLDivElement>(null);
   const panelWidth = useContainerWidth(panelContainerRef);
-  const indicatorDragRef = useRef({ active: false, startClientX: 0, startX: 0 });
-  const hIndicatorDragRef = useRef({ active: false, startClientY: 0, startY: 0 });
 
   const [grid, setGrid] = useState<any>(() => buildTickGrid(trackEvents));
 
@@ -89,61 +82,17 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
     if (hasData) setOpen(true);
   }, [hasData]);
 
-  function onIndicatorPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
-    e.preventDefault();
-    e.stopPropagation();
-    indicatorDragRef.current = { active: true, startClientX: e.clientX, startX: indicatorX };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function onIndicatorPointerMove(e: React.PointerEvent<HTMLButtonElement>) {
-    if (!indicatorDragRef.current.active) return;
-    const delta = e.clientX - indicatorDragRef.current.startClientX;
-    const maxX = contentRef.current ? contentRef.current.scrollWidth : 999999;
-    setIndicatorX(Math.max(0, Math.min(indicatorDragRef.current.startX + delta, maxX)));
-  }
-
-  function onIndicatorPointerUp() {
-    indicatorDragRef.current.active = false;
-  }
-
-  function onHIndicatorPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
-    e.preventDefault();
-    e.stopPropagation();
-    hIndicatorDragRef.current = { active: true, startClientY: e.clientY, startY: indicatorY };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function onHIndicatorPointerMove(e: React.PointerEvent<HTMLButtonElement>) {
-    if (!hIndicatorDragRef.current.active) return;
-    const delta = e.clientY - hIndicatorDragRef.current.startClientY;
-    const maxY = contentRef.current ? contentRef.current.offsetHeight : 999999;
-    setIndicatorY(Math.max(0, Math.min(hIndicatorDragRef.current.startY + delta, maxY)));
-  }
-
-  function onHIndicatorPointerUp() {
-    hIndicatorDragRef.current.active = false;
-  }
-
-  function onColumnClick(el: HTMLElement) {
-    const content = contentRef.current;
-    if (!content) return;
-    const x =
-      el.getBoundingClientRect().left - content.getBoundingClientRect().left + el.offsetWidth / 2;
-    setIndicatorX(Math.max(0, x));
-  }
-
-  function onRowClick(el: HTMLElement) {
-    const content = contentRef.current;
-    if (!content) return;
-    const y =
-      el.getBoundingClientRect().top - content.getBoundingClientRect().top + el.offsetHeight / 2;
-    setIndicatorY(Math.max(0, y));
-  }
-
   return (
     <ErrorBoundary>
-      <div style={{ position: 'relative' }} ref={panelContainerRef}>
+      <div
+        style={{
+          position: 'relative',
+          maxWidth: '100vw',
+          width: '100%',
+          overflowX: 'hidden',
+        }}
+        ref={panelContainerRef}
+      >
         {processing && (
           <div
             style={{
@@ -202,115 +151,13 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
             ))}
           </div>
 
-          {/* Block totals and raw resource summary */}
-          {grid.instruments.length > 0 &&
-            (() => {
-              const { noteblocks, repeaters, dust, raw, supportMap } = totalBlockCounts as any;
-              const supportEntries = [...(supportMap?.entries?.() ?? [])];
-              return (
-                <div className="schematic-totals">
-                  <div className="schematic-totals-section">
-                    <h3 className="schematic-totals-heading">Blocks needed</h3>
-                    <div className="schematic-totals-chips">
-                      <TotalsChip
-                        icon={<MiniNoteBlock block="minecraft:dirt" size={18} />}
-                        count={noteblocks}
-                        label="note blocks"
-                      />
-                      <TotalsChip
-                        icon={<MiniRepeater size={18} />}
-                        count={repeaters}
-                        label="repeaters"
-                      />
-                      <TotalsChip
-                        icon={<MiniDust size={18} />}
-                        count={dust}
-                        label="redstone dust"
-                      />
-                      {supportEntries.map(([bid, n]: [string, number]) => (
-                        <TotalsChip
-                          key={bid}
-                          icon={<MiniBlock color={blockColorFor(bid)} size={18} />}
-                          count={n}
-                          label={blockLabel(bid)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="schematic-totals-section">
-                    <h3 className="schematic-totals-heading">Raw resources</h3>
-                    <div className="schematic-totals-chips">
-                      <TotalsChip
-                        icon={<MiniBlock color="#6b4a1e" size={18} />}
-                        count={raw?.logs}
-                        label={`logs (${raw?.planks?.toLocaleString()} planks)`}
-                      />
-                      <TotalsChip
-                        icon={<MiniDust size={18} />}
-                        count={raw?.redstoneDust}
-                        label={
-                          raw?.redstoneBlocks > 0
-                            ? `redstone dust = ${raw.redstoneBlocks} block${raw.redstoneBlocks !== 1 ? 's' : ''}${raw.redstoneRemainder > 0 ? ` + ${raw.redstoneRemainder}` : ''}`
-                            : 'redstone dust'
-                        }
-                      />
-                      <TotalsChip
-                        icon={<MiniBlock color="#8f9497" size={18} />}
-                        count={raw?.stone}
-                        label="stone"
-                      />
-                      {supportEntries.map(([bid, n]: [string, number]) => (
-                        <TotalsChip
-                          key={bid}
-                          icon={<MiniBlock color={blockColorFor(bid)} size={18} />}
-                          count={n}
-                          label={`${blockLabel(bid)} (support)`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="schematic-totals-section">
-                    <h3 className="schematic-totals-heading">Minimum build area</h3>
-                    <div className="schematic-dimensions">
-                      <span className="schematic-dim-chip">
-                        <span className="schematic-dim-axis">X</span>
-                        <span className="schematic-dim-value">{dimensions.x}</span>
-                        <span className="schematic-dim-unit">blocks long</span>
-                      </span>
-                      <span className="schematic-dim-sep">×</span>
-                      <span className="schematic-dim-chip">
-                        <span className="schematic-dim-axis">Z</span>
-                        <span className="schematic-dim-value">{dimensions.z}</span>
-                        <span className="schematic-dim-unit">blocks wide</span>
-                      </span>
-                      <span className="schematic-dim-sep">×</span>
-                      <span className="schematic-dim-chip">
-                        <span className="schematic-dim-axis">Y</span>
-                        <span className="schematic-dim-value">{dimensions.y}</span>
-                        <span className="schematic-dim-unit">blocks tall</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-          <SchematicGridArea
+          <BlocksNeededSummary
+            dimensions={dimensions}
             grid={grid}
-            cellSize={cellSize}
-            indicatorX={indicatorX}
-            indicatorY={indicatorY}
-            onIndicatorPointerDown={onIndicatorPointerDown}
-            onIndicatorPointerMove={onIndicatorPointerMove}
-            onIndicatorPointerUp={onIndicatorPointerUp}
-            onHIndicatorPointerDown={onHIndicatorPointerDown}
-            onHIndicatorPointerMove={onHIndicatorPointerMove}
-            onHIndicatorPointerUp={onHIndicatorPointerUp}
-            onColumnClick={onColumnClick}
-            onRowClick={onRowClick}
-            contentRef={contentRef}
-            maxWidth={panelWidth}
+            totalBlockCounts={totalBlockCounts}
           />
+
+          <SchematicGridArea grid={grid} cellSize={cellSize} maxWidth={panelWidth} />
         </CollapsiblePanel>
       </div>
     </ErrorBoundary>

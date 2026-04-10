@@ -1,7 +1,6 @@
 import { blockColorFor } from '@components/SchematicPanel/schematicData';
-const miniNoteBlockSvg = '/midi-to-minecraft/assets/icons/mini-note-block.svg';
-
-const MINI = 18;
+import { MINI } from '@constants';
+const miniNoteBlockSvg = 'assets/icons/mini-note-block.svg';
 
 export function MiniNoteBlock({ block, size = MINI }: { block: any; size?: number }) {
   const col = blockColorFor(block || 'minecraft:dirt');

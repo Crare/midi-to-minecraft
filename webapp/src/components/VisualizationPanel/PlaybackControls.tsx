@@ -59,9 +59,7 @@ export default function PlaybackControls({
           disabled={visibleTracks.length === 0 || isPlaying}
           aria-label="Play"
         >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <polygon points="3,1 15,8 3,15" />
-          </svg>
+          <img src="assets/icons/play.svg" width="16" height="16" alt="Play" aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -71,10 +69,7 @@ export default function PlaybackControls({
           disabled={!isPlaying && playheadTick === 0}
           aria-label="Stop"
         >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <rect x="2" y="1" width="4" height="14" />
-            <rect x="10" y="1" width="4" height="14" />
-          </svg>
+          <img src="assets/icons/stop.svg" width="16" height="16" alt="Stop" aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -84,9 +79,7 @@ export default function PlaybackControls({
           disabled={visibleTracks.length === 0}
           aria-label="Go to start"
         >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <rect x="2" y="2" width="12" height="12" rx="1" ry="1" />
-          </svg>
+          <img src="assets/icons/goto-start.svg" width="16" height="16" alt="Go to start" aria-hidden="true" />
         </button>
       </div>
       <div className="playback-meta">Position: {playheadTick.toFixed(1)} ticks</div>

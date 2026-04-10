@@ -1,8 +1,6 @@
 import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
 import { playSuccessJingle } from './audio/noteblockAudio';
-import ExamplePanel from './components/ExamplePanel';
-import JsonOutputPanel from './components/JsonOutputPanel';
 import SchematicPanel from './components/SchematicPanel';
 import UploadPanel from './components/UploadPanel';
 import { eventsToPlacements } from './midi/placements';
@@ -78,7 +76,7 @@ export default function App() {
       </header>
 
       <main>
-        <ExamplePanel open={exampleOpen} onOpenChange={setExampleOpen} />
+        {/* <ExamplePanel open={exampleOpen} onOpenChange={setExampleOpen} /> */}
 
         <UploadPanel
           busy={busy}
@@ -90,7 +88,7 @@ export default function App() {
           onConvertRequest={onConvertRequest}
         />
 
-        <JsonOutputPanel downloadFiles={downloadFiles} zipFilename={zipFilename} />
+        {/* <JsonOutputPanel downloadFiles={downloadFiles} zipFilename={zipFilename} /> */}
 
         {/* <VisualizationPanel trackEvents={trackEvents} /> */}
 

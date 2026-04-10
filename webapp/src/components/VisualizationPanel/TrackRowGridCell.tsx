@@ -1,5 +1,6 @@
 import { playPlacementSound } from '@audio/noteblockAudio';
 import { noteColorByStep, notePitchNames } from '@constants';
+import { memo } from 'react';
 import { CellComponentProps } from 'react-window';
 import { Fragment } from 'react/jsx-runtime';
 
@@ -36,7 +37,7 @@ function getNoteblockTooltip(placement) {
 const noteblockImg = `${import.meta.env.BASE_URL}assets/icons/noteblock.svg`;
 
 // Cell renderer for react-window Grid
-export function TrackRowGridCell({
+function TrackRowGridCell({
   columnIndex,
   rowIndex,
   style,
@@ -168,3 +169,5 @@ export function TrackRowGridCell({
     </div>
   );
 }
+
+export default memo(TrackRowGridCell);

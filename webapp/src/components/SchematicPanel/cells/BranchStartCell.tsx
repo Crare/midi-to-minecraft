@@ -1,6 +1,6 @@
 import { CELL } from '@constants';
 
-const branchStartCellSvg = `${import.meta.env.BASE_URL}assets/icons/branch-start-cell.svg`;
+const branchStartCellSvg = 'assets/icons/branch-start-cell.svg';
 
 /**
  * BranchStartCell renders the start of a schematic branch, showing where a lane splits off to save repeaters.

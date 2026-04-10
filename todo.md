@@ -1,9 +1,10 @@
 # TODO
 
-- optimize the app
-
 - schematic expands to right out of window.
 - remove dragarea for now. lets add it later when everyhting works.
+
+- re-enable panels when they are fixed
+- optimize the app
 
 - fix icons in schematic
 - dragging horizontally doesnt work in schematic

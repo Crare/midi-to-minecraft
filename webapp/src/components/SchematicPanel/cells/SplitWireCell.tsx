@@ -1,6 +1,6 @@
 import { CELL } from '@constants';
 
-const splitWireCellSvg = `${import.meta.env.BASE_URL}assets/icons/split-wire-cell.svg`;
+const splitWireCellSvg = 'assets/icons/split-wire-cell.svg';
 
 /**
  * SplitWireCell renders a split wire (T-junction or cross) cell as an image in the schematic grid.

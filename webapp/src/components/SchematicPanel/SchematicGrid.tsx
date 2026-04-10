@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Grid } from 'react-window';
 import { AnchorCell, DustCell, SegRepCell } from './SchematicCells';
@@ -133,21 +133,21 @@ export default function SchematicGrid({
     return rows;
   }, [instruments]);
 
-  const rowHeight = cs + 8;
-  const gridRef = useRef(null);
+  // const rowHeight = cs + 8;
+  // const gridRef = useRef(null);
 
   // Virtualized grid rendering
   return (
-    <div style={{ overflow: 'auto', maxHeight: '70vh' }}>
+    <div style={{ overflow: 'auto' }}>
       <Grid
-        ref={gridRef}
+        // ref={gridRef}
         columnCount={totalCols}
         columnWidth={cs}
-        height={Math.min(virtualRows.length * rowHeight, 600)}
+        // height={Math.min(virtualRows.length * rowHeight, 600)}
         rowCount={virtualRows.length}
-        rowHeight={rowHeight}
+        rowHeight={cs + 8}
         cellComponent={SchematicRowGridCell}
-        width={Math.min(totalCols * cs, 1200)}
+        // width={Math.min(totalCols * cs, 1200)}
         cellProps={{
           cellProps: {
             virtualRows,

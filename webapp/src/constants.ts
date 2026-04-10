@@ -1,7 +1,8 @@
 export const defaultInstrumentBlock = 'minecraft:dirt';
 export const defaultPercussiveBlock = 'minecraft:sand';
 
-export const CELL = 28;
+export const CELL = 28; // cell size in pixels for schematic grid; also used as default size for cells if not specified
+export const MINI = 18; // mini block size in pixels for summary chips
 
 export const instrumentByBlock: Record<string, string> = {
   'minecraft:acacia_log': 'bass',
