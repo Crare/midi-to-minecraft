@@ -1,16 +1,15 @@
 # TODO
 
-- schematic expands to right out of window.
-- remove dragarea for now. lets add it later when everyhting works.
+- fix dragging horizontally doesnt work in schematic
+- fix dragging horizontally doesnt work in visualization
+- fix visualization autoscroll on play doesnt work
+- fix schematic example how-to-images dont work
+- fix schematic expands to right out of window.
 
 - re-enable panels when they are fixed
-- optimize the app
+- re-enable dragarea or do some horizontal drag
 
-- fix icons in schematic
-- dragging horizontally doesnt work in schematic
-- dragging horizontally doesnt work in visualization
-- visualization autoscroll on play doesnt work
-- schematic example how-to-images dont work
+- optimize the app
 
 - i think the horizontal scroll and play-head are not keeping up with the sounds playing of the song. they are not in sync.
 

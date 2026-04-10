@@ -1,6 +1,6 @@
 import { MidiFile } from 'midifile-ts';
 
-import { Instrument, Drum, BlockPallette } from './types.js';
+import { BlockPallette, Drum, Instrument } from './types.js';
 
 export { instrumentByPatchId };
 
@@ -23,7 +23,7 @@ function applyDefaultNamespaceToKey([key, value]: [string, string]): [
 export const instrumentByBlock = new Map(
   (
     [
-      ['acacia_log', 'bass'],
+      ['log', 'bass'],
       ['sand', 'snare'],
       ['glass', 'hat'],
       ['stone', 'basedrum'],
@@ -79,14 +79,14 @@ export const blockByPatchId = new Map(
       [30, 'white_wool'],
       [31, 'white_wool'],
       // Basses
-      [32, 'acacia_log'],
-      [33, 'acacia_log'],
-      [34, 'acacia_log'],
-      [35, 'acacia_log'],
-      [36, 'acacia_log'],
-      [37, 'acacia_log'],
-      [38, 'acacia_log'],
-      [39, 'acacia_log'],
+      [32, 'wood_log'],
+      [33, 'wood_log'],
+      [34, 'wood_log'],
+      [35, 'wood_log'],
+      [36, 'wood_log'],
+      [37, 'wood_log'],
+      [38, 'wood_log'],
+      [39, 'wood_log'],
       // Brass
       [56, 'copper_block'],
       [57, 'weathered_copper'],

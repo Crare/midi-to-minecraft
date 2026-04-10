@@ -4,6 +4,4 @@
   <rect x="2" y="11" width="24" height="6" fill="#b94141" />
   <rect x="18" y="5" width="4" height="4" fill="#d63737" />
   <rect x="6" y="19" width="4" height="4" fill="#d63737" />
-  <text x="14" y="10" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="#222" font-family="monospace">TICKS</text>
 </svg>
-<!-- Replace TICKS as needed -->

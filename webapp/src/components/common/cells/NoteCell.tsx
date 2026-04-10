@@ -1,6 +1,6 @@
-import { blockColorFor, blockLabel } from '@components/SchematicPanel/schematicData';
+import { blockLabel } from '@components/SchematicPanel/schematicData';
 import { CELL } from '@constants';
-const noteCellSvg = 'assets/icons/note-cell.svg';
+import { SupportBlock } from '../blocks/SupportBlock';
 
 /**
  * NoteCell renders the visual representation of a note block (noteblock) in the schematic grid.
@@ -24,21 +24,13 @@ export function NoteCell({
   size?: number;
 }) {
   const s = size ?? CELL;
-  const col = blockColorFor(block);
   const label = useCount != null ? String(useCount) : '';
   return (
     <div
       style={{ width: s, height: s, position: 'relative', display: 'block', flexShrink: 0 }}
       aria-label={`${instrument} on ${blockLabel(block)}`}
     >
-      <img
-        src={noteCellSvg}
-        width={s}
-        height={s}
-        style={{ display: 'block', width: s, height: s, background: col }}
-        alt="Note cell"
-        draggable={false}
-      />
+      <SupportBlock blockId={block} size={s} />
       {label !== '' && (
         <span
           style={{

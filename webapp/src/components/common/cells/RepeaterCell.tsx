@@ -41,6 +41,7 @@ export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) 
           color: '#222',
           pointerEvents: 'none',
           marginTop: 2,
+          zIndex: 10,
         }}
       >
         {ticks}

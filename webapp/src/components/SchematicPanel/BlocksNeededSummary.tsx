@@ -43,9 +43,9 @@ export default function BlocksNeededSummary({
           <h3 className="schematic-totals-heading">Raw resources</h3>
           <div className="schematic-totals-chips">
             <TotalsChip
-              icon={<SupportBlock blockId="minecraft:acacia_log" size={18} />}
+              icon={<SupportBlock blockId="minecraft:wood_log" size={18} />}
               count={raw?.logs}
-              label={`logs (${raw?.planks?.toLocaleString()} planks)`}
+              label={`wood logs (${raw?.planks?.toLocaleString()} planks)`}
             />
             <TotalsChip
               icon={<MiniDust size={18} />}

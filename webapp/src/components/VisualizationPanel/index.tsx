@@ -358,6 +358,8 @@ export default function VisualizationPanel({ trackEvents }: VisualizationPanelPr
     };
   }, [tracksOpen]);
 
+  // console.log('visibleTracks', visibleTracks);
+
   return (
     <ErrorBoundary>
       <CollapsiblePanel

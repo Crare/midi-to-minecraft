@@ -5,7 +5,7 @@ export const CELL = 28; // cell size in pixels for schematic grid; also used as 
 export const MINI = 18; // mini block size in pixels for summary chips
 
 export const instrumentByBlock: Record<string, string> = {
-  'minecraft:acacia_log': 'bass',
+  'minecraft:wood_log': 'bass',
   'minecraft:sand': 'snare',
   'minecraft:glass': 'hat',
   'minecraft:stone': 'basedrum',
@@ -42,14 +42,14 @@ export const blockByPatchId: Record<number, string> = {
   29: 'minecraft:white_wool',
   30: 'minecraft:white_wool',
   31: 'minecraft:white_wool',
-  32: 'minecraft:acacia_log',
-  33: 'minecraft:acacia_log',
-  34: 'minecraft:acacia_log',
-  35: 'minecraft:acacia_log',
-  36: 'minecraft:acacia_log',
-  37: 'minecraft:acacia_log',
-  38: 'minecraft:acacia_log',
-  39: 'minecraft:acacia_log',
+  32: 'minecraft:wood_log',
+  33: 'minecraft:wood_log',
+  34: 'minecraft:wood_log',
+  35: 'minecraft:wood_log',
+  36: 'minecraft:wood_log',
+  37: 'minecraft:wood_log',
+  38: 'minecraft:wood_log',
+  39: 'minecraft:wood_log',
   72: 'minecraft:clay',
   73: 'minecraft:clay',
   74: 'minecraft:clay',
@@ -105,7 +105,7 @@ export const noteColorByStep = [
 ];
 
 export const supportColorByBlock: Record<string, string> = {
-  acacia_log: '#8b5a2b',
+  wood_log: '#8b5a2b',
   sand: '#d4be7d',
   glass: '#8cd9e9',
   stone: '#8f9497',

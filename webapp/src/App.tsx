@@ -26,6 +26,8 @@ export default function App() {
   const [zipFilename, setZipFilename] = useState<string>('output.zip');
   const [exampleOpen, setExampleOpen] = useState<boolean>(true);
 
+  console.log('trackEvents', trackEvents);
+
   const onConvertRequest = async ({ file, outputName, trimLeadingSilence }: ConvertRequest) => {
     if (!file || busy) return;
 

@@ -15,7 +15,7 @@ export const blockColor = {
   'minecraft:emerald_block': '#3cc76f',
   'minecraft:hay_block': '#d6c66a',
   'minecraft:glowstone': '#f2cb6c',
-  'minecraft:acacia_log': '#8b5a2b',
+  'minecraft:wood_log': '#8b5a2b',
 };
 
 export function blockColorFor(blockId) {
