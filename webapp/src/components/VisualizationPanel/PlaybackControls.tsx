@@ -79,7 +79,13 @@ export default function PlaybackControls({
           disabled={visibleTracks.length === 0}
           aria-label="Go to start"
         >
-          <img src="assets/icons/goto-start.svg" width="16" height="16" alt="Go to start" aria-hidden="true" />
+          <img
+            src="assets/icons/goto-start.svg"
+            width="16"
+            height="16"
+            alt="Go to start"
+            aria-hidden="true"
+          />
         </button>
       </div>
       <div className="playback-meta">Position: {playheadTick.toFixed(1)} ticks</div>
