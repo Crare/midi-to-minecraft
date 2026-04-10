@@ -7,6 +7,11 @@
 - fix visualization autoscroll on play doesnt work
 - fix schematic example how-to-images dont work
 - fix schematic expands to right out of window.
+- fix visualization icons positions are wonky.
+- fix visualization horizontal positions to timeline.
+- fix schematic has extra empty spaces that could be trimmed off in the grid.
+- fix schematic is not showing all the repeaters.
+- show current tick in the schematic.
 
 - re-enable panels when they are fixed
 - re-enable dragarea or do some horizontal drag

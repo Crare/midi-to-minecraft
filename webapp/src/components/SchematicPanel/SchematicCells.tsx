@@ -7,7 +7,7 @@ export { NoteCell } from '../common/cells/NoteCell';
 export { PhantomRepeaterCell } from '../common/cells/PhantomRepeaterCell';
 export { RedstoneDustCell as DustCell } from '../common/cells/RedstoneDustCell';
 export { RepeaterCell } from '../common/cells/RepeaterCell';
-export { SegRepCell } from '../common/cells/SegRepCell';
+export { SegmentRepeaterCell } from '../common/cells/SegmentRepeaterCell';
 export { SplitBranchCell } from '../common/cells/SplitBranchCell';
 export { SplitPassCell } from '../common/cells/SplitPassCell';
 export { SplitWireCell } from '../common/cells/SplitWireCell';

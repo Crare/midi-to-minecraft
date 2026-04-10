@@ -936,22 +936,25 @@ button:disabled {
 /* Sticky connector column in tbody */
 .schematic-td-connector {
   position: sticky;
-  left: 0;
+  left: 1;
   z-index: 5;
   background: var(--panel);
-  padding: 0;
+  padding: 1;
+  border: 1px solid #00000015;
 }
 
 /* Segment data cell — contains inline flex of repeater SVGs */
 .schematic-td-seg {
-  padding: 0;
+  padding: 1;
   background: var(--panel);
-  border-right-color: transparent;
+  /* border-right-color: transparent; */
+  border: 1px solid #00000015;
 }
 
 /* Anchor data cell — note block or split indicator */
 .schematic-td-anchor {
-  padding: 0;
+  padding: 1;
+  border: 1px solid #00000015;
 }
 
 /* Pass-through cell — instrument wire running through a tick it doesn't play */
