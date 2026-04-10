@@ -11,6 +11,7 @@ import { RepeaterCell } from './RepeaterCell';
  */
 export function SegRepCell({ cell, cs }: { cell: any; cs: number }) {
   const { ref, pos, show, hide } = usePortalTooltip();
+  // console.log('Rendering SegRepCell with ticks:', cell.ticks);
   return (
     <div
       ref={ref}

@@ -2,10 +2,10 @@
 export { AnchorCell } from '../common/cells/AnchorCell';
 export { BranchStartCell } from '../common/cells/BranchStartCell';
 export { BranchTapCell } from '../common/cells/BranchTapCell';
-export { DustCell } from '../common/cells/DustCell';
 export { NoteBlockCell } from '../common/cells/NoteBlockCell';
 export { NoteCell } from '../common/cells/NoteCell';
 export { PhantomRepeaterCell } from '../common/cells/PhantomRepeaterCell';
+export { RedstoneDustCell as DustCell } from '../common/cells/RedstoneDustCell';
 export { RepeaterCell } from '../common/cells/RepeaterCell';
 export { SegRepCell } from '../common/cells/SegRepCell';
 export { SplitBranchCell } from '../common/cells/SplitBranchCell';

@@ -1,4 +1,5 @@
-import { AnchorCell, DustCell, SegRepCell } from './SchematicCells';
+import { RedstoneDustCell } from '@components/common/cells/RedstoneDustCell';
+import { AnchorCell, SegRepCell } from './SchematicCells';
 import { blockLabel } from './schematicData';
 
 // Cell renderer for react-window Grid
@@ -31,7 +32,7 @@ export function SchematicRowGridCell({ columnIndex, rowIndex, style, cellProps }
           }}
           aria-label="Move row marker here"
         >
-          <DustCell size={cs} />
+          <RedstoneDustCell size={cs} />
         </button>
       </div>
     );
@@ -41,12 +42,13 @@ export function SchematicRowGridCell({ columnIndex, rowIndex, style, cellProps }
   if ((columnIndex - 1) % 2 === 0) {
     // Segment column
     const seg = row.segments[anchorIdx] ?? [];
+    // return null;
     return (
       <div style={style} className="schematic-td-seg">
         <div className="schematic-segment">
           {seg.map((cell: any, ri: number) =>
             cell.kind === 'dust' ? (
-              <DustCell key={ri} size={cs} />
+              <RedstoneDustCell key={ri} size={cs} />
             ) : (
               <SegRepCell key={ri} cell={cell} cs={cs} />
             ),

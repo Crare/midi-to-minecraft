@@ -1,5 +1,5 @@
-import { DustCell } from './DustCell';
 import { NoteBlockCell } from './NoteBlockCell';
+import { RedstoneDustCell } from './RedstoneDustCell';
 import { SplitWireCell } from './SplitWireCell';
 /**
  * AnchorCell is a schematic grid cell component responsible for rendering the main cell types
@@ -60,7 +60,7 @@ export function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed,
     if (!cell.note) {
       return (
         <div className="schematic-cell schematic-cell--passthrough" aria-hidden="true">
-          <DustCell size={cs} />
+          <RedstoneDustCell size={cs} />
         </div>
       );
     }

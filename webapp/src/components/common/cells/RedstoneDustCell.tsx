@@ -2,13 +2,13 @@ import { CELL } from '@constants';
 
 const dustCellSvg = `${import.meta.env.BASE_URL}assets/icons/dust-cell.svg`;
 /**
- * DustCell renders a single redstone dust cell as an image in the schematic grid.
+ * RedstoneDustCell renders a single redstone dust cell as an image in the schematic grid.
  * Used for passthrough and wiring cells. Purely visual, not interactive.
  *
  * Props:
  * - size: Cell size in pixels (optional)
  */
-export function DustCell({ size }: { size?: number }) {
+export function RedstoneDustCell({ size }: { size?: number }) {
   const s = size ?? CELL;
   return (
     <img
