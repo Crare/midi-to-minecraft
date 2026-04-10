@@ -1,3 +1,6 @@
+import ExamplePanel from '@components/ExamplePanel';
+import JsonOutputPanel from '@components/JsonOutputPanel';
+import VisualizationPanel from '@components/VisualizationPanel';
 import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
 import { playSuccessJingle } from './audio/noteblockAudio';
@@ -58,6 +61,7 @@ export default function App() {
       setZipFilename(getZipFilename(outputName, file.name));
       const totalNotes = sequences.reduce((sum, track) => sum + track.length, 0);
       setStatus(`Converted ${sequences.length} track(s), ${totalNotes} notes total.`);
+      setExampleOpen(false);
       setTimeout(() => playSuccessJingle(), 500);
     } catch (error: any) {
       console.error(error);
@@ -78,23 +82,22 @@ export default function App() {
       </header>
 
       <main>
-        {/* <ExamplePanel open={exampleOpen} onOpenChange={setExampleOpen} /> */}
+        <ExamplePanel open={exampleOpen} onOpenChange={setExampleOpen} />
 
         <UploadPanel
           busy={busy}
           status={status}
           onFileSelected={(filename: string) => {
             setStatus(`Selected: ${filename}`);
-            setExampleOpen(false);
           }}
           onConvertRequest={onConvertRequest}
         />
 
-        {/* <JsonOutputPanel downloadFiles={downloadFiles} zipFilename={zipFilename} /> */}
+        <JsonOutputPanel downloadFiles={busy ? [] : downloadFiles} zipFilename={zipFilename} />
 
-        {/* <VisualizationPanel trackEvents={trackEvents} /> */}
+        <VisualizationPanel trackEvents={busy ? [] : trackEvents} busy={busy} />
 
-        <SchematicPanel trackEvents={trackEvents} />
+        <SchematicPanel trackEvents={busy ? [] : trackEvents} busy={busy} />
       </main>
 
       <footer className="site-footer">

@@ -16,9 +16,10 @@ import VisualizationOptions from './VisualizationOptions';
 
 interface VisualizationPanelProps {
   trackEvents: any[];
+  busy: boolean;
 }
 
-export default function VisualizationPanel({ trackEvents }: VisualizationPanelProps) {
+export default function VisualizationPanel({ trackEvents, busy }: VisualizationPanelProps) {
   const [tracksOpen, setTracksOpen] = useState(false);
   const [showColor, setShowColor] = useState(true);
   const [showNumber, setShowNumber] = useState(true);
@@ -359,6 +360,27 @@ export default function VisualizationPanel({ trackEvents }: VisualizationPanelPr
   }, [tracksOpen]);
 
   // console.log('visibleTracks', visibleTracks);
+
+  if (!visibleTracks || busy) {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(255,255,255,0.7)',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <span className="spinner spinner-large" aria-label="Loading" />
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary>

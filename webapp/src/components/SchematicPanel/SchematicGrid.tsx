@@ -33,26 +33,21 @@ export default function SchematicGrid({
         });
       }
     });
-
-    // console.log('virtualRows', rows);
     return rows;
   }, [instruments]);
 
-  // const rowHeight = cs + 8;
-  // const gridRef = useRef(null);
+  // Calculate the grid's pixel width, but never exceed 100% of the parent
+  const gridContentWidth = totalCols * (cs - 2);
 
-  // Virtualized grid rendering
   return (
-    <div style={{ overflow: 'auto' }}>
+    <div style={{ width: '100%', overflowX: 'auto', maxWidth: '100%' }}>
       <Grid
-        // ref={gridRef}
         columnCount={totalCols}
-        columnWidth={cs}
-        // height={Math.min(virtualRows.length * rowHeight, 600)}
+        columnWidth={cs - 2}
         rowCount={virtualRows.length}
         rowHeight={cs + 8}
         cellComponent={SchematicRowGridCell}
-        // width={Math.min(totalCols * cs, 1200)}
+        style={{ width: gridContentWidth, maxWidth: '100%' }}
         cellProps={{
           cellProps: {
             virtualRows,

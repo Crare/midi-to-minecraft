@@ -15,9 +15,10 @@ import {
 
 interface SchematicPanelProps {
   trackEvents: any[];
+  busy?: boolean;
 }
 
-export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
+export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProps) {
   const [open, setOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
@@ -41,6 +42,7 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
       cancelled = true;
     };
   }, [trackEvents]);
+
   const totalNotes = useMemo(
     () =>
       Array.isArray(grid?.instruments)
@@ -81,27 +83,30 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
 
   console.log('grid', grid);
 
+  if (processing || !grid || busy) {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(255,255,255,0.7)',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <span className="spinner spinner-large" aria-label="Loading" />
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <div style={{ position: 'relative' }}>
-        {processing && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: 'rgba(255,255,255,0.7)',
-              zIndex: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span className="spinner spinner-large" aria-label="Loading" />
-          </div>
-        )}
         <CollapsiblePanel
           title="4) Build Schematic (Top-Down)"
           meta={
@@ -287,12 +292,14 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
               );
             })()}
 
-          <div ref={contentRef} className="schematic-content">
-            {grid.instruments.length === 0 ? (
-              <p className="hint">No notes to display.</p>
-            ) : (
-              <SchematicGrid grid={grid} cellSize={cellSize} />
-            )}
+          <div style={{ width: '100%', overflowX: 'auto' }}>
+            <div ref={contentRef} className="schematic-content">
+              {grid.instruments.length === 0 ? (
+                <p className="hint">No notes to display.</p>
+              ) : (
+                <SchematicGrid grid={grid} cellSize={cellSize} />
+              )}
+            </div>
           </div>
         </CollapsiblePanel>
       </div>
