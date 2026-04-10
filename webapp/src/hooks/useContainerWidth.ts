@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 
-export function useContainerWidth(ref) {
+export function useContainerWidth(ref: React.RefObject<any>) {
   const [width, setWidth] = useState(0);
 
   useLayoutEffect(() => {
