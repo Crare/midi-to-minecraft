@@ -1,0 +1,6 @@
+- If images in /public/assets/examples/ are not loading, check Vite's static asset handling.
+- Try using "/assets/examples/example_schematic.png" directly as the src (without BASE_URL).
+- If the app is served from a subpath, BASE_URL may be set (e.g. "/midi-to-minecraft/").
+- Use import.meta.env.BASE_URL + "assets/examples/example_schematic.png" for correct prefixing.
+- If still not working, try importing the image and using the imported URL.
+- See: https://vitejs.dev/guide/assets.html#the-public-directory

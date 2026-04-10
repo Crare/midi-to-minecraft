@@ -1,3 +1,7 @@
+const exampleMinecraft1 = `${import.meta.env.BASE_URL}assets/examples/example_minecraft1.png`;
+const exampleMinecraft2 = `${import.meta.env.BASE_URL}assets/examples/example_minecraft2.png`;
+const exampleSchematic = `${import.meta.env.BASE_URL}assets/examples/example_schematic.png`;
+
 interface HowToWireTutorialProps {
   tutorialOpen: boolean;
   setTutorialOpen: (open: boolean) => void;
@@ -12,7 +16,7 @@ export default function HowToWireTutorial({
       <button
         type="button"
         className="schematic-tutorial-toggle"
-        onClick={() => setTutorialOpen((o) => !o)}
+        onClick={() => setTutorialOpen(!tutorialOpen)}
         aria-expanded={tutorialOpen}
       >
         <span className="schematic-tutorial-toggle-label">How to wire it in Minecraft</span>
@@ -28,24 +32,15 @@ export default function HowToWireTutorial({
           </p>
           <div className="schematic-tutorial-images">
             <figure className="schematic-tutorial-figure">
-              <img
-                src={`${import.meta.env.BASE_URL}assets/example_schematic.png`}
-                alt="Example schematic view"
-              />
+              <img src={exampleSchematic} alt="Example schematic view" />
               <figcaption>Schematic view (top-down)</figcaption>
             </figure>
             <figure className="schematic-tutorial-figure">
-              <img
-                src={`${import.meta.env.BASE_URL}assets/example_minecraft1.png`}
-                alt="Example Minecraft wiring 1"
-              />
+              <img src={exampleMinecraft1} alt="Example Minecraft wiring 1" />
               <figcaption>In-game wiring example 1</figcaption>
             </figure>
             <figure className="schematic-tutorial-figure">
-              <img
-                src={`${import.meta.env.BASE_URL}assets/example_minecraft2.png`}
-                alt="Example Minecraft wiring 2"
-              />
+              <img src={exampleMinecraft2} alt="Example Minecraft wiring 2" />
               <figcaption>In-game wiring example 2</figcaption>
             </figure>
           </div>

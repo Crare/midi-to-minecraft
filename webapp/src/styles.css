@@ -377,6 +377,11 @@ button:disabled {
   border-top-color: white;
 }
 
+.spinner-large {
+  width: 2rem;
+  height: 2rem;
+}
+
 .downloads {
   display: grid;
   gap: 0.5rem;
@@ -750,7 +755,7 @@ button:disabled {
 .schematic-tutorial {
   border: 1px solid rgba(42, 70, 22, 0.25);
   border-radius: 6px;
-  margin: 0.75rem 0 0.5rem;
+  margin: 2rem 0 2rem;
   background: rgba(0, 0, 0, 0.08);
 }
 

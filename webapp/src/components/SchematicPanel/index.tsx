@@ -1,13 +1,13 @@
 import CollapsiblePanel from '@components/common/CollapsiblePanel';
 import ErrorBoundary from '@components/common/ErrorBoundary';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { buildTickGridAsync } from '../../workers/tickGridWorkerClient';
 import { MiniDust, MiniNoteBlock, MiniRepeater, SupportBlock } from './SchematicCells';
 import SchematicGrid from './SchematicGrid';
 import TotalsChip from './TotalsChip';
 import {
   blockColor,
   blockLabel,
-  buildTickGrid,
   computeRawResources,
   computeSchematicDimensions,
   computeTickGridBlockCounts,
@@ -26,18 +26,24 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
 
   const contentRef = useRef<HTMLDivElement | null>(null);
 
-  const [grid, setGrid] = useState<any>(() => buildTickGrid(trackEvents));
+  const [grid, setGrid] = useState<any>(null);
 
   useEffect(() => {
     let cancelled = false;
     setProcessing(true);
-    // Simulate async processing for demonstration; replace with real async if needed
-    setTimeout(() => {
-      if (!cancelled) {
-        setGrid(buildTickGrid(trackEvents));
-        setProcessing(false);
-      }
-    }, 0);
+    buildTickGridAsync(trackEvents)
+      .then((result) => {
+        if (!cancelled) {
+          setGrid(result);
+          setProcessing(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setGrid({ instruments: [], anchors: [], error: err.message });
+          setProcessing(false);
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -84,24 +90,7 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
   console.log('grid', grid);
 
   if (processing || !grid || busy) {
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(255,255,255,0.7)',
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <span className="spinner spinner-large" aria-label="Loading" />
-      </div>
-    );
+    return <span className="spinner spinner-large" aria-label="Processing Schematic" />;
   }
 
   return (

@@ -362,24 +362,7 @@ export default function VisualizationPanel({ trackEvents, busy }: VisualizationP
   // console.log('visibleTracks', visibleTracks);
 
   if (!visibleTracks || busy) {
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(255,255,255,0.7)',
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <span className="spinner spinner-large" aria-label="Loading" />
-      </div>
-    );
+    return <span className="spinner spinner-large" aria-label="Processing Tracks" />;
   }
 
   return (
