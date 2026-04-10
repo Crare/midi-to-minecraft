@@ -21,13 +21,9 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
   const [open, setOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
-  const [indicatorX, setIndicatorX] = useState(15);
-  const [indicatorY, setIndicatorY] = useState(30);
   const [processing, setProcessing] = useState(false);
 
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const indicatorDragRef = useRef({ active: false, startClientX: 0, startX: 0 });
-  const hIndicatorDragRef = useRef({ active: false, startClientY: 0, startY: 0 });
 
   const [grid, setGrid] = useState<any>(() => buildTickGrid(trackEvents));
 
@@ -82,58 +78,6 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
   useEffect(() => {
     if (hasData) setOpen(true);
   }, [hasData]);
-
-  function onIndicatorPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
-    e.preventDefault();
-    e.stopPropagation();
-    indicatorDragRef.current = { active: true, startClientX: e.clientX, startX: indicatorX };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function onIndicatorPointerMove(e: React.PointerEvent<HTMLButtonElement>) {
-    if (!indicatorDragRef.current.active) return;
-    const delta = e.clientX - indicatorDragRef.current.startClientX;
-    const maxX = contentRef.current ? contentRef.current.scrollWidth : 999999;
-    setIndicatorX(Math.max(0, Math.min(indicatorDragRef.current.startX + delta, maxX)));
-  }
-
-  function onIndicatorPointerUp() {
-    indicatorDragRef.current.active = false;
-  }
-
-  function onHIndicatorPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
-    e.preventDefault();
-    e.stopPropagation();
-    hIndicatorDragRef.current = { active: true, startClientY: e.clientY, startY: indicatorY };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function onHIndicatorPointerMove(e: React.PointerEvent<HTMLButtonElement>) {
-    if (!hIndicatorDragRef.current.active) return;
-    const delta = e.clientY - hIndicatorDragRef.current.startClientY;
-    const maxY = contentRef.current ? contentRef.current.offsetHeight : 999999;
-    setIndicatorY(Math.max(0, Math.min(hIndicatorDragRef.current.startY + delta, maxY)));
-  }
-
-  function onHIndicatorPointerUp() {
-    hIndicatorDragRef.current.active = false;
-  }
-
-  function onColumnClick(el: HTMLElement) {
-    const content = contentRef.current;
-    if (!content) return;
-    const x =
-      el.getBoundingClientRect().left - content.getBoundingClientRect().left + el.offsetWidth / 2;
-    setIndicatorX(Math.max(0, x));
-  }
-
-  function onRowClick(el: HTMLElement) {
-    const content = contentRef.current;
-    if (!content) return;
-    const y =
-      el.getBoundingClientRect().top - content.getBoundingClientRect().top + el.offsetHeight / 2;
-    setIndicatorY(Math.max(0, y));
-  }
 
   console.log('grid', grid);
 
@@ -190,9 +134,8 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
             Top-down schematic. Background color = instrument block. Each repeater shows its
             individual delay setting (1–4 t). Tracks starting later include leading repeaters.
             Harmonics are connected by a vertical redstone rail on the left. An orange T-junction
-            cell marks where a lane branches off another lane to save repeaters. Drag the gold
-            vertical marker to track column progress; drag the blue horizontal marker to track row
-            progress. Click any note block to highlight it as your last-placed position.
+            cell marks where a lane branches off another lane to save repeaters. Click any note
+            block to highlight it as your last-placed position.
           </p>
 
           {/* Tutorial */}
@@ -345,45 +288,10 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
             })()}
 
           <div ref={contentRef} className="schematic-content">
-            {grid?.instruments?.length > 0 && (
-              <>
-                <button
-                  type="button"
-                  className="schematic-indicator"
-                  style={{ left: `${indicatorX}px` }}
-                  onPointerDown={onIndicatorPointerDown}
-                  onPointerMove={onIndicatorPointerMove}
-                  onPointerUp={onIndicatorPointerUp}
-                  onPointerCancel={onIndicatorPointerUp}
-                  aria-label="Drag to mark column build progress"
-                >
-                  <span className="schematic-indicator-line" aria-hidden="true" />
-                  <span className="schematic-indicator-head" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="schematic-h-indicator"
-                  style={{ top: `${indicatorY}px` }}
-                  onPointerDown={onHIndicatorPointerDown}
-                  onPointerMove={onHIndicatorPointerMove}
-                  onPointerUp={onHIndicatorPointerUp}
-                  onPointerCancel={onHIndicatorPointerUp}
-                  aria-label="Drag to mark row build progress"
-                >
-                  <span className="schematic-h-indicator-line" aria-hidden="true" />
-                  <span className="schematic-h-indicator-head" aria-hidden="true" />
-                </button>
-              </>
-            )}
             {grid.instruments.length === 0 ? (
               <p className="hint">No notes to display.</p>
             ) : (
-              <SchematicGrid
-                grid={grid}
-                cellSize={cellSize}
-                onColumnClick={onColumnClick}
-                onRowClick={onRowClick}
-              />
+              <SchematicGrid grid={grid} cellSize={cellSize} />
             )}
           </div>
         </CollapsiblePanel>

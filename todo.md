@@ -1,5 +1,7 @@
 # TODO
 
+- schematic renders out of screen. fix grid.
+
 - fix dragging horizontally doesnt work in schematic
 - fix dragging horizontally doesnt work in visualization
 - fix visualization autoscroll on play doesnt work
@@ -8,6 +10,7 @@
 
 - re-enable panels when they are fixed
 - re-enable dragarea or do some horizontal drag
+- re-enable some type of highlight to keep track where you are in line. like we had vertical and horizontal indicators that could be dragged.
 
 - optimize the app
 
