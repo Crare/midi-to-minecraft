@@ -7,7 +7,6 @@ interface SchematicGridProps {
   cellSize?: number;
   onColumnClick?: (el: HTMLElement) => void;
   onRowClick?: (el: HTMLElement) => void;
-  currentTick?: number;
 }
 
 export default function SchematicGrid({
@@ -15,7 +14,6 @@ export default function SchematicGrid({
   cellSize,
   onColumnClick,
   onRowClick,
-  currentTick = 0,
 }: SchematicGridProps) {
   const cs = cellSize ?? 32;
   const [lastPressed, setLastPressed] = useState<string | null>(null);
@@ -26,9 +24,6 @@ export default function SchematicGrid({
   const virtualRows = useMemo(() => {
     if (!Array.isArray(instruments)) return [];
     const rows: any[] = [];
-    // Insert a synthetic header row as the first row
-    rows.push({ type: 'header' });
-    // rows.push({ type: 'label' });
     instruments.forEach((inst: any) => {
       if (Array.isArray(inst.rows)) {
         inst.rows.forEach((row: any) => {
@@ -41,55 +36,6 @@ export default function SchematicGrid({
 
   // Calculate the grid's pixel width, but never exceed 100% of the parent
   const gridContentWidth = totalCols * (cs - 2);
-
-  // Render header row for ticks
-  const headerCells = [];
-  headerCells.push(
-    <div
-      key="header-connector"
-      className="schematic-header-cell schematic-header-connector"
-      style={{
-        width: cs - 2,
-        height: cs / 1.5,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 700,
-        background: '#f5f5f5',
-        border: '1px solid #c0c4c8',
-        boxSizing: 'border-box',
-      }}
-    >
-      Tick
-    </div>,
-  );
-  for (let col = 1; col < totalCols; col++) {
-    // Each anchor has two columns: segment and anchor
-    const tickIdx = Math.floor((col - 1) / 2);
-    const isAnchor = (col - 1) % 2 === 1;
-    headerCells.push(
-      <div
-        key={`header-${col}`}
-        className={
-          'schematic-header-cell' +
-          (isAnchor && tickIdx === currentTick ? ' schematic-header-current-tick' : '')
-        }
-        style={{
-          width: cs - 2,
-          height: cs / 1.5,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: isAnchor && tickIdx === currentTick ? 900 : 400,
-          background: isAnchor && tickIdx === currentTick ? '#ffe066' : '#f5f5f5',
-          border: '1px solid #c0c4c8',
-          boxSizing: 'border-box',
-        }}
-      >
-        {isAnchor ? tickIdx : ''}
-      </div>,
-    );
-  }
 
   return (
     <div style={{ width: '100%', overflowX: 'auto', maxWidth: '100%' }}>

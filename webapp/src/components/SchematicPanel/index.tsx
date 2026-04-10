@@ -137,7 +137,7 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
               {grid.instruments.length === 0 ? (
                 <p className="hint">No notes to display.</p>
               ) : (
-                <SchematicGrid grid={grid} cellSize={cellSize} currentTick={0} />
+                <SchematicGrid grid={grid} cellSize={cellSize} />
               )}
             </div>
           </div>
