@@ -2,16 +2,10 @@ import CollapsiblePanel from '@components/common/CollapsiblePanel';
 import ErrorBoundary from '@components/common/ErrorBoundary';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildTickGridAsync } from '../../workers/tickGridWorkerClient';
-import { MiniDust, MiniNoteBlock, MiniRepeater, SupportBlock } from './SchematicCells';
+import BlocksNeededSummary from './BlocksNeededSummary';
+import HowToWireTutorial from './HowToWireTutorial';
 import SchematicGrid from './SchematicGrid';
-import TotalsChip from './TotalsChip';
-import {
-  blockColor,
-  blockLabel,
-  computeRawResources,
-  computeSchematicDimensions,
-  computeTickGridBlockCounts,
-} from './schematicData';
+import { blockColor, blockLabel } from './schematicData';
 
 interface SchematicPanelProps {
   trackEvents: any[];
@@ -20,7 +14,6 @@ interface SchematicPanelProps {
 
 export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProps) {
   const [open, setOpen] = useState(false);
-  const [tutorialOpen, setTutorialOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
   const [processing, setProcessing] = useState(false);
 
@@ -73,14 +66,6 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
     [grid],
   );
 
-  const totalBlockCounts = useMemo(() => {
-    if (!grid || !Array.isArray(grid.instruments)) return {};
-    const c = computeTickGridBlockCounts(grid);
-    const raw = computeRawResources(c);
-    return { ...c, raw };
-  }, [grid]);
-
-  const dimensions = useMemo(() => computeSchematicDimensions(grid), [grid]);
   const hasData = Array.isArray(trackEvents) && trackEvents.length > 0;
 
   useEffect(() => {
@@ -133,50 +118,7 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
           </p>
 
           {/* Tutorial */}
-          <div className="schematic-tutorial">
-            <button
-              type="button"
-              className="schematic-tutorial-toggle"
-              onClick={() => setTutorialOpen((o) => !o)}
-              aria-expanded={tutorialOpen}
-            >
-              <span className="schematic-tutorial-toggle-label">How to wire it in Minecraft</span>
-              <span className="schematic-tutorial-toggle-arrow">{tutorialOpen ? '▲' : '▼'}</span>
-            </button>
-            {tutorialOpen && (
-              <div className="schematic-tutorial-body">
-                <p className="schematic-tutorial-note">
-                  <strong>Note:</strong> The schematic is not an exact representation of how the
-                  redstone needs to be wired. It shows only the timeline and repeater delays. Wiring
-                  multiple note blocks to play at the same time requires more redstone, as shown in
-                  the example pictures below.
-                </p>
-                <div className="schematic-tutorial-images">
-                  <figure className="schematic-tutorial-figure">
-                    <img
-                      src={`${import.meta.env.BASE_URL}assets/example_schematic.png`}
-                      alt="Example schematic view"
-                    />
-                    <figcaption>Schematic view (top-down)</figcaption>
-                  </figure>
-                  <figure className="schematic-tutorial-figure">
-                    <img
-                      src={`${import.meta.env.BASE_URL}assets/example_minecraft1.png`}
-                      alt="Example Minecraft wiring 1"
-                    />
-                    <figcaption>In-game wiring example 1</figcaption>
-                  </figure>
-                  <figure className="schematic-tutorial-figure">
-                    <img
-                      src={`${import.meta.env.BASE_URL}assets/example_minecraft2.png`}
-                      alt="Example Minecraft wiring 2"
-                    />
-                    <figcaption>In-game wiring example 2</figcaption>
-                  </figure>
-                </div>
-              </div>
-            )}
-          </div>
+          <HowToWireTutorial />
 
           {/* Legend */}
           <div className="schematic-legend">
@@ -188,105 +130,14 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
             ))}
           </div>
 
-          {/* Block totals and raw resource summary */}
-          {grid.instruments.length > 0 &&
-            (() => {
-              const { noteblocks, repeaters, dust, raw, supportMap } = totalBlockCounts as any;
-              const supportEntries = [...(supportMap?.entries?.() ?? [])];
-              return (
-                <div className="schematic-totals">
-                  <div className="schematic-totals-section">
-                    <h3 className="schematic-totals-heading">Blocks needed</h3>
-                    <div className="schematic-totals-chips">
-                      <TotalsChip
-                        icon={<MiniNoteBlock block="minecraft:dirt" size={18} />}
-                        count={noteblocks}
-                        label="note blocks"
-                      />
-                      <TotalsChip
-                        icon={<MiniRepeater size={18} />}
-                        count={repeaters}
-                        label="repeaters"
-                      />
-                      <TotalsChip
-                        icon={<MiniDust size={18} />}
-                        count={dust}
-                        label="redstone dust"
-                      />
-                      {supportEntries.map(([bid, n]: [string, number]) => (
-                        <TotalsChip
-                          key={bid}
-                          icon={<SupportBlock blockId={bid} size={18} />}
-                          count={n}
-                          label={blockLabel(bid)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="schematic-totals-section">
-                    <h3 className="schematic-totals-heading">Raw resources</h3>
-                    <div className="schematic-totals-chips">
-                      <TotalsChip
-                        icon={<SupportBlock blockId="minecraft:wood_log" size={18} />}
-                        count={raw?.logs}
-                        label={`wood logs (${raw?.planks?.toLocaleString()} planks)`}
-                      />
-                      <TotalsChip
-                        icon={<MiniDust size={18} />}
-                        count={raw?.redstoneDust}
-                        label={
-                          raw?.redstoneBlocks > 0
-                            ? `redstone dust = ${raw.redstoneBlocks} block${raw.redstoneBlocks !== 1 ? 's' : ''}${raw.redstoneRemainder > 0 ? ` + ${raw.redstoneRemainder}` : ''}`
-                            : 'redstone dust'
-                        }
-                      />
-                      <TotalsChip
-                        icon={<SupportBlock blockId="minecraft:stone" size={18} />}
-                        count={raw?.stone}
-                        label="stone"
-                      />
-                      {supportEntries.map(([bid, n]: [string, number]) => (
-                        <TotalsChip
-                          key={bid}
-                          icon={<SupportBlock blockId={bid} size={18} />}
-                          count={n}
-                          label={`${blockLabel(bid)} (support)`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="schematic-totals-section">
-                    <h3 className="schematic-totals-heading">Minimum build area</h3>
-                    <div className="schematic-dimensions">
-                      <span className="schematic-dim-chip">
-                        <span className="schematic-dim-axis">X</span>
-                        <span className="schematic-dim-value">{dimensions.x}</span>
-                        <span className="schematic-dim-unit">blocks long</span>
-                      </span>
-                      <span className="schematic-dim-sep">×</span>
-                      <span className="schematic-dim-chip">
-                        <span className="schematic-dim-axis">Z</span>
-                        <span className="schematic-dim-value">{dimensions.z}</span>
-                        <span className="schematic-dim-unit">blocks wide</span>
-                      </span>
-                      <span className="schematic-dim-sep">×</span>
-                      <span className="schematic-dim-chip">
-                        <span className="schematic-dim-axis">Y</span>
-                        <span className="schematic-dim-value">{dimensions.y}</span>
-                        <span className="schematic-dim-unit">blocks tall</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
+          <BlocksNeededSummary grid={grid} />
 
           <div style={{ width: '100%', overflowX: 'auto' }}>
             <div ref={contentRef} className="schematic-content">
               {grid.instruments.length === 0 ? (
                 <p className="hint">No notes to display.</p>
               ) : (
-                <SchematicGrid grid={grid} cellSize={cellSize} />
+                <SchematicGrid grid={grid} cellSize={cellSize} currentTick={0} />
               )}
             </div>
           </div>

@@ -1,18 +1,65 @@
 import { RedstoneDustCell } from '@components/common/cells/RedstoneDustCell';
 import { AnchorCell, SegmentRepeaterCell } from './SchematicCells';
-import { blockLabel } from './schematicData';
 
 // Cell renderer for react-window Grid
 export function SchematicRowGridCell({ columnIndex, rowIndex, style, cellProps }: any) {
-  const { virtualRows, anchors, cs, onColumnClick, onRowClick, lastPressed, setLastPressed } =
-    cellProps;
+  const {
+    virtualRows,
+    anchors,
+    cs,
+    onColumnClick,
+    onRowClick,
+    lastPressed,
+    setLastPressed,
+    currentTick,
+  } = cellProps;
   const item = virtualRows[rowIndex];
-  if (item.type === 'label') {
-    return (
-      <div style={style} className="schematic-instrument-label-row">
-        <div className="schematic-instrument-label-cell">
-          {item.inst.label} — {blockLabel(item.inst.block)}
+  // Render header row as the first row
+  if (item.type === 'header') {
+    // Connector column
+    if (columnIndex === 0) {
+      return (
+        <div
+          style={{
+            ...style,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 700,
+            background: '#f5f5f5',
+            border: '1px solid #c0c4c8',
+            boxSizing: 'border-box',
+          }}
+          className="schematic-header-cell schematic-header-connector"
+        >
+          Tick
         </div>
+      );
+    }
+    // Tick columns: show anchor tick value for anchor columns, blank for segment columns
+    const anchorIdx = Math.floor((columnIndex - 1) / 2);
+    const isAnchor = (columnIndex - 1) % 2 === 1;
+    const tickValue = isAnchor && anchors[anchorIdx] !== undefined ? anchors[anchorIdx] : '';
+    return (
+      <div
+        style={{
+          ...style,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: isAnchor && tickValue === currentTick ? 900 : 400,
+          background: isAnchor && tickValue === currentTick ? '#ffe066' : '#f5f5f5',
+          border: '1px solid #c0c4c8',
+          color: isAnchor && tickValue === currentTick ? '#222' : undefined,
+          borderBottom: isAnchor && tickValue === currentTick ? '2px solid #e09f3e' : undefined,
+          boxSizing: 'border-box',
+        }}
+        className={
+          'schematic-header-cell' +
+          (isAnchor && tickValue === currentTick ? ' schematic-header-current-tick' : '')
+        }
+      >
+        {isAnchor ? tickValue : ''}
       </div>
     );
   }

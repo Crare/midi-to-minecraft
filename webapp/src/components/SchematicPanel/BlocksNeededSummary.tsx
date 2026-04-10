@@ -1,21 +1,44 @@
+import { useMemo } from 'react';
 import { MiniDust, MiniNoteBlock, MiniRepeater, SupportBlock } from './SchematicCells';
-import { blockLabel } from './schematicData';
+import {
+  blockLabel,
+  computeRawResources,
+  computeSchematicDimensions,
+  computeTickGridBlockCounts,
+} from './schematicData';
 import TotalsChip from './TotalsChip';
 
 interface BlocksNeededSummaryProps {
   grid: any;
-  totalBlockCounts: any;
-  dimensions: { x: number; y: number; z: number };
 }
 
-export default function BlocksNeededSummary({
-  grid,
-  totalBlockCounts,
-  dimensions,
-}: BlocksNeededSummaryProps) {
+export default function BlocksNeededSummary({ grid }: BlocksNeededSummaryProps) {
   if (!grid || !Array.isArray(grid.instruments) || grid.instruments.length === 0) return null;
-  const { noteblocks, repeaters, dust, raw, supportMap } = totalBlockCounts;
-  const supportEntries = [...(supportMap?.entries?.() ?? [])];
+
+  const dimensions = useMemo(() => computeSchematicDimensions(grid), [grid]);
+
+  const totalBlockCounts = useMemo((): {
+    noteblocks: number;
+    repeaters: number;
+    dust: number;
+    supportMap: Map<string, number>;
+    raw: {
+      logs: number;
+      planks: number;
+      redstoneDust: number;
+      redstoneBlocks: number;
+      redstoneRemainder: number;
+      stone: number;
+    };
+    supportEntries: [string, number][];
+  } => {
+    if (!grid || !Array.isArray(grid.instruments)) return {} as any;
+    const c = computeTickGridBlockCounts(grid);
+    const raw = computeRawResources(c);
+    const supportEntries = [...(c.supportMap?.entries?.() ?? [])];
+    return { ...c, raw, supportEntries };
+  }, [grid]);
+
   return (
     <>
       <div className="schematic-totals">
@@ -24,12 +47,20 @@ export default function BlocksNeededSummary({
           <div className="schematic-totals-chips">
             <TotalsChip
               icon={<MiniNoteBlock block="minecraft:dirt" size={18} />}
-              count={noteblocks}
+              count={totalBlockCounts?.noteblocks}
               label="note blocks"
             />
-            <TotalsChip icon={<MiniRepeater size={18} />} count={repeaters} label="repeaters" />
-            <TotalsChip icon={<MiniDust size={18} />} count={dust} label="redstone dust" />
-            {supportEntries.map(([bid, n]: [string, number]) => (
+            <TotalsChip
+              icon={<MiniRepeater size={18} />}
+              count={totalBlockCounts?.repeaters}
+              label="repeaters"
+            />
+            <TotalsChip
+              icon={<MiniDust size={18} />}
+              count={totalBlockCounts?.dust}
+              label="redstone dust"
+            />
+            {totalBlockCounts?.supportEntries.map(([bid, n]: [string, number]) => (
               <TotalsChip
                 key={bid}
                 icon={<SupportBlock blockId={bid} size={18} />}
@@ -44,24 +75,24 @@ export default function BlocksNeededSummary({
           <div className="schematic-totals-chips">
             <TotalsChip
               icon={<SupportBlock blockId="minecraft:wood_log" size={18} />}
-              count={raw?.logs}
-              label={`wood logs (${raw?.planks?.toLocaleString()} planks)`}
+              count={totalBlockCounts?.raw?.logs}
+              label={`wood logs (${totalBlockCounts?.raw?.planks?.toLocaleString()} planks)`}
             />
             <TotalsChip
               icon={<MiniDust size={18} />}
-              count={raw?.redstoneDust}
+              count={totalBlockCounts?.raw?.redstoneDust}
               label={
-                raw?.redstoneBlocks > 0
-                  ? `redstone dust = ${raw.redstoneBlocks} block${raw.redstoneBlocks !== 1 ? 's' : ''}${raw.redstoneRemainder > 0 ? ` + ${raw.redstoneRemainder}` : ''}`
+                totalBlockCounts?.raw?.redstoneBlocks > 0
+                  ? `redstone dust = ${totalBlockCounts.raw.redstoneBlocks} block${totalBlockCounts.raw.redstoneBlocks !== 1 ? 's' : ''}${totalBlockCounts.raw.redstoneRemainder > 0 ? ` + ${totalBlockCounts.raw.redstoneRemainder}` : ''}`
                   : 'redstone dust'
               }
             />
             <TotalsChip
               icon={<SupportBlock blockId="minecraft:stone" size={18} />}
-              count={raw?.stone}
+              count={totalBlockCounts?.raw?.stone}
               label="stone"
             />
-            {supportEntries.map(([bid, n]: [string, number]) => (
+            {totalBlockCounts?.supportEntries.map(([bid, n]: [string, number]) => (
               <TotalsChip
                 key={bid}
                 icon={<SupportBlock blockId={bid} size={18} />}

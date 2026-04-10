@@ -1,16 +1,12 @@
+import { useState } from 'react';
+
 const exampleMinecraft1 = `${import.meta.env.BASE_URL}assets/examples/example_minecraft1.png`;
 const exampleMinecraft2 = `${import.meta.env.BASE_URL}assets/examples/example_minecraft2.png`;
 const exampleSchematic = `${import.meta.env.BASE_URL}assets/examples/example_schematic.png`;
 
-interface HowToWireTutorialProps {
-  tutorialOpen: boolean;
-  setTutorialOpen: (open: boolean) => void;
-}
+export default function HowToWireTutorial() {
+  const [tutorialOpen, setTutorialOpen] = useState(false);
 
-export default function HowToWireTutorial({
-  tutorialOpen,
-  setTutorialOpen,
-}: HowToWireTutorialProps) {
   return (
     <div className="schematic-tutorial">
       <button

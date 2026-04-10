@@ -1,16 +1,15 @@
 # TODO
 
-- schematic renders out of screen. fix grid.
+- fix schematic is not showing all the repeaters.
+- fix schematic expands to right out of window.
 
 - fix dragging horizontally doesnt work in schematic
 - fix dragging horizontally doesnt work in visualization
 - fix visualization autoscroll on play doesnt work
 - fix schematic example how-to-images dont work
-- fix schematic expands to right out of window.
 - fix visualization icons positions are wonky.
 - fix visualization horizontal positions to timeline.
 - fix schematic has extra empty spaces that could be trimmed off in the grid.
-- fix schematic is not showing all the repeaters.
 - show current tick in the schematic.
 
 - re-enable panels when they are fixed

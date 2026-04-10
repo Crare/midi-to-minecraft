@@ -1,3 +1,14 @@
+.schematic-header-cell {
+  font-size: 0.85rem;
+  text-align: center;
+  user-select: none;
+}
+
+.schematic-header-current-tick {
+  background: #ffe066 !important;
+  color: #222;
+  border-bottom: 2px solid #e09f3e !important;
+}
 /* Ensure schematic grid area is horizontally scrollable and doesn't overflow viewport */
 .schematic-content-x-scroll {
   width: 100%;
