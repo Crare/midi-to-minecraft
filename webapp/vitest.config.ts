@@ -1,11 +1,13 @@
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-
 import { resolve } from 'path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  base: '/midi-to-minecraft/',
-  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: [],
+    include: ['tests/**/*.test.{ts,tsx}'],
+  },
   resolve: {
     alias: {
       '@hooks': resolve(__dirname, 'src/hooks'),

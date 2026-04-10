@@ -21,7 +21,8 @@
       "@midi/*": ["midi/*"],
       "@audio/*": ["audio/*"],
       "@assets/*": ["public/assets/*"],
-      "@constants": ["constants"]
+      "@constants": ["constants"],
+      "@src/*": ["*"]
     }
   },
   "include": ["src"],

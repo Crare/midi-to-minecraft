@@ -22,4 +22,4 @@ Refer to these files for guidance when working on or extending agents in specifi
 
 - webapp lives in /webapp/-folder, not in root. run `yarn` in /webapp/ and install packages in /webapp/ and not in root!
 - use yarn instead of npm.
-- check build works with `yarn build`
+- remember to check build works with `yarn build` and tests with `yarn test` after making changes.
