@@ -1,9 +1,9 @@
 import CollapsiblePanel from '@components/common/CollapsiblePanel';
 import ErrorBoundary from '@components/common/ErrorBoundary';
-import { useContainerWidth } from '@hooks/useContainerWidth';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import BlocksNeededSummary from './BlocksNeededSummary';
-import HowToWireTutorial from './HowToWireTutorial';
+import { MiniDust, MiniNoteBlock, MiniRepeater, SupportBlock } from './SchematicCells';
+import SchematicGrid from './SchematicGrid';
+import TotalsChip from './TotalsChip';
 import {
   blockColor,
   blockLabel,
@@ -12,8 +12,6 @@ import {
   computeSchematicDimensions,
   computeTickGridBlockCounts,
 } from './schematicData';
-import SchematicGridArea from './SchematicGridArea';
-import SchematicOptions from './SchematicOptions';
 
 interface SchematicPanelProps {
   trackEvents: any[];
@@ -23,10 +21,13 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
   const [open, setOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
+  const [indicatorX, setIndicatorX] = useState(15);
+  const [indicatorY, setIndicatorY] = useState(30);
   const [processing, setProcessing] = useState(false);
 
-  const panelContainerRef = useRef<HTMLDivElement>(null);
-  const panelWidth = useContainerWidth(panelContainerRef);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const indicatorDragRef = useRef({ active: false, startClientX: 0, startX: 0 });
+  const hIndicatorDragRef = useRef({ active: false, startClientY: 0, startY: 0 });
 
   const [grid, setGrid] = useState<any>(() => buildTickGrid(trackEvents));
 
@@ -82,17 +83,61 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
     if (hasData) setOpen(true);
   }, [hasData]);
 
+  function onIndicatorPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    indicatorDragRef.current = { active: true, startClientX: e.clientX, startX: indicatorX };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onIndicatorPointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!indicatorDragRef.current.active) return;
+    const delta = e.clientX - indicatorDragRef.current.startClientX;
+    const maxX = contentRef.current ? contentRef.current.scrollWidth : 999999;
+    setIndicatorX(Math.max(0, Math.min(indicatorDragRef.current.startX + delta, maxX)));
+  }
+
+  function onIndicatorPointerUp() {
+    indicatorDragRef.current.active = false;
+  }
+
+  function onHIndicatorPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    hIndicatorDragRef.current = { active: true, startClientY: e.clientY, startY: indicatorY };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onHIndicatorPointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!hIndicatorDragRef.current.active) return;
+    const delta = e.clientY - hIndicatorDragRef.current.startClientY;
+    const maxY = contentRef.current ? contentRef.current.offsetHeight : 999999;
+    setIndicatorY(Math.max(0, Math.min(hIndicatorDragRef.current.startY + delta, maxY)));
+  }
+
+  function onHIndicatorPointerUp() {
+    hIndicatorDragRef.current.active = false;
+  }
+
+  function onColumnClick(el: HTMLElement) {
+    const content = contentRef.current;
+    if (!content) return;
+    const x =
+      el.getBoundingClientRect().left - content.getBoundingClientRect().left + el.offsetWidth / 2;
+    setIndicatorX(Math.max(0, x));
+  }
+
+  function onRowClick(el: HTMLElement) {
+    const content = contentRef.current;
+    if (!content) return;
+    const y =
+      el.getBoundingClientRect().top - content.getBoundingClientRect().top + el.offsetHeight / 2;
+    setIndicatorY(Math.max(0, y));
+  }
+
   return (
     <ErrorBoundary>
-      <div
-        style={{
-          position: 'relative',
-          maxWidth: '100vw',
-          width: '100%',
-          overflowX: 'hidden',
-        }}
-        ref={panelContainerRef}
-      >
+      <div style={{ position: 'relative' }}>
         {processing && (
           <div
             style={{
@@ -127,7 +172,17 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
           disabled={!hasData}
           className="schematic-panel"
         >
-          <SchematicOptions cellSize={cellSize} setCellSize={setCellSize} />
+          <div className="schematic-controls">
+            <label className="option-row option-row-stacked">
+              <span>Cell size</span>
+              <select value={cellSize} onChange={(e) => setCellSize(Number(e.target.value))}>
+                <option value={20}>Small (20px)</option>
+                <option value={28}>Medium (28px)</option>
+                <option value={36}>Large (36px)</option>
+                <option value={48}>XL (48px)</option>
+              </select>
+            </label>
+          </div>
 
           <p className="hint output-summary">
             Top-down schematic. Background color = instrument block. Each repeater shows its
@@ -139,7 +194,50 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
           </p>
 
           {/* Tutorial */}
-          <HowToWireTutorial tutorialOpen={tutorialOpen} setTutorialOpen={setTutorialOpen} />
+          <div className="schematic-tutorial">
+            <button
+              type="button"
+              className="schematic-tutorial-toggle"
+              onClick={() => setTutorialOpen((o) => !o)}
+              aria-expanded={tutorialOpen}
+            >
+              <span className="schematic-tutorial-toggle-label">How to wire it in Minecraft</span>
+              <span className="schematic-tutorial-toggle-arrow">{tutorialOpen ? '▲' : '▼'}</span>
+            </button>
+            {tutorialOpen && (
+              <div className="schematic-tutorial-body">
+                <p className="schematic-tutorial-note">
+                  <strong>Note:</strong> The schematic is not an exact representation of how the
+                  redstone needs to be wired. It shows only the timeline and repeater delays. Wiring
+                  multiple note blocks to play at the same time requires more redstone, as shown in
+                  the example pictures below.
+                </p>
+                <div className="schematic-tutorial-images">
+                  <figure className="schematic-tutorial-figure">
+                    <img
+                      src={`${import.meta.env.BASE_URL}assets/example_schematic.png`}
+                      alt="Example schematic view"
+                    />
+                    <figcaption>Schematic view (top-down)</figcaption>
+                  </figure>
+                  <figure className="schematic-tutorial-figure">
+                    <img
+                      src={`${import.meta.env.BASE_URL}assets/example_minecraft1.png`}
+                      alt="Example Minecraft wiring 1"
+                    />
+                    <figcaption>In-game wiring example 1</figcaption>
+                  </figure>
+                  <figure className="schematic-tutorial-figure">
+                    <img
+                      src={`${import.meta.env.BASE_URL}assets/example_minecraft2.png`}
+                      alt="Example Minecraft wiring 2"
+                    />
+                    <figcaption>In-game wiring example 2</figcaption>
+                  </figure>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Legend */}
           <div className="schematic-legend">
@@ -151,13 +249,141 @@ export default function SchematicPanel({ trackEvents }: SchematicPanelProps) {
             ))}
           </div>
 
-          <BlocksNeededSummary
-            dimensions={dimensions}
-            grid={grid}
-            totalBlockCounts={totalBlockCounts}
-          />
+          {/* Block totals and raw resource summary */}
+          {grid.instruments.length > 0 &&
+            (() => {
+              const { noteblocks, repeaters, dust, raw, supportMap } = totalBlockCounts as any;
+              const supportEntries = [...(supportMap?.entries?.() ?? [])];
+              return (
+                <div className="schematic-totals">
+                  <div className="schematic-totals-section">
+                    <h3 className="schematic-totals-heading">Blocks needed</h3>
+                    <div className="schematic-totals-chips">
+                      <TotalsChip
+                        icon={<MiniNoteBlock block="minecraft:dirt" size={18} />}
+                        count={noteblocks}
+                        label="note blocks"
+                      />
+                      <TotalsChip
+                        icon={<MiniRepeater size={18} />}
+                        count={repeaters}
+                        label="repeaters"
+                      />
+                      <TotalsChip
+                        icon={<MiniDust size={18} />}
+                        count={dust}
+                        label="redstone dust"
+                      />
+                      {supportEntries.map(([bid, n]: [string, number]) => (
+                        <TotalsChip
+                          key={bid}
+                          icon={<SupportBlock blockId={bid} size={18} />}
+                          count={n}
+                          label={blockLabel(bid)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="schematic-totals-section">
+                    <h3 className="schematic-totals-heading">Raw resources</h3>
+                    <div className="schematic-totals-chips">
+                      <TotalsChip
+                        icon={<SupportBlock blockId="minecraft:log" size={18} />}
+                        count={raw?.logs}
+                        label={`logs (${raw?.planks?.toLocaleString()} planks)`}
+                      />
+                      <TotalsChip
+                        icon={<MiniDust size={18} />}
+                        count={raw?.redstoneDust}
+                        label={
+                          raw?.redstoneBlocks > 0
+                            ? `redstone dust = ${raw.redstoneBlocks} block${raw.redstoneBlocks !== 1 ? 's' : ''}${raw.redstoneRemainder > 0 ? ` + ${raw.redstoneRemainder}` : ''}`
+                            : 'redstone dust'
+                        }
+                      />
+                      <TotalsChip
+                        icon={<SupportBlock blockId="minecraft:stone" size={18} />}
+                        count={raw?.stone}
+                        label="stone"
+                      />
+                      {supportEntries.map(([bid, n]: [string, number]) => (
+                        <TotalsChip
+                          key={bid}
+                          icon={<SupportBlock blockId={bid} size={18} />}
+                          count={n}
+                          label={`${blockLabel(bid)} (support)`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="schematic-totals-section">
+                    <h3 className="schematic-totals-heading">Minimum build area</h3>
+                    <div className="schematic-dimensions">
+                      <span className="schematic-dim-chip">
+                        <span className="schematic-dim-axis">X</span>
+                        <span className="schematic-dim-value">{dimensions.x}</span>
+                        <span className="schematic-dim-unit">blocks long</span>
+                      </span>
+                      <span className="schematic-dim-sep">×</span>
+                      <span className="schematic-dim-chip">
+                        <span className="schematic-dim-axis">Z</span>
+                        <span className="schematic-dim-value">{dimensions.z}</span>
+                        <span className="schematic-dim-unit">blocks wide</span>
+                      </span>
+                      <span className="schematic-dim-sep">×</span>
+                      <span className="schematic-dim-chip">
+                        <span className="schematic-dim-axis">Y</span>
+                        <span className="schematic-dim-value">{dimensions.y}</span>
+                        <span className="schematic-dim-unit">blocks tall</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
-          <SchematicGridArea grid={grid} cellSize={cellSize} maxWidth={panelWidth} />
+          <div ref={contentRef} className="schematic-content">
+            {grid?.instruments?.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  className="schematic-indicator"
+                  style={{ left: `${indicatorX}px` }}
+                  onPointerDown={onIndicatorPointerDown}
+                  onPointerMove={onIndicatorPointerMove}
+                  onPointerUp={onIndicatorPointerUp}
+                  onPointerCancel={onIndicatorPointerUp}
+                  aria-label="Drag to mark column build progress"
+                >
+                  <span className="schematic-indicator-line" aria-hidden="true" />
+                  <span className="schematic-indicator-head" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="schematic-h-indicator"
+                  style={{ top: `${indicatorY}px` }}
+                  onPointerDown={onHIndicatorPointerDown}
+                  onPointerMove={onHIndicatorPointerMove}
+                  onPointerUp={onHIndicatorPointerUp}
+                  onPointerCancel={onHIndicatorPointerUp}
+                  aria-label="Drag to mark row build progress"
+                >
+                  <span className="schematic-h-indicator-line" aria-hidden="true" />
+                  <span className="schematic-h-indicator-head" aria-hidden="true" />
+                </button>
+              </>
+            )}
+            {grid.instruments.length === 0 ? (
+              <p className="hint">No notes to display.</p>
+            ) : (
+              <SchematicGrid
+                grid={grid}
+                cellSize={cellSize}
+                onColumnClick={onColumnClick}
+                onRowClick={onRowClick}
+              />
+            )}
+          </div>
         </CollapsiblePanel>
       </div>
     </ErrorBoundary>

@@ -1,19 +1,19 @@
 // cells for rendering the schematic grid
-export { AnchorCell } from './cells/AnchorCell';
-export { BranchStartCell } from './cells/BranchStartCell';
-export { BranchTapCell } from './cells/BranchTapCell';
-export { DustCell } from './cells/DustCell';
-export { NoteBlockCell } from './cells/NoteBlockCell';
-export { NoteCell } from './cells/NoteCell';
-export { PhantomRepeaterCell } from './cells/PhantomRepeaterCell';
-export { RepeaterCell } from './cells/RepeaterCell';
-export { SegRepCell } from './cells/SegRepCell';
-export { SplitBranchCell } from './cells/SplitBranchCell';
-export { SplitPassCell } from './cells/SplitPassCell';
-export { SplitWireCell } from './cells/SplitWireCell';
+export { AnchorCell } from '../common/cells/AnchorCell';
+export { BranchStartCell } from '../common/cells/BranchStartCell';
+export { BranchTapCell } from '../common/cells/BranchTapCell';
+export { DustCell } from '../common/cells/DustCell';
+export { NoteBlockCell } from '../common/cells/NoteBlockCell';
+export { NoteCell } from '../common/cells/NoteCell';
+export { PhantomRepeaterCell } from '../common/cells/PhantomRepeaterCell';
+export { RepeaterCell } from '../common/cells/RepeaterCell';
+export { SegRepCell } from '../common/cells/SegRepCell';
+export { SplitBranchCell } from '../common/cells/SplitBranchCell';
+export { SplitPassCell } from '../common/cells/SplitPassCell';
+export { SplitWireCell } from '../common/cells/SplitWireCell';
 
-// miniblocks for tooltips and legends
-export { MiniBlock } from './miniblocks/MiniBlock';
-export { MiniDust } from './miniblocks/MiniDust';
-export { MiniNoteBlock } from './miniblocks/MiniNoteBlock';
-export { MiniRepeater } from './miniblocks/MiniRepeater';
+// support block for tooltips and legends
+export { MiniDust } from '../common/miniblocks/MiniDust';
+export { MiniNoteBlock } from '../common/miniblocks/MiniNoteBlock';
+export { MiniRepeater } from '../common/miniblocks/MiniRepeater';
+export { SupportBlock } from '../common/SupportBlock';

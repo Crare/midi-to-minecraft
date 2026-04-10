@@ -1,5 +1,5 @@
-import { MiniBlock, MiniDust, MiniNoteBlock, MiniRepeater } from './SchematicCells';
-import { blockColorFor, blockLabel } from './schematicData';
+import { MiniDust, MiniNoteBlock, MiniRepeater, SupportBlock } from './SchematicCells';
+import { blockLabel } from './schematicData';
 import TotalsChip from './TotalsChip';
 
 interface BlocksNeededSummaryProps {
@@ -32,7 +32,7 @@ export default function BlocksNeededSummary({
             {supportEntries.map(([bid, n]: [string, number]) => (
               <TotalsChip
                 key={bid}
-                icon={<MiniBlock color={blockColorFor(bid)} size={18} />}
+                icon={<SupportBlock blockId={bid} size={18} />}
                 count={n}
                 label={blockLabel(bid)}
               />
@@ -43,7 +43,7 @@ export default function BlocksNeededSummary({
           <h3 className="schematic-totals-heading">Raw resources</h3>
           <div className="schematic-totals-chips">
             <TotalsChip
-              icon={<MiniBlock color="#6b4a1e" size={18} />}
+              icon={<SupportBlock blockId="minecraft:acacia_log" size={18} />}
               count={raw?.logs}
               label={`logs (${raw?.planks?.toLocaleString()} planks)`}
             />
@@ -57,14 +57,14 @@ export default function BlocksNeededSummary({
               }
             />
             <TotalsChip
-              icon={<MiniBlock color="#8f9497" size={18} />}
+              icon={<SupportBlock blockId="minecraft:stone" size={18} />}
               count={raw?.stone}
               label="stone"
             />
             {supportEntries.map(([bid, n]: [string, number]) => (
               <TotalsChip
                 key={bid}
-                icon={<MiniBlock color={blockColorFor(bid)} size={18} />}
+                icon={<SupportBlock blockId={bid} size={18} />}
                 count={n}
                 label={`${blockLabel(bid)} (support)`}
               />

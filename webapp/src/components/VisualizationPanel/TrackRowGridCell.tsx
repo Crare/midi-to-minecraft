@@ -1,6 +1,6 @@
 import { playPlacementSound } from '@audio/noteblockAudio';
+import { SupportBlock } from '@components/common/SupportBlock';
 import { noteColorByStep, notePitchNames } from '@constants';
-import { memo } from 'react';
 import { CellComponentProps } from 'react-window';
 import { Fragment } from 'react/jsx-runtime';
 
@@ -36,8 +36,10 @@ function getNoteblockTooltip(placement) {
 }
 const noteblockImg = `${import.meta.env.BASE_URL}assets/icons/noteblock.svg`;
 
+const GRID_BLOCK_SIZE = 32;
+
 // Cell renderer for react-window Grid
-function TrackRowGridCell({
+export default function TrackRowGridCell({
   columnIndex,
   rowIndex,
   style,
@@ -128,14 +130,15 @@ function TrackRowGridCell({
                   className="note-img"
                   src={noteblockImg}
                   alt="noteblock"
-                  style={{ width: 32, height: 32, marginBottom: 0 }}
+                  style={{ width: GRID_BLOCK_SIZE, height: GRID_BLOCK_SIZE, marginBottom: 0 }}
                 />
                 {showSupport ? (
-                  <img
+                  <SupportBlock
+                    blockId={placement.block}
+                    size={GRID_BLOCK_SIZE}
                     className="support-img"
-                    src={supportSpriteForBlock(placement.block)}
+                    style={{ marginTop: GRID_BLOCK_SIZE }}
                     alt={placement.block}
-                    style={{ width: 32, height: 32, marginTop: 32 }}
                   />
                 ) : null}
               </div>
@@ -170,4 +173,4 @@ function TrackRowGridCell({
   );
 }
 
-export default memo(TrackRowGridCell);
+// export default memo(TrackRowGridCell);
