@@ -1,15 +1,16 @@
 import { playPlacementSound } from '@audio/noteblockAudio';
-import { SupportBlock } from '@components/common/SupportBlock';
+import { NoteblockIcon } from '@components/common/blocks/NoteblockIcon';
+import { SupportBlock } from '@components/common/blocks/SupportBlock';
 import { noteColorByStep, notePitchNames } from '@constants';
 import { CellComponentProps } from 'react-window';
 import { Fragment } from 'react/jsx-runtime';
 
-function supportSpriteForBlock(blockId) {
+function supportSpriteForBlock(blockId: string) {
   const blockName = (blockId || 'minecraft:dirt').replace('minecraft:', '');
   // Use static SVGs for each block type, fallback to dirt
   return `${import.meta.env.BASE_URL}assets/icons/support-block-${blockName}.svg`;
 }
-function getMinecraftTuningInfo(useCount) {
+function getMinecraftTuningInfo(useCount: number) {
   const normalizedUseCount = ((useCount % 24) + 24) % 24;
   const noteStep = normalizedUseCount % 12;
   return {
@@ -19,7 +20,7 @@ function getMinecraftTuningInfo(useCount) {
     color: noteColorByStep[noteStep],
   };
 }
-function getNoteblockTooltip(placement) {
+function getNoteblockTooltip(placement: any) {
   const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
   return [
     `Instrument: ${placement.instrument}`,
@@ -34,7 +35,6 @@ function getNoteblockTooltip(placement) {
     .filter(Boolean)
     .join('\n');
 }
-const noteblockImg = `${import.meta.env.BASE_URL}assets/icons/noteblock.svg`;
 
 const GRID_BLOCK_SIZE = 32;
 
@@ -126,12 +126,7 @@ export default function TrackRowGridCell({
                   justifyContent: 'center',
                 }}
               >
-                <img
-                  className="note-img"
-                  src={noteblockImg}
-                  alt="noteblock"
-                  style={{ width: GRID_BLOCK_SIZE, height: GRID_BLOCK_SIZE, marginBottom: 0 }}
-                />
+                <NoteblockIcon size={GRID_BLOCK_SIZE} />
                 {showSupport ? (
                   <SupportBlock
                     blockId={placement.block}

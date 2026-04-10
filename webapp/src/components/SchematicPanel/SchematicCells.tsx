@@ -13,7 +13,7 @@ export { SplitPassCell } from '../common/cells/SplitPassCell';
 export { SplitWireCell } from '../common/cells/SplitWireCell';
 
 // support block for tooltips and legends
+export { SupportBlock } from '../common/blocks/SupportBlock';
 export { MiniDust } from '../common/miniblocks/MiniDust';
 export { MiniNoteBlock } from '../common/miniblocks/MiniNoteBlock';
 export { MiniRepeater } from '../common/miniblocks/MiniRepeater';
-export { SupportBlock } from '../common/SupportBlock';

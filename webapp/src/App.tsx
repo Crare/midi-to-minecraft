@@ -61,7 +61,7 @@ export default function App() {
       console.error(error);
       setStatus(`Conversion failed: ${error.message || String(error)}`);
     } finally {
-      setBusy(false);
+      setTimeout(() => setBusy(false), 500);
     }
   };
 

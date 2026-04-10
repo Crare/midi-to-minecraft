@@ -10,7 +10,6 @@
 - dragging horizontally doesnt work in schematic
 - dragging horizontally doesnt work in visualization
 - visualization autoscroll on play doesnt work
-- loading texts dont work correctly
 - schematic example how-to-images dont work
 
 - i think the horizontal scroll and play-head are not keeping up with the sounds playing of the song. they are not in sync.
