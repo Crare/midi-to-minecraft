@@ -42,6 +42,9 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
     };
   }, [trackEvents]);
 
+  // console.log('trackEvents', trackEvents);
+  // console.log('grid', grid);
+
   const totalNotes = useMemo(
     () =>
       Array.isArray(grid?.instruments)
