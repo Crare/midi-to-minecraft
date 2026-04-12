@@ -88,38 +88,76 @@ export type TrackEvent = {
   title: string;
   events: NoteEvent[];
   notes?: NoteEvent[];
+  cells?: any[];
 };
+
+// Helper to flatten each instrument's schematic events into a cell array for canvas rendering
+function buildInstrumentCells(events: any[]): any[] {
+  const cells: any[] = [];
+  events.forEach((event: any, idx: number) => {
+    // Add repeaters for delay before this note
+    for (let i = 0; i < Math.floor(event.repeaterTicks / 4); ++i) {
+      cells.push({ type: 'repeater', ticks: 4, key: `rep4-${idx}-${i}` });
+    }
+    if (event.repeaterTicks % 4 > 0) {
+      cells.push({ type: 'repeater', ticks: event.repeaterTicks % 4, key: `repX-${idx}` });
+    }
+    if (event.split) {
+      cells.push({ type: 'split', key: `split-${idx}` });
+    }
+    cells.push({ type: 'note', event, key: `note-${idx}` });
+  });
+  return cells;
+}
 
 export function buildTrackEvents(
   midi: Midi,
   { trimLeadingSilence = false }: { trimLeadingSilence?: boolean } = {},
 ): TrackEvent[] {
+  // 1. Build flat note list
   const noteList = buildNoteList(midi, { trimLeadingSilence });
+  // 2. Combine all events for the same instrument
   const instrumentMap = new Map<string, NoteEvent[]>();
   noteList.forEach((note) => {
     if (!instrumentMap.has(note.instrument)) instrumentMap.set(note.instrument, []);
     instrumentMap.get(note.instrument)!.push(note);
   });
+
+  // 3. For each instrument, sort by tick and build tick-indexed map
   const tracks: TrackEvent[] = [];
-  const epsilon = 1e-6;
   instrumentMap.forEach((events, instrument) => {
-    const lanes: { lastEndTime: number; events: NoteEvent[] }[] = [];
-    events.forEach((event) => {
-      let lane = lanes.find((l) => event.time + epsilon >= l.lastEndTime);
-      if (!lane) {
-        lane = { lastEndTime: -Infinity, events: [] };
-        lanes.push(lane);
-      }
-      lane.events.push(event);
-      lane.lastEndTime = Math.max(lane.lastEndTime, event.endTime);
+    // Sort by tick, then by note for determinism
+    const sorted = [...events].sort((a, b) => a.tick - b.tick || a.note - b.note);
+    // Map: tick -> notes[]
+    const tickMap = new Map<number, NoteEvent[]>();
+    sorted.forEach((ev) => {
+      if (!tickMap.has(ev.tick)) tickMap.set(ev.tick, []);
+      tickMap.get(ev.tick)!.push(ev);
     });
-    lanes.forEach((lane, laneIndex) => {
-      tracks.push({
-        id: `instrument-${instrument}-${laneIndex}`,
-        title: instrument,
-        events: lane.events,
-        notes: Array.isArray(lane.events) ? lane.events : [],
+    // 4. Build schematic-ready event list
+    let lastTick: number | null = null;
+    const schematicEvents: Array<NoteEvent & { repeaterTicks: number; split: boolean }> = [];
+    for (const [tick, notesAtTick] of Array.from(tickMap.entries()).sort((a, b) => a[0] - b[0])) {
+      const isSplit = notesAtTick.length > 1;
+      // For each note at this tick, compute repeaters needed from lastTick
+      notesAtTick.forEach((note, idx) => {
+        const repeaterTicks = lastTick === null ? note.tick : note.tick - lastTick;
+        schematicEvents.push({
+          ...note,
+          repeaterTicks,
+          split: isSplit,
+        });
       });
+      lastTick = tick;
+    }
+    // Attach .cells for canvas rendering
+    const cells = buildInstrumentCells(schematicEvents);
+    tracks.push({
+      id: `instrument-${instrument}`,
+      title: instrument,
+      events: schematicEvents,
+      notes: schematicEvents,
+      cells,
     });
   });
   return tracks;
