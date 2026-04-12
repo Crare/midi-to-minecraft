@@ -73,3 +73,56 @@ export const blockByPercussiveNote = {
   46: "minecraft:glass",
   56: "minecraft:soul_sand"
 };
+
+export const notePitchNames = [
+  "F#/Gb",
+  "G",
+  "G#/Ab",
+  "A",
+  "A#/Bb",
+  "B",
+  "C",
+  "C#/Db",
+  "D",
+  "D#/Eb",
+  "E",
+  "F"
+];
+
+export const noteColorByStep = [
+  "#77D700",
+  "#95C000",
+  "#B2A500",
+  "#CC8600",
+  "#E26500",
+  "#F34100",
+  "#FC1E00",
+  "#FE000F",
+  "#F70033",
+  "#E8005A",
+  "#CF0083",
+  "#AE00A9"
+];
+
+export const supportColorByBlock = {
+  acacia_log: "#8b5a2b",
+  sand: "#d4be7d",
+  glass: "#8cd9e9",
+  stone: "#8f9497",
+  gold_block: "#f3cf3f",
+  clay: "#b9a6a2",
+  packed_ice: "#bce8ff",
+  white_wool: "#f4f2e9",
+  bone_block: "#e3dcc2",
+  iron_block: "#c4cbd0",
+  soul_sand: "#6f5b45",
+  pumpkin: "#d27720",
+  emerald_block: "#3cc76f",
+  hay_block: "#d6c66a",
+  glowstone: "#f2cb6c",
+  copper_block: "#c97b5d",
+  exposed_copper: "#bd906a",
+  weathered_copper: "#77a98a",
+  oxidized_copper: "#4fab8d",
+  dirt: "#7f5a34"
+};
