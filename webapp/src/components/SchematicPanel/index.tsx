@@ -9,6 +9,8 @@ import HowToWireTutorial from './HowToWireTutorial';
 import SchematicGrid from './SchematicGrid';
 import { blockColor, blockLabel } from './schematicData';
 
+import type { TrackEvent } from '../../midi/trackEvents';
+
 interface SchematicPanelProps {
   trackEvents?: TrackEvent[];
   busy?: boolean;
@@ -40,9 +42,6 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
     [trackEvents],
   );
   const processing = false;
-
-  // console.log('trackEvents', trackEvents);
-  // console.log('grid', grid);
 
   // Defensive: fallback for new grid shape (canvas/cells)
   const totalNotes = useMemo(() => {

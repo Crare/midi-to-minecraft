@@ -36,7 +36,8 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
   const cellGap = 2;
   const fullGridWidth = labelWidth + columnCount * (cs + cellGap);
   const canvasWidth = width > 0 ? width - cs : fullGridWidth - cs;
-  const canvasHeight = Math.min(rowCount * (cs + cellGap), 800);
+  // Add one row for tick row
+  const canvasHeight = Math.min((rowCount + 1) * (cs + cellGap), 800);
 
   // Clamp scrollX
   const maxScrollX = Math.max(0, fullGridWidth - canvasWidth);
@@ -55,32 +56,34 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    // ...existing code...
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    // Draw tick numbers above each visible column
-    ctx.save();
-    ctx.font = 'bold 13px sans-serif';
+    // Draw tick row as first row of cells
+    ctx.font = 'bold 15px sans-serif';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillStyle = '#444';
+    ctx.textBaseline = 'middle';
     for (let colIdx = 0; colIdx < renderColumnCount; ++colIdx) {
       const tick = firstVisibleCol + colIdx;
-      const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset + cs / 2;
-      if (x + cs / 2 < labelWidth) continue;
-      if (x - cs / 2 > canvasWidth) continue;
-      ctx.fillText(String(tick), x, 12);
+      const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
+      if (x + cs < labelWidth) continue;
+      if (x > canvasWidth) continue;
+      // Draw tick cell background
+      ctx.fillStyle = '#e0e0e0';
+      ctx.fillRect(x, 0, cs, cs);
+      // Draw tick number
+      ctx.fillStyle = '#444';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(String(tick), x + cs / 2, cs / 2);
     }
-    ctx.restore();
 
-    // Draw each row
+    // Draw instrument rows, shifted down by one row
     ctx.font = '600 15px sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let rowIdx = 0; rowIdx < rowCount; ++rowIdx) {
-      const y = rowIdx * (cs + cellGap);
+      const y = (rowIdx + 1) * (cs + cellGap);
       // Draw instrument label
       ctx.fillStyle = '#222';
       ctx.fillText(instruments[rowIdx]?.title ?? '', labelWidth - 8, y + cs / 2);

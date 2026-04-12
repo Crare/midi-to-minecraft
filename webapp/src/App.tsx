@@ -1,5 +1,4 @@
 import ExamplePanel from '@components/ExamplePanel';
-import JsonOutputPanel from '@components/JsonOutputPanel';
 import SchematicPanel from '@components/SchematicPanel';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -9,14 +8,7 @@ import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
 import { playSuccessJingle } from './audio/noteblockAudio';
 import UploadPanel from './components/UploadPanel';
-import { eventsToPlacements } from './midi/placements';
-import {
-  buildTrackEvents,
-  getZipFilename,
-  splitOutputTarget,
-  type TrackEvent,
-} from './midi/trackEvents';
-import { Placement } from './midi/types';
+import { buildTrackEvents, type TrackEvent } from './midi/trackEvents';
 
 interface ConvertRequest {
   file: File;
@@ -28,8 +20,6 @@ export default function App() {
   const [status, setStatus] = useState<string>('Choose a MIDI file to begin.');
   const [busy, setBusy] = useState<boolean>(false);
   const [trackEvents, setTrackEvents] = useState<TrackEvent[]>([]);
-  const [downloadFiles, setDownloadFiles] = useState<{ name: string; data: Placement[] }[]>([]);
-  const [zipFilename, setZipFilename] = useState<string>('output.zip');
   const [exampleOpen, setExampleOpen] = useState<boolean>(true);
 
   console.log('trackEvents', trackEvents);
@@ -43,27 +33,8 @@ export default function App() {
       const buffer = await file.arrayBuffer();
       const midi = new Midi(buffer);
       const nextTrackEvents = buildTrackEvents(midi, { trimLeadingSilence });
-      const sequences = nextTrackEvents.map((track) => eventsToPlacements(track.events));
       setTrackEvents(nextTrackEvents);
-
-      const target = splitOutputTarget(file.name, outputName);
-      const files =
-        sequences.length <= 1
-          ? [
-              {
-                name: `${target.dir}/${target.stem}${target.ext}`,
-                data: sequences[0] || [],
-              },
-            ]
-          : sequences.map((track, i) => ({
-              name: `${target.dir}/${target.stem}.${i}${target.ext}`,
-              data: track,
-            }));
-
-      setDownloadFiles(files);
-      setZipFilename(getZipFilename(outputName, file.name));
-      const totalNotes = sequences.reduce((sum, track) => sum + track.length, 0);
-      setStatus(`Converted ${sequences.length} track(s), ${totalNotes} notes total.`);
+      setStatus(`Converted ${nextTrackEvents.length} track(s).`);
       setExampleOpen(false);
       setTimeout(() => playSuccessJingle(), 500);
     } catch (error: any) {
@@ -97,8 +68,6 @@ export default function App() {
           }}
           onConvertRequest={onConvertRequest}
         />
-
-        <JsonOutputPanel downloadFiles={busy ? [] : downloadFiles} zipFilename={zipFilename} />
 
         <SchematicPanel trackEvents={busy ? [] : trackEvents} busy={busy} />
       </Box>
