@@ -18,5 +18,6 @@ export type NoteEvent = {
   instrument: string;
   trackIndex: number;
   trackName: string;
+  /** when note should be played in ticks. */
   tick: number;
 };
