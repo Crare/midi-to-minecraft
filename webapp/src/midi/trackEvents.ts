@@ -110,56 +110,221 @@ function buildInstrumentCells(events: any[]): any[] {
   return cells;
 }
 
+function midiToMinecraftSupportBlock(track: Track, note: Note): number {
+  const isDrum = track.channel === 9;
+  const mcNote = isDrum ? 0 : midiToMinecraftNote(note.midi);
+  return mcNote;
+}
+
+interface NoteEvent2 {
+  tick: number;
+  note: number;
+  pitch: string | undefined;
+  instrument: string;
+  track: number;
+  // trackName: string;
+  block: number;
+}
+
+interface InstrumentsLanes {
+  instumentLanes: Map<string, NoteEvent2[]>;
+}
+
+/**
+ * Produces a flat list of NoteEvent2 with tick, note, instrument, and track.
+ */
+function buildInstrumentLanes(midi: Midi, trimLeadingSilence?: boolean): InstrumentsLanes[] {
+  var notes2: NoteEvent2[] = [];
+  // Flatten all notes across all tracks into a single list with tick, note, instrument, and track info
+  midi.tracks.forEach((track: Track, trackIndex: number) => {
+    notes2.push(
+      ...track.notes.map((note: Note) => ({
+        tick: typeof note.ticks === 'number' ? note.ticks : 0,
+        note: midiToMinecraftNote(note.midi),
+        instrument: instrumentByBlock[midiToMinecraftSupportBlock(track, note)] || 'harp',
+        pitch: midiToPitchClass(note.midi),
+        track: trackIndex,
+        // trackName: track.name || `Track ${trackIndex + 1}`,
+        block: midiToMinecraftSupportBlock(track, note),
+      })),
+    );
+  });
+  // Sort by tick, then by note for determinism
+  notes2.sort((a, b) => a.tick - b.tick || a.note - b.note);
+
+  // If trimLeadingSilence, shift all ticks so the earliest note starts at tick 0
+  if (trimLeadingSilence) {
+    const firstTick = notes2.length > 0 ? notes2[0].tick : 0;
+    notes2 = notes2.map((n) => ({ ...n, tick: Math.max(0, n.tick - firstTick) }));
+  }
+  console.log('notes2', notes2);
+
+  /// Group notes by instrument for potential future use (e.g. separate lanes)
+  const perInstrument: NoteEvent2[] = [];
+  const instrumentMap = new Map<string, NoteEvent2[]>();
+  notes2.forEach((note) => {
+    if (!instrumentMap.has(note.instrument!)) instrumentMap.set(note.instrument!, []);
+    instrumentMap.get(note.instrument!)!.push(note);
+  });
+  console.log('instrumentMap', instrumentMap);
+
+  // For each instrument, we could further separate into lanes if multiple notes occur at the same tick
+  const perInstrumentNoteLane: InstrumentsLanes[] = [];
+  instrumentMap.forEach((events, instrument) => {
+    const instrumentLanes = new Map<string, NoteEvent2[]>();
+
+    instrumentLanes.set(`${instrument}-0`, []); // at least one lane per instrument
+
+    events.forEach((note) => {
+      // if instrumentLane contains note on same tick, push to next lane
+      const laneKey = `${instrument}-${note.tick}`;
+      if (!instrumentLanes.has(laneKey)) {
+        instrumentLanes.set(laneKey, []);
+      }
+      instrumentLanes.get(laneKey)!.push(note);
+    });
+
+    // convert instrumentLanes to maps of instrument-index and notes for that lane.
+    const instrumentLanes2 = new Map<string, NoteEvent2[]>();
+    let laneIndex = 0;
+    instrumentLanes.forEach((notes, key) => {
+      instrumentLanes2.set(`${instrument}-${laneIndex}`, notes);
+      laneIndex++;
+    });
+
+    perInstrumentNoteLane.push({ instumentLanes: instrumentLanes2 });
+  });
+
+  return perInstrumentNoteLane;
+}
+
+interface InstrumentLaneEvent {
+  note?: NoteEvent2; // if its not note, then its a repeater or split event or redstone to fill the gap.
+  repeaterTicks?: number; // ticks of repeaters to next note
+  split?: boolean; // whether this event is a split point
+  redstone?: boolean; // whether to place redstone before this event for timing
+}
+
+export interface TracksByInstrumentLane {
+  instrument: string;
+  lane: number;
+  events: InstrumentLaneEvent[];
+}
+
+function buildTracks(
+  instrumentsLanes: InstrumentsLanes[],
+  lastTick: number,
+): TracksByInstrumentLane[] {
+  const tracks: TracksByInstrumentLane[] = [];
+  // var gridPos = 0;
+  // var tickPos = 0;
+
+  // for(var i = 0; i < lastTick; i++) {
+
+  //   // for each instrument lane, we check notes at this tick.
+  //   instrumentsLanes.forEach(({ instumentLanes }) => {
+  //     instumentLanes.forEach((events, laneKey) => {
+  //       const [instrument, laneStr] = laneKey.split('-');
+  //       const lane = parseInt(laneStr, 10);
+  //       if(events.some(e => e.tick === tickPos)) {
+  //         // if this lane has a note at this tick, we add it to the track with its instrument and lane info.
+  //         tracks.push({ instrument, lane, events: [{ note: events.find(e => e.tick === i)! }] });
+  //       }
+  //     });
+
+  //   tickPos = +1;
+  // }
+
+  instrumentsLanes.forEach(({ instumentLanes }) => {
+    instumentLanes.forEach((events, laneKey) => {
+      const [instrument, laneStr] = laneKey.split('-');
+      const lane = parseInt(laneStr, 10);
+
+      // add repeaters before the event, the amount after last note played
+      const laneEvents: InstrumentLaneEvent[] = [];
+      let laneLastTick = 0;
+      let laneGridPos = 0;
+      events.forEach((note) => {
+        const gap = note.tick - laneLastTick;
+        if (gap > 0) {
+          // add repeater events to fill the gap, we can only add repeaters of 4 ticks,
+          // so we add as many as needed and then a final one for the remainder if needed
+          if (gap > 4) {
+            const repeaterCount = Math.floor(gap / 4);
+            for (let i = 0; i < repeaterCount; ++i) {
+              laneEvents.push({ repeaterTicks: 4 });
+              laneGridPos += 1;
+            }
+          }
+          if (gap % 4 > 0) {
+            laneEvents.push({ repeaterTicks: gap % 4 });
+            laneGridPos += 1;
+          }
+        }
+
+        // if any other lane has repeaters or splits, we need to add redstone before this note to sync timing,
+        // as repeaters can cause desync if not placed before every note
+        const hasOtherTimingEvents = Array.from(instumentLanes.values()).some(
+          (otherLane) => otherLane !== events && otherLane.some((n) => n.tick === note.tick),
+        );
+        if (hasOtherTimingEvents) {
+          laneEvents.push({ redstone: true });
+          laneGridPos += 1;
+        }
+
+        // if another instrument's lanes contains a note at the same tick, mark this note as split
+        const split = Array.from(instumentLanes.values()).some(
+          (otherLane) =>
+            // is not same lane and instrument
+            otherLane !== events &&
+            otherLane.some((n) => {
+              // quick exit if tick is higher as the arrays are in sorted order
+              if (n.tick > note.tick) return true;
+              // if tick is the same, then its a split
+              return n.tick === note.tick && n !== note;
+            }),
+        );
+        laneEvents.push({ note, split });
+        if (split) {
+          laneGridPos += 1;
+        }
+        laneGridPos += 1;
+        laneLastTick = note.tick;
+      });
+
+      tracks.push({ instrument, lane, events: laneEvents });
+    });
+  });
+
+  return tracks;
+}
+
+function getLastTick(instrumentLanes: InstrumentsLanes[]): number {
+  let lastTick = 0;
+  instrumentLanes.forEach(({ instumentLanes }) => {
+    instumentLanes.forEach((events) => {
+      // get last index of events tick, as events are in sorted order.
+      var lastIndex = events.length - 1;
+      var tick = events[lastIndex].tick;
+      if (tick > lastTick) {
+        lastTick = tick;
+      }
+    });
+  });
+  return lastTick;
+}
+
 export function buildTrackEvents(
   midi: Midi,
   { trimLeadingSilence = false }: { trimLeadingSilence?: boolean } = {},
-): TrackEvent[] {
-  // 1. Build flat note list
-  const noteList = buildNoteList(midi, { trimLeadingSilence });
-  // 2. Combine all events for the same instrument
-  const instrumentMap = new Map<string, NoteEvent[]>();
-  noteList.forEach((note) => {
-    if (!instrumentMap.has(note.instrument)) instrumentMap.set(note.instrument, []);
-    instrumentMap.get(note.instrument)!.push(note);
-  });
-
-  // 3. For each instrument, sort by tick and build tick-indexed map
-  const tracks: TrackEvent[] = [];
-  instrumentMap.forEach((events, instrument) => {
-    // Sort by tick, then by note for determinism
-    const sorted = [...events].sort((a, b) => a.tick - b.tick || a.note - b.note);
-    // Map: tick -> notes[]
-    const tickMap = new Map<number, NoteEvent[]>();
-    sorted.forEach((ev) => {
-      if (!tickMap.has(ev.tick)) tickMap.set(ev.tick, []);
-      tickMap.get(ev.tick)!.push(ev);
-    });
-    // 4. Build schematic-ready event list
-    let lastTick: number | null = null;
-    const schematicEvents: Array<NoteEvent & { repeaterTicks: number; split: boolean }> = [];
-    for (const [tick, notesAtTick] of Array.from(tickMap.entries()).sort((a, b) => a[0] - b[0])) {
-      const isSplit = notesAtTick.length > 1;
-      // For each note at this tick, compute repeaters needed from lastTick
-      notesAtTick.forEach((note, idx) => {
-        const repeaterTicks = lastTick === null ? note.tick : note.tick - lastTick;
-        schematicEvents.push({
-          ...note,
-          repeaterTicks,
-          split: isSplit,
-        });
-      });
-      lastTick = tick;
-    }
-    // Attach .cells for canvas rendering
-    const cells = buildInstrumentCells(schematicEvents);
-    tracks.push({
-      id: `instrument-${instrument}`,
-      title: instrument,
-      events: schematicEvents,
-      notes: schematicEvents,
-      cells,
-    });
-  });
+): TracksByInstrumentLane[] {
+  console.log('midi', midi);
+  const instrumentLanes = buildInstrumentLanes(midi, trimLeadingSilence);
+  console.log('instrumentLanes', instrumentLanes);
+  const lastTick = getLastTick(instrumentLanes);
+  const tracks = buildTracks(instrumentLanes, lastTick);
+  console.log('tracks', tracks);
+  // TODO: make the code use the new tracks format.
   return tracks;
 }
 

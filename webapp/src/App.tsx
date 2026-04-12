@@ -33,8 +33,8 @@ export default function App() {
       const buffer = await file.arrayBuffer();
       const midi = new Midi(buffer);
       const nextTrackEvents = buildTrackEvents(midi, { trimLeadingSilence });
-      setTrackEvents(nextTrackEvents);
-      setStatus(`Converted ${nextTrackEvents.length} track(s).`);
+      // setTrackEvents(nextTrackEvents);
+      // setStatus(`Converted ${nextTrackEvents.length} track(s).`);
       setExampleOpen(false);
       setTimeout(() => playSuccessJingle(), 500);
     } catch (error: any) {
