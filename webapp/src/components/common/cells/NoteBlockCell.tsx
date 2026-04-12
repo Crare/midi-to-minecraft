@@ -1,6 +1,7 @@
 import { playPlacementSound } from '@audio/noteblockAudio';
 import { blockLabel, getUseCount } from '@components/SchematicPanel/schematicData';
 import { TooltipPortal, usePortalTooltip } from '@hooks/usePortalTooltip';
+import Box from '@mui/material/Box';
 import { NoteCell } from './NoteCell';
 
 /**
@@ -21,12 +22,28 @@ export function NoteBlockCell({ cell, cs, instrument, block, isLastPressed, onPr
   const useCount = getUseCount(note.note);
   const noteBlock = note.block ?? block;
   return (
-    <div
+    <Box
       ref={ref}
-      className={`schematic-cell schematic-cell-tip${isLastPressed ? ' schematic-cell--last-pressed' : ''}`}
       tabIndex={0}
       role="button"
       aria-label={`${note.instrument ?? instrument} - ${note.pitch || 'drum'}`}
+      sx={{
+        width: cs,
+        height: cs,
+        outline: isLastPressed ? '2px solid #3d5f22' : 'none',
+        borderRadius: 1,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: isLastPressed ? '0 0 0 2px #ffe066' : undefined,
+        background: 'transparent',
+        cursor: 'pointer',
+        p: 0,
+        m: 0,
+        '&:focus': {
+          outline: '2px solid #3d5f22',
+        },
+      }}
       onPointerDown={(e) => e.stopPropagation()}
       onMouseEnter={show}
       onMouseLeave={hide}
@@ -69,6 +86,6 @@ export function NoteBlockCell({ cell, cs, instrument, block, isLastPressed, onPr
           {blockLabel(noteBlock)}
         </TooltipPortal>
       )}
-    </div>
+    </Box>
   );
 }

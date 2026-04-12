@@ -1,4 +1,5 @@
 import { CELL } from '@constants';
+import Box from '@mui/material/Box';
 
 const repeaterCellSvg = `${import.meta.env.BASE_URL}assets/icons/repeater-cell.svg`;
 
@@ -13,8 +14,8 @@ const repeaterCellSvg = `${import.meta.env.BASE_URL}assets/icons/repeater-cell.s
 export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) {
   const s = size ?? CELL;
   return (
-    <div
-      style={{ width: s, height: s, position: 'relative', display: 'block', flexShrink: 0 }}
+    <Box
+      sx={{ width: s, height: s, position: 'relative', display: 'block', flexShrink: 0 }}
       aria-label={`Repeater ${ticks}t`}
     >
       <img
@@ -25,8 +26,9 @@ export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) 
         alt="Repeater cell"
         draggable={false}
       />
-      <span
-        style={{
+      <Box
+        component="span"
+        sx={{
           position: 'absolute',
           left: 0,
           top: 0,
@@ -40,12 +42,12 @@ export function RepeaterCell({ ticks, size }: { ticks: number; size?: number }) 
           fontFamily: 'monospace',
           color: '#222',
           pointerEvents: 'none',
-          marginTop: 2,
+          marginTop: '2px',
           zIndex: 10,
         }}
       >
         {ticks}
-      </span>
-    </div>
+      </Box>
+    </Box>
   );
 }

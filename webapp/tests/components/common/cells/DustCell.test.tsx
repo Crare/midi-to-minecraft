@@ -1,4 +1,4 @@
-import { DustCell } from '@components/SchematicPanel/cells/DustCell';
+import { DustCell } from '@components/common/cells/RedstoneDustCell';
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

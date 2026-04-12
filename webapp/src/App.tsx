@@ -1,6 +1,10 @@
 import ExamplePanel from '@components/ExamplePanel';
 import JsonOutputPanel from '@components/JsonOutputPanel';
 import VisualizationPanel from '@components/VisualizationPanel';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Link from '@mui/material/Link';
+import Typography from '@mui/material/Typography';
 import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
 import { playSuccessJingle } from './audio/noteblockAudio';
@@ -29,7 +33,7 @@ export default function App() {
   const [zipFilename, setZipFilename] = useState<string>('output.zip');
   const [exampleOpen, setExampleOpen] = useState<boolean>(true);
 
-  console.log('trackEvents', trackEvents);
+  // console.log('trackEvents', trackEvents);
 
   const onConvertRequest = async ({ file, outputName, trimLeadingSilence }: ConvertRequest) => {
     if (!file || busy) return;
@@ -72,16 +76,18 @@ export default function App() {
   };
 
   return (
-    <>
-      <header className="hero">
-        <h1>MIDI to Minecraft Noteblocks</h1>
-        <p>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Box component="header" sx={{ mb: 4, textAlign: 'center' }}>
+        <Typography variant="h3" component="h1" gutterBottom>
+          MIDI to Minecraft Noteblocks
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
           Upload a MIDI file, convert it to note block JSON, and visualize each track as a
           horizontal build line.
-        </p>
-      </header>
+        </Typography>
+      </Box>
 
-      <main>
+      <Box component="main" sx={{ mb: 4 }}>
         <ExamplePanel open={exampleOpen} onOpenChange={setExampleOpen} />
 
         <UploadPanel
@@ -98,39 +104,42 @@ export default function App() {
         <VisualizationPanel trackEvents={busy ? [] : trackEvents} busy={busy} />
 
         <SchematicPanel trackEvents={busy ? [] : trackEvents} busy={busy} />
-      </main>
+      </Box>
 
-      <footer className="site-footer">
-        <p>
+      <Box
+        component="footer"
+        sx={{ textAlign: 'center', color: 'text.secondary', fontSize: '0.95rem', mt: 4 }}
+      >
+        <Typography variant="body2" gutterBottom>
           Inspired by the{' '}
-          <a href="https://github.com/colinthesealion" target="_blank" rel="noreferrer">
+          <Link href="https://github.com/colinthesealion" target="_blank" rel="noreferrer">
             MIDI to Minecraft project by colinthesealion
-          </a>
+          </Link>
           . Website with visualization and schematic created by{' '}
-          <a href="https://crare.github.io" target="_blank" rel="noreferrer">
+          <Link href="https://crare.github.io" target="_blank" rel="noreferrer">
             Crare
-          </a>
+          </Link>
           .
-        </p>
-        <p>
+        </Typography>
+        <Typography variant="body2" gutterBottom>
           This site uses{' '}
-          <a href="https://www.goatcounter.com" target="_blank" rel="noreferrer">
+          <Link href="https://www.goatcounter.com" target="_blank" rel="noreferrer">
             GoatCounter
-          </a>{' '}
+          </Link>{' '}
           to count anonymous page visits. No personal data is collected.
-        </p>
-        <p>
+        </Typography>
+        <Typography variant="body2">
           Licensed under the{' '}
-          <a
+          <Link
             href="https://github.com/Crare/midi-to-minecraft/blob/main/LICENSE"
             target="_blank"
             rel="noreferrer"
           >
             MIT License
-          </a>
+          </Link>
           .
-        </p>
-      </footer>
-    </>
+        </Typography>
+      </Box>
+    </Container>
   );
 }

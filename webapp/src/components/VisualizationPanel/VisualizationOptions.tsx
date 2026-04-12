@@ -1,3 +1,8 @@
+import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+
 interface VisualizationOptionsProps {
   viewMode: string;
   setViewMode: (v: string) => void;
@@ -26,42 +31,56 @@ export default function VisualizationOptions({
   viewModes,
 }: VisualizationOptionsProps) {
   return (
-    <div className="viz-toggles">
-      <label className="option-row option-row-stacked">
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        gap: 3,
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        my: 2,
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span>Group by</span>
-        <select
+        <Select
           value={viewMode}
           onChange={(e) => setViewMode(e.target.value)}
           disabled={visibleTracks.length === 0 && trackEvents.length === 0}
+          size="small"
+          sx={{ minWidth: 140, bgcolor: '#fff', '& .MuiSelect-select': { py: 1 } }}
         >
-          <option value={viewModes.instrument}>Instrument</option>
-          <option value={viewModes.track}>Original tracks</option>
-        </select>
-      </label>
-      <label className="viz-toggle-label">
-        <input
-          type="checkbox"
+          <MenuItem value={viewModes.instrument}>Instrument</MenuItem>
+          <MenuItem value={viewModes.track}>Original tracks</MenuItem>
+        </Select>
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Checkbox
           checked={showColor}
           onChange={(e) => setShowColor(e.target.checked)}
+          size="small"
+          sx={{ color: '#3d5f22', '&.Mui-checked': { color: '#3d5f22' } }}
         />
         Color
-      </label>
-      <label className="viz-toggle-label">
-        <input
-          type="checkbox"
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Checkbox
           checked={showNumber}
           onChange={(e) => setShowNumber(e.target.checked)}
+          size="small"
+          sx={{ color: '#3d5f22', '&.Mui-checked': { color: '#3d5f22' } }}
         />
         Number
-      </label>
-      <label className="viz-toggle-label">
-        <input
-          type="checkbox"
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Checkbox
           checked={showSupport}
           onChange={(e) => setShowSupport(e.target.checked)}
+          size="small"
+          sx={{ color: '#3d5f22', '&.Mui-checked': { color: '#3d5f22' } }}
         />
         Support
-      </label>
-    </div>
+      </Box>
+    </Box>
   );
 }

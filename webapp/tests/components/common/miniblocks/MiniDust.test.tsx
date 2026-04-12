@@ -1,4 +1,4 @@
-import { MiniDust } from '@components/SchematicPanel/miniblocks/MiniDust';
+import { MiniDust } from '@components/common/miniblocks/MiniDust';
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

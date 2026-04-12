@@ -1,4 +1,6 @@
 import CollapsiblePanel from '@components/common/CollapsiblePanel';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import DownloadRow from './DownloadRow';
 
@@ -27,16 +29,15 @@ export default function JsonOutputPanel({ downloadFiles, zipFilename }: JsonOutp
         if (downloadFiles.length > 0) setOutputsOpen(v);
       }}
       disabled={downloadFiles.length === 0}
-      className="outputs"
     >
-      <p className="hint output-summary">
+      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
         {downloadFiles.length === 0
           ? 'No output yet.'
           : `${downloadFiles.length} file(s) packaged into ${zipFilename}.`}
-      </p>
-      <div className="downloads">
+      </Typography>
+      <Box sx={{ mt: 1 }}>
         <DownloadRow filename={zipFilename} files={downloadFiles} />
-      </div>
+      </Box>
     </CollapsiblePanel>
   );
 }

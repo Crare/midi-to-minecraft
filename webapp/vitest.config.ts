@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: [],
+    setupFiles: ['tests/setup/globalMocks.ts'],
     include: ['tests/**/*.test.{ts,tsx}'],
   },
   resolve: {

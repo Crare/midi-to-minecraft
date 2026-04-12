@@ -1,4 +1,5 @@
 import { CELL } from '@constants';
+import Box from '@mui/material/Box';
 
 const dustCellSvg = `${import.meta.env.BASE_URL}assets/icons/dust-cell.svg`;
 /**
@@ -8,17 +9,20 @@ const dustCellSvg = `${import.meta.env.BASE_URL}assets/icons/dust-cell.svg`;
  * Props:
  * - size: Cell size in pixels (optional)
  */
+
 export function RedstoneDustCell({ size }: { size?: number }) {
   const s = size ?? CELL;
   return (
-    <img
+    <Box
+      component="img"
       src={dustCellSvg}
-      width={s}
-      height={s}
-      style={{ display: 'block', flexShrink: 0 }}
       alt="Dust cell"
       draggable={false}
       aria-hidden="true"
+      sx={{ display: 'block', flexShrink: 0, width: s, height: s }}
     />
   );
 }
+
+// Alias for compatibility with tests and legacy imports
+export const DustCell = RedstoneDustCell;

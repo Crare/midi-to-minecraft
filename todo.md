@@ -1,7 +1,8 @@
 # TODO
 
+- fix schematic expands to right out of window. again..
 - fix schematic is not showing all the repeaters.
-- fix schematic expands to right out of window.
+- when opening schematic, close the visualization and vice versa. so one of them can be open at a time to improve performance. keep both collapsed at start. maybe do the schematic processing still beforehand.
 
 - fix dragging horizontally doesnt work in schematic
 - fix dragging horizontally doesnt work in visualization
@@ -27,7 +28,7 @@
 
 - add export schematic as excel file.
 
-- use some common ui-library like material-ui
+- update example images when we are done.
 
 ## OPTIMIZE
 

@@ -1,4 +1,6 @@
 import { useContainerWidth } from '@hooks/useContainerWidth';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import React, { useRef } from 'react';
 import { Grid } from 'react-window';
 import TrackRowGridCell from './TrackRowGridCell';
@@ -56,29 +58,54 @@ export default function TrackGrid({
   // console.log('visibleTracks', visibleTracks);
 
   return (
-    <div className="track-area" ref={containerRef}>
-      <div className="track-scroll-column">
-        <div className="track-scroll-proxy-top" ref={topScrollRef}>
-          <div
-            className="track-scroll-spacer"
-            style={{ width: `${timelineUnitCount * trackUnitSize}px` }}
-          />
-        </div>
-        <div className="track-headers">
+    <Box
+      ref={containerRef}
+      sx={{
+        width: '100%',
+        overflowX: 'auto',
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: 1,
+        p: 1,
+      }}
+    >
+      <Box>
+        <Box ref={topScrollRef} sx={{ width: '100%' }}>
+          <Box sx={{ width: timelineUnitCount * trackUnitSize }} aria-hidden="true" />
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', mb: 1 }}>
           {visibleTracks.map((track: any, index: number) => (
-            <div
+            <Box
               key={track.id}
-              className={
-                playbackScope === 'single' &&
-                selectedPlaybackTrackId &&
-                track.id !== selectedPlaybackTrackId
-                  ? 'track-header track-row-dimmed'
-                  : 'track-header'
-              }
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                opacity:
+                  playbackScope === 'single' &&
+                  selectedPlaybackTrackId &&
+                  track.id !== selectedPlaybackTrackId
+                    ? 0.5
+                    : 1,
+                py: 0.5,
+                px: 1,
+                borderBottom: '1px solid #eee',
+              }}
             >
-              <button
-                type="button"
-                className="icon-btn track-mute-btn"
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  minWidth: 32,
+                  minHeight: 32,
+                  bgcolor: '#3d5f22',
+                  color: '#fff',
+                  p: 1,
+                  mr: 1,
+                  borderRadius: 1,
+                  minInlineSize: 0,
+                  '&:hover': { bgcolor: '#49732a' },
+                }}
                 title={mutedTracks.has(track.id) ? 'Unmute' : 'Mute'}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -94,6 +121,8 @@ export default function TrackGrid({
                     height="16"
                     alt="Muted"
                     aria-hidden="true"
+                    draggable={false}
+                    style={{ filter: 'invert(1) brightness(2)' }}
                   />
                 ) : (
                   <img
@@ -102,19 +131,30 @@ export default function TrackGrid({
                     height="16"
                     alt="Unmuted"
                     aria-hidden="true"
+                    draggable={false}
+                    style={{ filter: 'invert(1) brightness(2)' }}
                   />
                 )}
-              </button>
-              <span className="track-index">{track.title}</span>
-              <span className="track-count">{track.subtitle}</span>
-            </div>
+              </Button>
+              <Box sx={{ fontWeight: 600, fontSize: 15 }}>{track.title}</Box>
+              <Box sx={{ color: 'text.secondary', fontSize: 13 }}>{track.subtitle}</Box>
+            </Box>
           ))}
-        </div>
+        </Box>
         <button
           ref={playheadRef}
           type="button"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            zIndex: 10,
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+          }}
           className={playheadDragging ? 'playhead playhead-dragging' : 'playhead'}
-          style={{ left: '0px' }}
           onPointerDown={onPlayheadPointerDown}
           onPointerMove={onPlayheadPointerMove}
           onPointerUp={onPlayheadPointerUp}
@@ -124,19 +164,19 @@ export default function TrackGrid({
           <span className="playhead-line" aria-hidden="true" />
           <span className="playhead-head" aria-hidden="true" />
         </button>
-        <div
-          className="track-stage"
-          style={
-            {
-              '--timeline-unit-count': timelineUnitCount,
-              width: scrollContainerWidth, // Keep this from parent
-              maxWidth: `${scrollContainerWidth}px`,
-              overflowX: 'auto',
-              scrollbarWidth: 'none', // Remove scrollbar if needed
-            } as React.CSSProperties
-          }
+        <Box
+          sx={{
+            width: scrollContainerWidth,
+            maxWidth: scrollContainerWidth,
+            overflowX: 'auto',
+            position: 'relative',
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 0,
+            mt: 1,
+          }}
         >
-          <div className="track-wrap">
+          <Box>
             {Array.isArray(visibleTracks) && visibleTracks.length > 0 && (
               <Grid
                 columnCount={timelineUnitCount}
@@ -161,9 +201,9 @@ export default function TrackGrid({
                 }}
               />
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

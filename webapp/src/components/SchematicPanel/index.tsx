@@ -1,5 +1,8 @@
 import CollapsiblePanel from '@components/common/CollapsiblePanel';
 import ErrorBoundary from '@components/common/ErrorBoundary';
+import Box from '@mui/material/Box';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildTickGridAsync } from '../../workers/tickGridWorkerClient';
 import BlocksNeededSummary from './BlocksNeededSummary';
@@ -75,77 +78,86 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
     if (hasData) setOpen(true);
   }, [hasData]);
 
-  console.log('grid', grid);
-
-  if (processing || !grid || busy) {
-    return <span className="spinner spinner-large" aria-label="Processing Schematic" />;
-  }
-
   return (
     <ErrorBoundary>
-      <div style={{ position: 'relative' }}>
+      <Box sx={{ position: 'relative' }}>
         <CollapsiblePanel
           title="4) Build Schematic (Top-Down)"
           meta={
-            !hasData
-              ? 'No tracks yet'
-              : open
-                ? 'Hide'
-                : `Show ${totalRows} lane(s), ${totalNotes} note(s)`
+            processing || !grid || busy
+              ? 'Processing...'
+              : !hasData
+                ? 'No tracks yet'
+                : open
+                  ? 'Hide'
+                  : `Show ${totalRows} lane(s), ${totalNotes} note(s)`
           }
           open={open}
           onOpenChange={(v) => {
             if (hasData) setOpen(v);
           }}
           disabled={!hasData}
-          className="schematic-panel"
         >
-          <div className="schematic-controls">
-            <label className="option-row option-row-stacked">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span>Cell size</span>
-              <select value={cellSize} onChange={(e) => setCellSize(Number(e.target.value))}>
-                <option value={20}>Small (20px)</option>
-                <option value={28}>Medium (28px)</option>
-                <option value={36}>Large (36px)</option>
-                <option value={48}>XL (48px)</option>
-              </select>
-            </label>
-          </div>
+              <Select
+                value={cellSize}
+                onChange={(e) => setCellSize(Number(e.target.value))}
+                size="small"
+                sx={{ minWidth: 120, bgcolor: '#fff', '& .MuiSelect-select': { py: 1 } }}
+              >
+                <MenuItem value={20}>Small (20px)</MenuItem>
+                <MenuItem value={28}>Medium (28px)</MenuItem>
+                <MenuItem value={36}>Large (36px)</MenuItem>
+                <MenuItem value={48}>XL (48px)</MenuItem>
+              </Select>
+            </Box>
+          </Box>
 
-          <p className="hint output-summary">
+          <Box sx={{ mb: 2, color: 'text.secondary', fontSize: '0.95rem' }}>
             Top-down schematic. Background color = instrument block. Each repeater shows its
             individual delay setting (1–4 t). Tracks starting later include leading repeaters.
             Harmonics are connected by a vertical redstone rail on the left. An orange T-junction
             cell marks where a lane branches off another lane to save repeaters. Click any note
             block to highlight it as your last-placed position.
-          </p>
+          </Box>
 
           {/* Tutorial */}
           <HowToWireTutorial />
 
           {/* Legend */}
-          <div className="schematic-legend">
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
             {Object.entries(blockColor).map(([blockId, color]) => (
-              <div key={blockId} className="schematic-legend-item">
-                <span className="schematic-legend-swatch" style={{ background: color }} />
-                <span className="schematic-legend-label">{blockLabel(blockId)}</span>
-              </div>
+              <Box key={blockId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 18,
+                    height: 18,
+                    borderRadius: 3,
+                    background: color,
+                    marginRight: 6,
+                  }}
+                />
+                <span>{blockLabel(blockId)}</span>
+              </Box>
             ))}
-          </div>
+          </Box>
 
           <BlocksNeededSummary grid={grid} />
 
-          <div style={{ width: '100%', overflowX: 'auto' }}>
+          <Box sx={{ width: '100%', overflowX: 'auto' }}>
             <div ref={contentRef} className="schematic-content">
-              {grid.instruments.length === 0 ? (
+              {grid?.instruments?.length === 0 ? (
                 <p className="hint">No notes to display.</p>
               ) : (
                 <SchematicGrid grid={grid} cellSize={cellSize} />
               )}
             </div>
-          </div>
+          </Box>
         </CollapsiblePanel>
-      </div>
+      </Box>
     </ErrorBoundary>
   );
 }

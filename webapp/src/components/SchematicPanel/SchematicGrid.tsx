@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box';
 import { useState } from 'react';
 import { Grid } from 'react-window';
 import { SchematicRowGridCell } from './SchematicRowGridCell';
@@ -52,7 +53,7 @@ export default function SchematicGrid({
   };
 
   return (
-    <div style={{ width: '100%', overflowX: 'auto', maxWidth: '100%' }}>
+    <Box sx={{ width: '100%', overflowX: 'auto', maxWidth: '100%' }}>
       <Grid
         columnCount={totalCols}
         columnWidth={cs + 2}
@@ -72,6 +73,6 @@ export default function SchematicGrid({
           },
         }}
       />
-    </div>
+    </Box>
   );
 }

@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box';
 import React from 'react';
 
 export interface SupportBlockProps {
@@ -14,21 +15,25 @@ export function getSupportBlockSvg(blockId: string) {
   return `assets/icons/support-block-${blockName}.svg`;
 }
 
-export const SupportBlock: React.FC<SupportBlockProps> = ({
+export const SupportBlock: React.FC<Omit<SupportBlockProps, 'className'>> = ({
   blockId,
   size = 18,
-  className = '',
   style = {},
   alt = '',
 }) => (
-  <img
+  <Box
+    component="img"
     src={getSupportBlockSvg(blockId)}
-    width={size}
-    height={size}
-    className={className}
-    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
     alt={alt || blockId}
     draggable={false}
     aria-hidden={alt ? undefined : true}
+    sx={{
+      width: size,
+      height: size,
+      display: 'inline-block',
+      verticalAlign: 'middle',
+      flexShrink: 0,
+      ...style,
+    }}
   />
 );

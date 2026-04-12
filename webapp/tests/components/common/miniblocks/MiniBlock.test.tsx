@@ -1,4 +1,4 @@
-import { MiniBlock } from '@components/SchematicPanel/miniblocks/MiniBlock';
+import { MiniBlock } from '@components/common/miniblocks/MiniBlock';
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

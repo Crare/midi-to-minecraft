@@ -181,12 +181,17 @@
 //                           {tuningInfo.useCount}
 //                         </span>
 //                       ) : null}
-//                       <img className="note-img" src={noteblockImg} alt="noteblock" />
+//                       <img className="note-img"
+//                           src={noteblockImg}
+//                           alt="noteblock"
+//                           draggable={false}
+//                         />
 //                       {showSupport ? (
 //                         <img
 //                           className="support-img"
 //                           src={supportSpriteForBlock(placement.block)}
 //                           alt={placement.block}
+//                           draggable={false}
 //                         />
 //                       ) : null}
 //                       <span

@@ -1,6 +1,7 @@
 import { playPlacementSoundSync, prepareAudioPlayback } from '@audio/noteblockAudio';
 import CollapsiblePanel from '@components/common/CollapsiblePanel';
 import ErrorBoundary from '@components/common/ErrorBoundary';
+import Box from '@mui/material/Box';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import PlaybackControls from './PlaybackControls';
 import TrackGrid from './TrackGrid';
@@ -359,29 +360,24 @@ export default function VisualizationPanel({ trackEvents, busy }: VisualizationP
     };
   }, [tracksOpen]);
 
-  // console.log('visibleTracks', visibleTracks);
-
-  if (!visibleTracks || busy) {
-    return <span className="spinner spinner-large" aria-label="Processing Tracks" />;
-  }
-
   return (
     <ErrorBoundary>
       <CollapsiblePanel
         title="3) Track Visualization"
         meta={
-          visibleTracks.length === 0
-            ? 'No tracks yet'
-            : tracksOpen
-              ? 'Hide'
-              : `Show ${visibleTracks.length} lane(s)`
+          !visibleTracks || busy
+            ? 'Processing...'
+            : visibleTracks.length === 0
+              ? 'No tracks yet'
+              : tracksOpen
+                ? 'Hide'
+                : `Show ${visibleTracks.length} lane(s)`
         }
         open={tracksOpen}
         onOpenChange={(v) => {
           if (visibleTracks.length > 0) setTracksOpen(v);
         }}
         disabled={visibleTracks.length === 0}
-        className="visualization"
       >
         <PlaybackControls
           playbackScope={playbackScope}
@@ -407,11 +403,11 @@ export default function VisualizationPanel({ trackEvents, busy }: VisualizationP
           trackEvents={trackEvents}
           viewModes={viewModes}
         />
-        <p className="hint output-summary">
+        <Box sx={{ color: 'text.secondary', fontSize: 15, my: 2 }}>
           {visibleTracks.length === 0
             ? 'No tracks to visualize.'
             : `${visibleTracks.length} ${viewMode === viewModes.track ? 'track' : 'instrument'} lane(s) ready. Scroll horizontally for long tracks.`}
-        </p>
+        </Box>
         <TrackGrid
           visibleTracks={visibleTracks}
           mutedTracks={mutedTracks}

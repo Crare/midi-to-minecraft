@@ -1,3 +1,5 @@
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import React from 'react';
 
 function stackLabel(n: number): string {
@@ -16,14 +18,28 @@ interface TotalsChipProps {
 
 const TotalsChip: React.FC<TotalsChipProps> = ({ icon, count, label }) => {
   return (
-    <div className="totals-chip">
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        px: 1,
+        py: 0.5,
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        boxShadow: 1,
+      }}
+    >
       {icon}
-      <div className="totals-chip-info">
-        <span className="totals-chip-count">{count.toLocaleString()}</span>{' '}
-        <span className="totals-chip-label">{label}</span>
-        <span className="totals-chip-stacks">{stackLabel(count)}</span>
-      </div>
-    </div>
+      <Box sx={{ display: 'flex', flexDirection: 'column', ml: 1 }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1 }}>
+          {count.toLocaleString()} <span style={{ fontWeight: 400 }}>{label}</span>
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1 }}>
+          {stackLabel(count)}
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 

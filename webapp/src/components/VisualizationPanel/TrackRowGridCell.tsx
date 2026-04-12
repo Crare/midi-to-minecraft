@@ -2,6 +2,7 @@ import { playPlacementSound } from '@audio/noteblockAudio';
 import { NoteblockIcon } from '@components/common/blocks/NoteblockIcon';
 import { SupportBlock } from '@components/common/blocks/SupportBlock';
 import { noteColorByStep, notePitchNames } from '@constants';
+import Box from '@mui/material/Box';
 import { CellComponentProps } from 'react-window';
 import { Fragment } from 'react/jsx-runtime';
 
@@ -39,7 +40,7 @@ function getNoteblockTooltip(placement: any) {
 const GRID_BLOCK_SIZE = 32;
 
 // Cell renderer for react-window Grid
-export default function TrackRowGridCell({
+export function TrackRowGridCell({
   columnIndex,
   rowIndex,
   style,
@@ -51,27 +52,51 @@ export default function TrackRowGridCell({
   cellProps: any;
 }>) {
   // console.log('here0', 'rowIndex:', rowIndex, 'columnIndex:', columnIndex, 'cellProps:', cellProps);
-  if (!cellProps) return <div style={style} />;
+  if (!cellProps) return <Box style={style} />;
   const { tracks, mutedTracks, showColor, showNumber, showSupport, trackUnitSize } = cellProps;
-  if (!tracks || !mutedTracks) return <div style={style} />;
+  if (!tracks || !mutedTracks) return <Box style={style} />;
   const track = tracks[rowIndex];
   if (!track || !track.id || !Array.isArray(track.notes)) return null;
   if (mutedTracks.has(track.id)) return null;
   const note = track.notes[columnIndex];
-  if (!note) return <div style={style} />;
+  if (!note) return <Box style={style} />;
   return (
-    <div style={style}>
-      <div className="note-unit" style={{ marginTop: 8, marginBottom: 8 }}>
+    <Box style={style}>
+      <Box
+        sx={{
+          mt: 1,
+          mb: 1,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         {note.placements.map((placement: any, pi: number) => {
           const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
           const tooltipLines = getNoteblockTooltip(placement).split('\n');
           return (
-            <div
+            <Box
               key={pi}
-              className="note-stack-item note-unit-button"
-              role="button"
               tabIndex={0}
+              role="button"
               aria-label={getNoteblockTooltip(placement).replace(/\n/g, ', ')}
+              sx={{
+                width: trackUnitSize - 6,
+                height: trackUnitSize - 10,
+                minWidth: 16,
+                minHeight: 16,
+                mx: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                outline: 'none',
+                cursor: 'pointer',
+                '&:focus': {
+                  outline: '2px solid #3d5f22',
+                },
+              }}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => {
                 void playPlacementSound(placement);
@@ -82,22 +107,10 @@ export default function TrackRowGridCell({
                   void playPlacementSound(placement);
                 }
               }}
-              style={{
-                width: trackUnitSize - 6,
-                height: trackUnitSize - 10,
-                minWidth: 16,
-                minHeight: 16,
-                margin: '0 1px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-              }}
             >
               {showColor && tuningInfo ? (
-                <span
-                  className="note-corner-color"
-                  style={{
+                <Box
+                  sx={{
                     backgroundColor: tuningInfo.color,
                     position: 'absolute',
                     top: 2,
@@ -110,16 +123,15 @@ export default function TrackRowGridCell({
                 />
               ) : null}
               {showNumber && tuningInfo ? (
-                <span
-                  className="note-use-count"
+                <Box
                   aria-hidden="true"
-                  style={{ position: 'absolute', top: 2, right: 2, fontSize: 10 }}
+                  sx={{ position: 'absolute', top: 2, right: 2, fontSize: 10 }}
                 >
                   {tuningInfo.useCount}
-                </span>
+                </Box>
               ) : null}
-              <div
-                style={{
+              <Box
+                sx={{
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -131,23 +143,23 @@ export default function TrackRowGridCell({
                   <SupportBlock
                     blockId={placement.block}
                     size={GRID_BLOCK_SIZE}
-                    className="support-img"
                     style={{ marginTop: GRID_BLOCK_SIZE }}
                     alt={placement.block}
                   />
                 ) : null}
-              </div>
-              <span
-                className="cell-tooltip"
+              </Box>
+              <Box
+                component="span"
                 role="tooltip"
-                style={{
+                sx={{
                   display: 'none',
                   position: 'absolute',
                   zIndex: 10,
                   background: '#222',
                   color: '#fff',
-                  padding: '2px 6px',
-                  borderRadius: 4,
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
                   fontSize: 11,
                   left: '100%',
                   top: 0,
@@ -159,13 +171,13 @@ export default function TrackRowGridCell({
                     {line}
                   </Fragment>
                 ))}
-              </span>
-            </div>
+              </Box>
+            </Box>
           );
         })}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
 
-// export default memo(TrackRowGridCell);
+export default TrackRowGridCell;

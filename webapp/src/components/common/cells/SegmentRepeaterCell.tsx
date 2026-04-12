@@ -1,4 +1,5 @@
 import { TooltipPortal, usePortalTooltip } from '@hooks/usePortalTooltip';
+import Box from '@mui/material/Box';
 import { RepeaterCell } from './RepeaterCell';
 
 /**
@@ -12,10 +13,23 @@ import { RepeaterCell } from './RepeaterCell';
 export function SegmentRepeaterCell({ cell, cs }: { cell: any; cs: number }) {
   const { ref, pos, show, hide } = usePortalTooltip();
   return (
-    <div
+    <Box
       ref={ref}
-      className="schematic-cell schematic-cell-tip"
       tabIndex={0}
+      sx={{
+        width: cs,
+        height: cs,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'transparent',
+        cursor: 'pointer',
+        p: 0,
+        m: 0,
+        '&:focus': {
+          outline: '2px solid #3d5f22',
+        },
+      }}
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
@@ -27,6 +41,6 @@ export function SegmentRepeaterCell({ cell, cs }: { cell: any; cs: number }) {
           Repeater: {cell.ticks} tick{cell.ticks !== 1 ? 's' : ''}
         </TooltipPortal>
       )}
-    </div>
+    </Box>
   );
 }

@@ -1,4 +1,6 @@
 import { RedstoneDustCell } from '@components/common/cells/RedstoneDustCell';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import { AnchorCell, SegmentRepeaterCell } from './SchematicCells';
 
 // Cell renderer for react-window Grid
@@ -20,11 +22,24 @@ export function SchematicRowGridCell({ columnIndex, rowIndex, style, cellProps }
   const { inst, row } = item;
   if (columnIndex === 0) {
     return (
-      <div style={style} className="schematic-td-connector">
-        <button
-          type="button"
-          className="schematic-connector schematic-connector--sticky"
-          style={{ width: cs, height: cs }}
+      <Box
+        style={style}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 0 }}
+      >
+        <Button
+          variant="contained"
+          size="small"
+          sx={{
+            minWidth: cs,
+            minHeight: cs,
+            width: cs,
+            height: cs,
+            bgcolor: '#3d5f22',
+            color: '#fff',
+            p: 0,
+            borderRadius: 1,
+            '&:hover': { bgcolor: '#49732a' },
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
@@ -33,8 +48,8 @@ export function SchematicRowGridCell({ columnIndex, rowIndex, style, cellProps }
           aria-label="Move row marker here"
         >
           <RedstoneDustCell size={cs} />
-        </button>
-      </div>
+        </Button>
+      </Box>
     );
   }
   // Each anchor has two columns: segment and anchor
@@ -43,8 +58,11 @@ export function SchematicRowGridCell({ columnIndex, rowIndex, style, cellProps }
     // Segment column
     const seg = row.segments[anchorIdx] ?? [];
     return (
-      <div style={style} className="schematic-td-seg">
-        <div className="schematic-segment">
+      <Box
+        style={style}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 0 }}
+      >
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
           {seg.map((cell: any, ri: number) =>
             cell.kind === 'dust' ? (
               <RedstoneDustCell key={ri} size={cs} />
@@ -52,13 +70,16 @@ export function SchematicRowGridCell({ columnIndex, rowIndex, style, cellProps }
               <SegmentRepeaterCell key={ri} cell={cell} cs={cs} />
             ),
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
     );
   } else {
     // Anchor cell
     return (
-      <div style={style} className="schematic-td-anchor">
+      <Box
+        style={style}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 0 }}
+      >
         <AnchorCell
           anchor={anchors[anchorIdx]}
           cell={row.anchorCells[anchorIdx]}
@@ -68,7 +89,7 @@ export function SchematicRowGridCell({ columnIndex, rowIndex, style, cellProps }
           isLastPressed={lastPressed === `${row.id}:${anchorIdx}`}
           onPress={() => setLastPressed(`${row.id}:${anchorIdx}`)}
         />
-      </div>
+      </Box>
     );
   }
 }

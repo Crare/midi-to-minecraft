@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -42,16 +43,28 @@ export function TooltipPortal({
   children: React.ReactNode;
 }) {
   return createPortal(
-    <div
-      className={`cell-tooltip-portal${pos.below ? ' cell-tooltip-portal-below' : ''}`}
-      style={{
-        left: `${pos.x}px`,
-        top: pos.below ? `${pos.y + 8}px` : `${pos.y - 8}px`,
-      }}
+    <Box
       role="tooltip"
+      sx={{
+        position: 'fixed',
+        left: pos.x,
+        top: pos.below ? pos.y + 8 : pos.y - 8,
+        zIndex: 1500,
+        bgcolor: 'background.paper',
+        color: 'text.primary',
+        borderRadius: 1,
+        boxShadow: 3,
+        px: 2,
+        py: 1,
+        fontSize: 14,
+        pointerEvents: 'none',
+        transform: 'translate(-50%, 0)',
+        transition: 'opacity 0.15s',
+        opacity: 1,
+      }}
     >
       {children}
-    </div>,
+    </Box>,
     document.body,
   );
 }

@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box';
 import { NoteBlockCell } from './NoteBlockCell';
 import { RedstoneDustCell } from './RedstoneDustCell';
 import { SplitWireCell } from './SplitWireCell';
@@ -19,9 +20,8 @@ import { SplitWireCell } from './SplitWireCell';
 export function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed, onPress }: any) {
   if (!cell || cell.kind === 'inactive') {
     return (
-      <div
-        className="schematic-cell schematic-cell--empty"
-        style={{ width: cs, height: cs }}
+      <Box
+        sx={{ width: cs, height: cs, background: 'transparent', display: 'inline-block' }}
         aria-hidden="true"
       />
     );
@@ -30,17 +30,25 @@ export function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed,
     const c = cell.connects ?? {};
     if (!c.left && !c.right && !c.up && !c.down) {
       return (
-        <div
-          className="schematic-cell schematic-cell--empty"
-          style={{ width: cs, height: cs }}
+        <Box
+          sx={{ width: cs, height: cs, background: 'transparent', display: 'inline-block' }}
           aria-hidden="true"
         />
       );
     }
     return (
-      <div className="schematic-cell" aria-hidden="true">
+      <Box
+        sx={{
+          width: cs,
+          height: cs,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        aria-hidden="true"
+      >
         <SplitWireCell connects={c} size={cs} />
-      </div>
+      </Box>
     );
   }
   if (cell.kind === 'split-branch') {
@@ -51,17 +59,35 @@ export function AnchorCell({ anchor, cell, cs, instrument, block, isLastPressed,
       down: true,
     };
     return (
-      <div className="schematic-cell" aria-hidden="true">
+      <Box
+        sx={{
+          width: cs,
+          height: cs,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        aria-hidden="true"
+      >
         <SplitWireCell connects={c} size={cs} />
-      </div>
+      </Box>
     );
   }
   if (cell.kind === 'note') {
     if (!cell.note) {
       return (
-        <div className="schematic-cell schematic-cell--passthrough" aria-hidden="true">
+        <Box
+          sx={{
+            width: cs,
+            height: cs,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          aria-hidden="true"
+        >
           <RedstoneDustCell size={cs} />
-        </div>
+        </Box>
       );
     }
     return (
