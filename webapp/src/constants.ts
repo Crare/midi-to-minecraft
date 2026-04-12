@@ -1,6 +1,9 @@
 export const defaultInstrumentBlock = "minecraft:dirt";
 export const defaultPercussiveBlock = "minecraft:sand";
 
+export const MINI = 18;
+export const CELL = 28; // default cell size in pixels
+
 export const instrumentByBlock = {
   "minecraft:acacia_log": "bass",
   "minecraft:sand": "snare",
