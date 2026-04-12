@@ -34,6 +34,17 @@ export function buildNoteList(
   { trimLeadingSilence = false }: { trimLeadingSilence?: boolean } = {},
 ): NoteEvent[] {
   const songStartTime = trimLeadingSilence ? getSongStartTime(midi) : 0;
+  // Find the earliest tick if trimming leading silence
+  let songStartTick = 0;
+  if (trimLeadingSilence) {
+    let minTick = Infinity;
+    midi.tracks.forEach((track: Track) => {
+      track.notes.forEach((note: Note) => {
+        if (typeof note.ticks === 'number' && note.ticks < minTick) minTick = note.ticks;
+      });
+    });
+    songStartTick = Number.isFinite(minTick) ? minTick : 0;
+  }
   const notes: NoteEvent[] = [];
   midi.tracks.forEach((track: Track, trackIndex: number) => {
     const channel = typeof track.channel === 'number' ? track.channel : 0;
@@ -50,6 +61,12 @@ export function buildNoteList(
         : defaultTrackBlock;
       const pitch = isDrum ? undefined : midiToPitchClass(note.midi);
       const mcNote = isDrum ? 0 : midiToMinecraftNote(note.midi);
+      // Store tick, adjusted for trimLeadingSilence
+      const tick = Math.max(
+        0,
+        (typeof note.ticks === 'number' ? note.ticks : 0) -
+          (trimLeadingSilence ? songStartTick : 0),
+      );
       notes.push({
         time: startTime,
         endTime,
@@ -59,6 +76,7 @@ export function buildNoteList(
         instrument: instrumentByBlock[block] || 'harp',
         trackIndex,
         trackName,
+        tick,
       });
     });
   });

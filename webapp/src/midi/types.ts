@@ -18,4 +18,5 @@ export type NoteEvent = {
   instrument: string;
   trackIndex: number;
   trackName: string;
+  tick: number;
 };
