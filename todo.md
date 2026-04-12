@@ -1,32 +1,20 @@
 # TODO
 
+- remove the visualizationpanel completely and just use the schematic. add playback to the schematic.
+- maybe use canvas to render the schematic..
 - fix schematic expands to right out of window. again..
 - fix schematic is not showing all the repeaters.
-- when opening schematic, close the visualization and vice versa. so one of them can be open at a time to improve performance. keep both collapsed at start. maybe do the schematic processing still beforehand.
 
-- fix dragging horizontally doesnt work in schematic
-- fix dragging horizontally doesnt work in visualization
-- fix visualization autoscroll on play doesnt work
-- fix schematic example how-to-images dont work
-- fix visualization icons positions are wonky.
-- fix visualization horizontal positions to timeline.
-- fix schematic has extra empty spaces that could be trimmed off in the grid.
+- add horizontally dragging in schematic
 - show current tick in the schematic.
 
-- re-enable panels when they are fixed
-- re-enable dragarea or do some horizontal drag
-- re-enable some type of highlight to keep track where you are in line. like we had vertical and horizontal indicators that could be dragged.
+- add highlight to keep track where you are in line.
 
 - optimize the app
 
-- i think the horizontal scroll and play-head are not keeping up with the sounds playing of the song. they are not in sync.
+- add option to show 4-tempo lines. add option to use other tempos too.
 
-- for schematic. add option to split the track in 4-tempo blocks. show 4 4-tempo blocks and then move on to the next one, by checking checkbox on top of the 4-tempo area. hide other 4-tempo block areas for visual clarity. add option to use other tempos too.
-
-- track visualization doesn't show the 4-tempo lines.
-- in the visualization show track length in time and minecraft ticks.
-
-- add export schematic as excel file.
+- add export schematic as excel and csv file for optional output.
 
 - update example images when we are done.
 

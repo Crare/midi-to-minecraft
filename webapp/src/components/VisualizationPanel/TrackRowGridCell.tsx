@@ -41,141 +41,154 @@ const GRID_BLOCK_SIZE = 32;
 
 // Cell renderer for react-window Grid
 export function TrackRowGridCell({
-  columnIndex,
   rowIndex,
   style,
-  cellProps,
-}: CellComponentProps<{
-  columnIndex: number;
-  rowIndex: number;
-  style: React.CSSProperties;
-  cellProps: any;
-}>) {
-  // console.log('here0', 'rowIndex:', rowIndex, 'columnIndex:', columnIndex, 'cellProps:', cellProps);
-  if (!cellProps) return <Box style={style} />;
-  const { tracks, mutedTracks, showColor, showNumber, showSupport, trackUnitSize } = cellProps;
+  tracks,
+  mutedTracks,
+  showColor,
+  showNumber,
+  showSupport,
+  trackUnitSize,
+}: CellComponentProps<any>) {
   if (!tracks || !mutedTracks) return <Box style={style} />;
+
   const track = tracks[rowIndex];
   if (!track || !track.id || !Array.isArray(track.notes)) return null;
   if (mutedTracks.has(track.id)) return null;
-  const note = track.notes[columnIndex];
-  if (!note) return <Box style={style} />;
+
+  // Find the min and max time for the notes to set the container width if needed
+  const minTime =
+    track.notes.length > 0 ? Math.min(...track.notes.map((n: any) => n.time ?? 0)) : 0;
+  const maxTime =
+    track.notes.length > 0 ? Math.max(...track.notes.map((n: any) => n.time ?? 0)) : 0;
+  // You may want to adjust the scale factor for time-to-pixels
+  const timeScale = trackUnitSize; // 1 time unit = 1 cell width
+
   return (
-    <Box style={style}>
-      <Box
-        sx={{
-          mt: 1,
-          mb: 1,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        {note.placements.map((placement: any, pi: number) => {
-          const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
-          const tooltipLines = getNoteblockTooltip(placement).split('\n');
-          return (
-            <Box
-              key={pi}
-              tabIndex={0}
-              role="button"
-              aria-label={getNoteblockTooltip(placement).replace(/\n/g, ', ')}
-              sx={{
-                width: trackUnitSize - 6,
-                height: trackUnitSize - 10,
-                minWidth: 16,
-                minHeight: 16,
-                mx: 0.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                outline: 'none',
-                cursor: 'pointer',
-                '&:focus': {
-                  outline: '2px solid #3d5f22',
-                },
-              }}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => {
-                void playPlacementSound(placement);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  void playPlacementSound(placement);
-                }
-              }}
-            >
-              {showColor && tuningInfo ? (
+    <Box style={{ ...style, position: 'relative', width: (maxTime + 1) * timeScale }}>
+      {track.notes.map((note: any, noteIdx: number) => {
+        if (!note) return null;
+        const left = (note.time ?? noteIdx) * timeScale;
+        return (
+          <Box
+            key={noteIdx}
+            sx={{
+              position: 'absolute',
+              left,
+              top: 0,
+              width: trackUnitSize,
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {note.placements.map((placement: any, pi: number) => {
+              const tuningInfo = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
+              const tooltipLines = getNoteblockTooltip(placement).split('\n');
+              return (
                 <Box
+                  key={pi}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={getNoteblockTooltip(placement).replace(/\n/g, ', ')}
                   sx={{
-                    backgroundColor: tuningInfo.color,
-                    position: 'absolute',
-                    top: 2,
-                    left: 2,
-                    width: 8,
-                    height: 8,
-                    borderRadius: 2,
+                    width: trackUnitSize - 6,
+                    height: trackUnitSize - 10,
+                    minWidth: 16,
+                    minHeight: 16,
+                    mx: 0.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    '&:focus': {
+                      outline: '2px solid #3d5f22',
+                    },
                   }}
-                  aria-hidden="true"
-                />
-              ) : null}
-              {showNumber && tuningInfo ? (
-                <Box
-                  aria-hidden="true"
-                  sx={{ position: 'absolute', top: 2, right: 2, fontSize: 10 }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={() => {
+                    void playPlacementSound(placement);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      void playPlacementSound(placement);
+                    }
+                  }}
                 >
-                  {tuningInfo.useCount}
+                  {showColor && tuningInfo ? (
+                    <Box
+                      sx={{
+                        backgroundColor: tuningInfo.color,
+                        position: 'absolute',
+                        top: 2,
+                        left: 2,
+                        width: 8,
+                        height: 8,
+                        borderRadius: 2,
+                      }}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                  {showNumber && tuningInfo ? (
+                    <Box
+                      aria-hidden="true"
+                      sx={{ position: 'absolute', top: 2, right: 2, fontSize: 10 }}
+                    >
+                      {tuningInfo.useCount}
+                    </Box>
+                  ) : null}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <NoteblockIcon size={GRID_BLOCK_SIZE} />
+                    {showSupport ? (
+                      <SupportBlock
+                        blockId={placement.block}
+                        size={GRID_BLOCK_SIZE}
+                        style={{ marginTop: GRID_BLOCK_SIZE }}
+                        alt={placement.block}
+                      />
+                    ) : null}
+                  </Box>
+                  <Box
+                    component="span"
+                    role="tooltip"
+                    sx={{
+                      display: 'none',
+                      position: 'absolute',
+                      zIndex: 10,
+                      background: '#222',
+                      color: '#fff',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: 11,
+                      left: '100%',
+                      top: 0,
+                    }}
+                  >
+                    {tooltipLines.map((line: string, lineIndex: number) => (
+                      <Fragment key={`${noteIdx}-${pi}-tooltip-${lineIndex}`}>
+                        {lineIndex > 0 ? <br /> : null}
+                        {line}
+                      </Fragment>
+                    ))}
+                  </Box>
                 </Box>
-              ) : null}
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <NoteblockIcon size={GRID_BLOCK_SIZE} />
-                {showSupport ? (
-                  <SupportBlock
-                    blockId={placement.block}
-                    size={GRID_BLOCK_SIZE}
-                    style={{ marginTop: GRID_BLOCK_SIZE }}
-                    alt={placement.block}
-                  />
-                ) : null}
-              </Box>
-              <Box
-                component="span"
-                role="tooltip"
-                sx={{
-                  display: 'none',
-                  position: 'absolute',
-                  zIndex: 10,
-                  background: '#222',
-                  color: '#fff',
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  fontSize: 11,
-                  left: '100%',
-                  top: 0,
-                }}
-              >
-                {tooltipLines.map((line: string, lineIndex: number) => (
-                  <Fragment key={`${columnIndex}-${pi}-tooltip-${lineIndex}`}>
-                    {lineIndex > 0 ? <br /> : null}
-                    {line}
-                  </Fragment>
-                ))}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
+              );
+            })}
+          </Box>
+        );
+      })}
     </Box>
   );
 }

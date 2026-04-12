@@ -1,6 +1,6 @@
 import ExamplePanel from '@components/ExamplePanel';
 import JsonOutputPanel from '@components/JsonOutputPanel';
-import VisualizationPanel from '@components/VisualizationPanel';
+import SchematicPanel from '@components/SchematicPanel';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
@@ -8,7 +8,6 @@ import Typography from '@mui/material/Typography';
 import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
 import { playSuccessJingle } from './audio/noteblockAudio';
-import SchematicPanel from './components/SchematicPanel';
 import UploadPanel from './components/UploadPanel';
 import { eventsToPlacements } from './midi/placements';
 import {
@@ -33,7 +32,7 @@ export default function App() {
   const [zipFilename, setZipFilename] = useState<string>('output.zip');
   const [exampleOpen, setExampleOpen] = useState<boolean>(true);
 
-  // console.log('trackEvents', trackEvents);
+  console.log('trackEvents', trackEvents);
 
   const onConvertRequest = async ({ file, outputName, trimLeadingSilence }: ConvertRequest) => {
     if (!file || busy) return;
@@ -100,8 +99,6 @@ export default function App() {
         />
 
         <JsonOutputPanel downloadFiles={busy ? [] : downloadFiles} zipFilename={zipFilename} />
-
-        <VisualizationPanel trackEvents={busy ? [] : trackEvents} busy={busy} />
 
         <SchematicPanel trackEvents={busy ? [] : trackEvents} busy={busy} />
       </Box>
