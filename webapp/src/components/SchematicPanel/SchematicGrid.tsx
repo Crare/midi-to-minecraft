@@ -41,7 +41,14 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
 
   useEffect(() => {
     console.log('width', width);
-    console.log('canvasWidth', canvasWidth, 'renderColumnCount', renderColumnCount, 'maxColumns', maxColumns);
+    console.log(
+      'canvasWidth',
+      canvasWidth,
+      'renderColumnCount',
+      renderColumnCount,
+      'maxColumns',
+      maxColumns,
+    );
     console.log('rowCount', rowCount, 'columnCount', columnCount);
 
     const ctx = canvasRef.current?.getContext('2d');
