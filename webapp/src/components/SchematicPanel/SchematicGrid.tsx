@@ -97,6 +97,24 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
     if (!ctx) return;
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
+    // Draw tick row at the top
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // Use the first visible instrument row for tick calculation
+    const tickRow = visibleInstrumentRows[0] || [];
+    for (let colIdx = 0; colIdx < tickRow.length; ++colIdx) {
+      const cell = tickRow[colIdx] as GridCell;
+      const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
+      if (x + cs < labelWidth) continue;
+      if (x > canvasWidth) continue;
+      ctx.fillStyle = '#e0e0e0';
+      ctx.fillRect(x, 0, cs, cs);
+      ctx.fillStyle = '#444';
+      const tickVal = cell && typeof cell.tick !== 'undefined' ? cell.tick : '';
+      ctx.fillText(String(tickVal), Math.round(x + cs / 2), Math.round(cs / 2));
+    }
+
     // Draw instrument rows, shifted down by one row
     ctx.font = '600 15px sans-serif';
     ctx.textAlign = 'left';
@@ -111,19 +129,15 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
       // Draw label aligned left, with 8px left padding
       const instrument = instruments[rowIdx]?.title.split(' ')[0] ?? '';
       const lane = instruments[rowIdx]?.title.split(' ')[2] ?? '';
-      // if (lane == 0) {
-      //   ctx.fillText(`${instrument}`, 8, y);
-      // }
       ctx.fillText(`${instrument} lane ${lane}`, 8, y + cs / 2);
 
       // Draw cells
       const row = visibleInstrumentRows[rowIdx];
       for (let colIdx = 0; colIdx < row.length; ++colIdx) {
         const cell = row[colIdx] as GridCell;
-        // x is relative to visible area, shifted by pixelOffset for smooth scroll
         const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
-        if (x + cs < labelWidth) continue; // Don't draw left of visible area
-        if (x > canvasWidth) continue; // Don't draw outside visible area
+        if (x + cs < labelWidth) continue;
+        if (x > canvasWidth) continue;
         if (!cell) continue;
         if (cell.type === 'empty') {
           continue;
