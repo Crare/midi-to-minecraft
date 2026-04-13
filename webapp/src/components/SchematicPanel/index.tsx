@@ -9,15 +9,15 @@ import HowToWireTutorial from './HowToWireTutorial';
 import SchematicGrid from './SchematicGrid';
 import { blockColor, blockLabel } from './schematicData';
 
-import type { TrackEvent } from '../../midi/trackEvents';
+import type { TrackEvent, TracksByInstrumentLane } from '../../midi/trackEvents';
 
 interface SchematicPanelProps {
-  trackEvents?: TrackEvent[];
+  trackEvents?: TrackEvent[] | TracksByInstrumentLane[];
   busy?: boolean;
 }
 
 export interface InstrumentGrid {
-  instruments: TrackEvent[];
+  instruments: any[];
   anchors: Anchor[];
 }
 
@@ -33,14 +33,75 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
   const [cellSize, setCellSize] = useState(28);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const parentWidth = useContainerWidth(panelRef);
-  console.log('SchematicPanel parentWidth (CollapsiblePanel wrapper)', parentWidth);
+  // console.log('SchematicPanel parentWidth (CollapsiblePanel wrapper)', parentWidth);
 
-  // Build schematic-ready data from trackEvents
-  // Now, trackEvents is already schematic-ready data (array of instrument tracks)
-  const grid = useMemo<InstrumentGrid>(
-    () => ({ instruments: Array.isArray(trackEvents) ? trackEvents : [], anchors: [] }),
-    [trackEvents],
-  );
+  // Utility: convert TracksByInstrumentLane[] to schematic instrument objects with .cells
+  function convertTracksToSchematicInstruments(tracks: TracksByInstrumentLane[]): any[] {
+    // TODO: i think we can get rid of this conversion, because the tracks are already in the right format for schematic rendering (just need to update SchematicGrid to handle both .events and .cells formats). For now, this is a quick way to reuse the existing SchematicGrid without refactoring it.
+    if (!Array.isArray(tracks)) return [];
+    return tracks.map((track, idx) => {
+      // Convert InstrumentLaneEvent[] to .cells array for schematic rendering
+      const cells: {
+        type: string;
+        ticks?: number;
+        note?: number;
+        pitch?: string;
+        instrument?: string;
+        block?: string;
+        key: string;
+      }[] = [];
+      track.events.forEach((event, i) => {
+        if (event.repeaterTicks) {
+          // Add one repeater cell for each event.repeaterTicks.
+          let ticks = event.repeaterTicks;
+          const t = Math.min(ticks, 4);
+          cells.push({ type: 'repeater', ticks: t, key: `rep-${i}-${t}` });
+          ticks -= t;
+        }
+        if (event.emptySpace) {
+          cells.push({ type: 'empty', key: `empty-${i}` });
+        }
+        if (event.redstone) {
+          cells.push({ type: 'dust', key: `dust-${i}` });
+        }
+        if (event.split) {
+          cells.push({ type: 'split', key: `split-${i}` });
+        }
+        if (event.note) {
+          cells.push({
+            type: 'note',
+            note: event.note.note,
+            pitch: event.note.pitch,
+            instrument: event.note.instrument,
+            block: event.note.block,
+            key: `note-${i}`,
+          });
+        }
+      });
+      return {
+        title: `${track.instrument} lane ${track.lane}`,
+        instrument: track.instrument,
+        lane: track.lane,
+        cells,
+      };
+    });
+  }
+
+  // Accept both legacy TrackEvent[] and new TracksByInstrumentLane[]
+  const grid = useMemo<InstrumentGrid>(() => {
+    // console.log('trackEvents for grid', trackEvents);
+    if (!Array.isArray(trackEvents)) return { instruments: [], anchors: [] };
+    // Heuristic: if first element has .events (array of InstrumentLaneEvent), treat as new format
+    if (trackEvents.length > 0 && (trackEvents[0] as any).events) {
+      return {
+        instruments: convertTracksToSchematicInstruments(trackEvents as TracksByInstrumentLane[]),
+        anchors: [],
+      };
+    }
+    // Otherwise, assume legacy format
+    return { instruments: trackEvents as TrackEvent[], anchors: [] };
+  }, [trackEvents]);
+
   const processing = false;
 
   // Defensive: fallback for new grid shape (canvas/cells)

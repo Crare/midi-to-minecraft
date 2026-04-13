@@ -1,4 +1,5 @@
 import ErrorBoundary from '@components/common/ErrorBoundary';
+import { minecraftBlockToBlock, supportColorByBlock } from '@constants';
 import Box from '@mui/material/Box';
 import { useEffect, useRef, useState } from 'react';
 import { InstrumentGrid } from '.';
@@ -7,6 +8,16 @@ interface SchematicGridProps {
   grid?: InstrumentGrid;
   cellSize?: number;
   width: number; // width from parent
+}
+
+interface GridCell {
+  type: string;
+  ticks?: number;
+  note?: number;
+  pitch?: string;
+  instrument?: string;
+  block?: string;
+  event?: any;
 }
 
 export default function SchematicGrid({ grid, cellSize, width }: SchematicGridProps) {
@@ -32,7 +43,18 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
   }
 
   // Calculate full grid size
-  const labelWidth = 80;
+  // Calculate label width dynamically based on the longest label
+  const ctxForLabel =
+    typeof window !== 'undefined' ? document.createElement('canvas').getContext('2d') : null;
+  let labelWidth = 80;
+  if (ctxForLabel && instruments.length > 0) {
+    ctxForLabel.font = '600 15px sans-serif';
+    const maxLabel = instruments
+      .map((inst) => inst?.title ?? '')
+      .reduce((a, b) => (a.length > b.length ? a : b), '');
+    const measured = ctxForLabel.measureText(maxLabel);
+    labelWidth = Math.ceil(measured.width) + 24; // 24px padding for left/right
+  }
   const cellGap = 2;
   const fullGridWidth = labelWidth + columnCount * (cs + cellGap);
   const canvasWidth = width > 0 ? width - cs : fullGridWidth - cs;
@@ -55,68 +77,122 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
+  const renderCanvas = () => {
+    // console.log('instruments', instruments);
+    // console.log('instrumentRows', instrumentRows);
+    console.log('visibleInstrumentRows', visibleInstrumentRows);
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    // Draw tick row as first row of cells
-    ctx.font = 'bold 15px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (let colIdx = 0; colIdx < renderColumnCount; ++colIdx) {
-      const tick = firstVisibleCol + colIdx;
-      const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
-      if (x + cs < labelWidth) continue;
-      if (x > canvasWidth) continue;
-      // Draw tick cell background
-      ctx.fillStyle = '#e0e0e0';
-      ctx.fillRect(x, 0, cs, cs);
-      // Draw tick number
-      ctx.fillStyle = '#444';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.fillText(String(tick), x + cs / 2, cs / 2);
-    }
+    // Draw tick row based on accumulated redstone ticks from the first instrument row
+    // ctx.font = 'bold 15px sans-serif';
+    // ctx.textAlign = 'center';
+    // ctx.textBaseline = 'middle';
+    // // Use the first visible instrument row for tick calculation
+    // const tickRow = visibleInstrumentRows[0] || [];
+    // let tickCounter = 0;
+    // for (let colIdx = 0; colIdx < renderColumnCount; ++colIdx) {
+    //   const cell = tickRow[colIdx];
+    //   const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
+    //   if (x + cs < labelWidth) continue;
+    //   if (x > canvasWidth) continue;
+    //   // Draw tick cell background
+    //   ctx.fillStyle = '#e0e0e0';
+    //   ctx.fillRect(x, 0, cs, cs);
+    //   // Draw tick number
+    //   ctx.fillStyle = '#444';
+    //   ctx.font = 'bold 15px sans-serif';
+    //   ctx.fillText(String(tickCounter), Math.round(x + cs / 2), Math.round(cs / 2));
+    //   // Advance tickCounter based on cell type
+    //   if (cell) {
+    //     if (cell.type === 'repeater' && typeof cell.ticks === 'number') {
+    //       tickCounter += cell.ticks;
+    //     }
+    //     // else if (cell.type === 'dust' || cell.type === 'split' || cell.type === 'note') {
+    //     //   tickCounter += 1;
+    //     // }
+    //   }
+    // }
 
     // Draw instrument rows, shifted down by one row
     ctx.font = '600 15px sans-serif';
-    ctx.textAlign = 'right';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     for (let rowIdx = 0; rowIdx < rowCount; ++rowIdx) {
-      const y = (rowIdx + 1) * (cs + cellGap);
+      let y = (rowIdx + 1) * (cs + cellGap);
       // Draw instrument label
       ctx.fillStyle = '#222';
-      ctx.fillText(instruments[rowIdx]?.title ?? '', labelWidth - 8, y + cs / 2);
+      ctx.font = '600 15px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      // Draw label aligned left, with 8px left padding
+      const instrument = instruments[rowIdx]?.title.split(' ')[0] ?? '';
+      const lane = instruments[rowIdx]?.title.split(' ')[2] ?? '';
+      // if (lane == 0) {
+      //   ctx.fillText(`${instrument}`, 8, y);
+      // }
+      ctx.fillText(`${instrument} lane ${lane}`, 8, y + cs / 2);
 
       // Draw cells
       const row = visibleInstrumentRows[rowIdx];
       for (let colIdx = 0; colIdx < row.length; ++colIdx) {
-        const cell = row[colIdx];
+        const cell = row[colIdx] as GridCell;
         // x is relative to visible area, shifted by pixelOffset for smooth scroll
         const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
         if (x + cs < labelWidth) continue; // Don't draw left of visible area
         if (x > canvasWidth) continue; // Don't draw outside visible area
         if (!cell) continue;
-        if (cell.type === 'repeater') {
+        if (cell.type === 'empty') {
+          continue;
+        } else if (cell.type === 'repeater') {
           ctx.fillStyle = '#e6b800';
           ctx.fillRect(x, y, cs, cs);
           ctx.fillStyle = '#fff';
           ctx.font = 'bold 16px sans-serif';
           ctx.fillText(String(cell.ticks), x + cs / 2, y + cs / 2);
-        } else if (cell.type === 'split') {
-          ctx.fillStyle = '#b71c1c';
+        } else if (cell.type === 'dust') {
+          // Draw a horizontal red line (dust)
+          ctx.strokeStyle = '#b71c1c';
+          ctx.lineWidth = 4;
           ctx.beginPath();
-          ctx.arc(x + cs / 2, y + cs / 2, cs / 3, 0, 2 * Math.PI);
-          ctx.fill();
+          ctx.moveTo(x + 4, y + cs / 2);
+          ctx.lineTo(x + cs - 4, y + cs / 2);
+          ctx.stroke();
+        } else if (cell.type === 'split') {
+          // Draw a T-junction: horizontal and vertical red lines
+          ctx.strokeStyle = '#b71c1c';
+          ctx.lineWidth = 4;
+          // Horizontal
+          ctx.beginPath();
+          ctx.moveTo(x + 4, y + cs / 2);
+          ctx.lineTo(x + cs - 4, y + cs / 2);
+          ctx.stroke();
+          // Vertical
+          ctx.beginPath();
+          ctx.moveTo(x + cs / 2, y + 4);
+          ctx.lineTo(x + cs / 2, y + cs - 4);
+          ctx.stroke();
         } else if (cell.type === 'note') {
-          ctx.fillStyle = '#8bc34a';
+          ctx.fillStyle = cell.block
+            ? supportColorByBlock[minecraftBlockToBlock(cell.block)]
+            : '#8bc34a';
           ctx.fillRect(x, y, cs, cs);
           ctx.fillStyle = '#222';
           ctx.font = 'bold 15px sans-serif';
-          ctx.fillText(String(cell.event.note), x + cs / 2, y + cs / 2);
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          // Support both cell.note and cell.event.note for compatibility
+          const noteVal = cell.note ?? (cell.event && cell.event.note) ?? '?';
+          // Use integer coordinates for sharp rendering
+          ctx.fillText(String(noteVal), Math.round(x + cs / 2), Math.round(y + cs / 2));
         }
       }
     }
+  };
+
+  useEffect(() => {
+    renderCanvas();
   }, [grid, cs, rowCount, columnCount, canvasWidth, canvasHeight, clampedScrollX, pixelOffset]);
 
   // Drag handlers for horizontal scroll

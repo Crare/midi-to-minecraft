@@ -1,25 +1,7 @@
-// ─── Block colors (top-down view of the instrument support block) ──────────────
-export const blockColor = {
-  'minecraft:dirt': '#7f5a34',
-  'minecraft:sand': '#d4be7d',
-  'minecraft:glass': '#8cd9e9',
-  'minecraft:stone': '#8f9497',
-  'minecraft:gold_block': '#f3cf3f',
-  'minecraft:clay': '#b9a6a2',
-  'minecraft:packed_ice': '#bce8ff',
-  'minecraft:white_wool': '#f4f2e9',
-  'minecraft:bone_block': '#e3dcc2',
-  'minecraft:iron_block': '#c4cbd0',
-  'minecraft:soul_sand': '#6f5b45',
-  'minecraft:pumpkin': '#d27720',
-  'minecraft:emerald_block': '#3cc76f',
-  'minecraft:hay_block': '#d6c66a',
-  'minecraft:glowstone': '#f2cb6c',
-  'minecraft:wood_log': '#8b5a2b',
-};
+import { supportColorByBlock } from '@constants';
 
 export function blockColorFor(blockId) {
-  return blockColor[blockId] || '#8a8a8a';
+  return supportColorByBlock[minecraftBlockToBlock(blockId)] || '#8a8a8a';
 }
 
 export function blockLabel(blockId) {

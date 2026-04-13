@@ -8,7 +8,7 @@ import { Midi } from '@tonejs/midi';
 import { useState } from 'react';
 import { playSuccessJingle } from './audio/noteblockAudio';
 import UploadPanel from './components/UploadPanel';
-import { buildTrackEvents, type TrackEvent } from './midi/trackEvents';
+import { buildTrackEvents } from './midi/trackEvents';
 
 interface ConvertRequest {
   file: File;
@@ -19,10 +19,10 @@ interface ConvertRequest {
 export default function App() {
   const [status, setStatus] = useState<string>('Choose a MIDI file to begin.');
   const [busy, setBusy] = useState<boolean>(false);
-  const [trackEvents, setTrackEvents] = useState<TrackEvent[]>([]);
+  const [trackEvents, setTrackEvents] = useState<any[]>([]);
   const [exampleOpen, setExampleOpen] = useState<boolean>(true);
 
-  console.log('trackEvents', trackEvents);
+  // console.log('trackEvents', trackEvents);
 
   const onConvertRequest = async ({ file, outputName, trimLeadingSilence }: ConvertRequest) => {
     if (!file || busy) return;
@@ -33,8 +33,8 @@ export default function App() {
       const buffer = await file.arrayBuffer();
       const midi = new Midi(buffer);
       const nextTrackEvents = buildTrackEvents(midi, { trimLeadingSilence });
-      // setTrackEvents(nextTrackEvents);
-      // setStatus(`Converted ${nextTrackEvents.length} track(s).`);
+      setTrackEvents(nextTrackEvents);
+      setStatus(`Converted ${nextTrackEvents.length} track(s).`);
       setExampleOpen(false);
       setTimeout(() => playSuccessJingle(), 500);
     } catch (error: any) {

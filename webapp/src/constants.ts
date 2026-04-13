@@ -104,8 +104,12 @@ export const noteColorByStep = [
   '#AE00A9',
 ];
 
+export const minecraftBlockToBlock = (block: string) => {
+  return block.replace('minecraft:', '');
+};
+
 export const supportColorByBlock: Record<string, string> = {
-  wood_log: '#8b5a2b',
+  wood_log: '#b86415',
   sand: '#d4be7d',
   glass: '#8cd9e9',
   stone: '#8f9497',
