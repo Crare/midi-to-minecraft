@@ -1,8 +1,20 @@
 import ErrorBoundary from '@components/common/ErrorBoundary';
 import { minecraftBlockToBlock, supportColorByBlock } from '@constants';
 import Box from '@mui/material/Box';
+// Tooltip info type
+interface NoteTooltipInfo {
+  x: number;
+  y: number;
+  block: string;
+  uses: number;
+  tick: number;
+  instrument: string;
+  lane: string;
+}
+
 import { useEffect, useRef, useState } from 'react';
 import { InstrumentGrid } from '.';
+import { blockLabel } from './schematicData';
 
 interface SchematicGridProps {
   grid?: InstrumentGrid;
@@ -84,36 +96,6 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-    // Draw tick row based on accumulated redstone ticks from the first instrument row
-    // ctx.font = 'bold 15px sans-serif';
-    // ctx.textAlign = 'center';
-    // ctx.textBaseline = 'middle';
-    // // Use the first visible instrument row for tick calculation
-    // const tickRow = visibleInstrumentRows[0] || [];
-    // let tickCounter = 0;
-    // for (let colIdx = 0; colIdx < renderColumnCount; ++colIdx) {
-    //   const cell = tickRow[colIdx];
-    //   const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
-    //   if (x + cs < labelWidth) continue;
-    //   if (x > canvasWidth) continue;
-    //   // Draw tick cell background
-    //   ctx.fillStyle = '#e0e0e0';
-    //   ctx.fillRect(x, 0, cs, cs);
-    //   // Draw tick number
-    //   ctx.fillStyle = '#444';
-    //   ctx.font = 'bold 15px sans-serif';
-    //   ctx.fillText(String(tickCounter), Math.round(x + cs / 2), Math.round(cs / 2));
-    //   // Advance tickCounter based on cell type
-    //   if (cell) {
-    //     if (cell.type === 'repeater' && typeof cell.ticks === 'number') {
-    //       tickCounter += cell.ticks;
-    //     }
-    //     // else if (cell.type === 'dust' || cell.type === 'split' || cell.type === 'note') {
-    //     //   tickCounter += 1;
-    //     // }
-    //   }
-    // }
 
     // Draw instrument rows, shifted down by one row
     ctx.font = '600 15px sans-serif';
@@ -260,6 +242,75 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
     };
   }, [isDragging]);
 
+  // Tooltip state
+  const [tooltip, setTooltip] = useState<NoteTooltipInfo | null>(null);
+  // Helper to get cell under mouse
+  function getNoteCellAt(mouseX: number, mouseY: number): NoteTooltipInfo | null {
+    // Adjust for canvas position
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const x = mouseX - rect.left;
+    const y = mouseY - rect.top;
+    // Find row
+    let yCursor = cs + cellGap; // skip tick row
+    for (let rowIdx = 0; rowIdx < rowCount; ++rowIdx) {
+      // TODO: handle extra gap if present
+      if (y >= yCursor && y < yCursor + cs) {
+        // Find col
+        for (let colIdx = 0; colIdx < visibleInstrumentRows[rowIdx].length; ++colIdx) {
+          const cellX = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
+          if (x >= cellX && x < cellX + cs) {
+            const cell = visibleInstrumentRows[rowIdx][colIdx] as GridCell;
+            if (cell && cell.type === 'note') {
+              // Extract info
+              const instrument = instruments[rowIdx]?.title.split(' ')[0] ?? '';
+              const lane = instruments[rowIdx]?.title.split(' ')[2] ?? '';
+              // remove "minecraft." prefix for readability
+              const block = cell.block ? blockLabel(cell.block) : '?';
+              const uses = cell.note ?? 0;
+              const tick = cell.tick ?? '?';
+              return {
+                x: mouseX,
+                y: mouseY,
+                block,
+                uses,
+                tick,
+                instrument,
+                lane,
+              };
+            } else if (cell && cell.type === 'repeater') {
+              const instrument = instruments[rowIdx]?.title.split(' ')[0] ?? '';
+              const lane = instruments[rowIdx]?.title.split(' ')[2] ?? '';
+              const block = 'repeater';
+              const uses = cell.ticks;
+              const tick = cell.tick ?? '?';
+              return {
+                x: mouseX,
+                y: mouseY,
+                block,
+                uses,
+                tick,
+                instrument,
+                lane,
+              };
+            }
+          }
+        }
+      }
+      yCursor += cs + cellGap;
+    }
+    return null;
+  }
+  // Mouse move for tooltip
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const info = getNoteCellAt(e.clientX, e.clientY);
+    setTooltip(info);
+  };
+  const handleCanvasMouseLeave = () => {
+    setTooltip(null);
+  };
+
   return (
     <ErrorBoundary>
       <Box
@@ -271,25 +322,68 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
         }}
       >
         <div style={{ width: '100%', minWidth: 400, overflowX: 'hidden' }}>
-          <canvas
-            ref={canvasRef}
-            width={canvasWidth}
-            height={canvasHeight}
-            style={{
-              display: 'block',
-              width: canvasWidth,
-              height: canvasHeight,
-              maxHeight: 800,
-              cursor: isDragging ? 'grabbing' : 'grab',
-            }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          />
+          <div style={{ position: 'relative' }}>
+            <canvas
+              ref={canvasRef}
+              width={canvasWidth}
+              height={canvasHeight}
+              style={{
+                display: 'block',
+                width: canvasWidth,
+                height: canvasHeight,
+                maxHeight: 800,
+                cursor: isDragging ? 'grabbing' : 'grab',
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={(e) => {
+                handleMouseMove(e);
+                handleCanvasMouseMove(e);
+              }}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={(e) => {
+                handleMouseUp();
+                handleCanvasMouseLeave();
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            />
+            {tooltip && (
+              <div
+                style={{
+                  position: 'fixed',
+                  left: tooltip.x + 12,
+                  top: tooltip.y + 12,
+                  background: 'rgba(30,30,30,0.97)',
+                  color: '#fff',
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                  fontSize: 14,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                  minWidth: 180,
+                }}
+              >
+                <div>
+                  <b>Block:</b> {tooltip.block}
+                </div>
+                <div>
+                  {tooltip.block === 'repeater' ? <b>Delay: </b> : <b>Note: </b>}
+                  {tooltip.uses}
+                </div>
+                <div>
+                  <b>Tick:</b> {tooltip.tick}
+                </div>
+                <div>
+                  <b>Instrument:</b> {tooltip.instrument}
+                </div>
+                <div>
+                  <b>Lane:</b> {tooltip.lane}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </Box>
     </ErrorBoundary>

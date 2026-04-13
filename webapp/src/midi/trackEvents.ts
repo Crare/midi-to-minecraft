@@ -156,6 +156,7 @@ export interface InstrumentLaneEvent {
   split?: boolean; // whether this event is a split point
   redstone?: boolean; // whether to place redstone before this event for timing
   type: 'note' | 'repeater' | 'split' | 'dust' | 'empty';
+  tick: number; // tick of when this event happens.
 }
 
 export interface TracksByInstrumentLane {
@@ -206,18 +207,26 @@ function buildTracks(
             const repeaterCount = Math.floor(gap / 4);
             for (let i = 0; i < repeaterCount; ++i) {
               if (lane == 0) {
-                laneEvents.push({ repeaterTicks: 4 });
+                laneEvents.push({ repeaterTicks: 4, tick: laneLastTick + i * 4, type: 'repeater' });
               } else {
-                laneEvents.push({ emptySpace: true });
+                laneEvents.push({ emptySpace: true, tick: laneLastTick + i * 4, type: 'empty' });
               }
               laneGridPos += 1;
             }
           }
           if (gap % 4 > 0) {
             if (lane == 0) {
-              laneEvents.push({ repeaterTicks: gap % 4 });
+              laneEvents.push({
+                repeaterTicks: gap % 4,
+                tick: laneLastTick + Math.floor(gap / 4) * 4,
+                type: 'repeater',
+              });
             } else {
-              laneEvents.push({ emptySpace: true });
+              laneEvents.push({
+                emptySpace: true,
+                tick: laneLastTick + Math.floor(gap / 4) * 4,
+                type: 'empty',
+              });
             }
             laneGridPos += 1;
           }
@@ -229,7 +238,8 @@ function buildTracks(
           (otherLane) => otherLane !== events && otherLane.some((n) => n.tick === note.tick),
         );
         if (hasOtherTimingEvents) {
-          laneEvents.push({ redstone: true });
+          // TODO: we could set different dust types to render different connections.
+          laneEvents.push({ redstone: true, tick: note.tick, type: 'dust' });
           laneGridPos += 1;
         }
 
@@ -245,7 +255,8 @@ function buildTracks(
               return n.tick === note.tick && n !== note;
             }),
         );
-        laneEvents.push({ note, split });
+        // TODO: we could set different split dust types to render different connections.
+        laneEvents.push({ note, split, tick: note.tick, type: 'note' });
         if (split) {
           laneGridPos += 1;
         }

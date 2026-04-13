@@ -50,23 +50,24 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
         instrument?: string;
         block?: string;
         key: string;
+        tick: number;
       }[] = [];
       track.events.forEach((event, i) => {
         if (event.repeaterTicks) {
           // Add one repeater cell for each event.repeaterTicks.
           let ticks = event.repeaterTicks;
           const t = Math.min(ticks, 4);
-          cells.push({ type: 'repeater', ticks: t, key: `rep-${i}-${t}` });
+          cells.push({ type: 'repeater', ticks: t, key: `rep-${i}-${t}`, tick: event.tick });
           ticks -= t;
         }
         if (event.emptySpace) {
-          cells.push({ type: 'empty', key: `empty-${i}` });
+          cells.push({ type: 'empty', key: `empty-${i}`, tick: event.tick });
         }
         if (event.redstone) {
-          cells.push({ type: 'dust', key: `dust-${i}` });
+          cells.push({ type: 'dust', key: `dust-${i}`, tick: event.tick });
         }
         if (event.split) {
-          cells.push({ type: 'split', key: `split-${i}` });
+          cells.push({ type: 'split', key: `split-${i}`, tick: event.tick });
         }
         if (event.note) {
           cells.push({
@@ -76,6 +77,7 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
             instrument: event.note.instrument,
             block: event.note.block,
             key: `note-${i}`,
+            tick: event.tick,
           });
         }
       });
