@@ -146,11 +146,33 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
         if (cell.type === 'empty') {
           continue;
         } else if (cell.type === 'repeater') {
-          ctx.fillStyle = '#e6b800';
+          // Draw gray background
+          ctx.fillStyle = '#b8b8b8';
           ctx.fillRect(x, y, cs, cs);
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 16px sans-serif';
-          ctx.fillText(String(cell.ticks), x + cs / 2, y + cs / 2);
+          ctx.fillStyle = '#e7e7e7';
+          ctx.fillRect(x + 2, y + 2, cs - 4, cs - 4);
+
+          // Draw red horizontal line in the middle
+          ctx.strokeStyle = '#b71c1c';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(x + 2, y + cs - 4);
+          ctx.lineTo(x + cs - 2, y + cs - 4);
+          ctx.stroke();
+
+          // Draw red square near top right corner
+          ctx.fillStyle = '#b71c1c';
+          ctx.fillRect(x + cs - 10, y + cs - 10, 6, 6);
+
+          // Draw red square near bottom left corner
+          ctx.fillRect(x + 4, y + cs - 10, 6, 6);
+
+          // Draw ticks number in white, centered
+          ctx.fillStyle = '#000';
+          ctx.font = '600 16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(cell.ticks), Math.round(x + cs / 2), Math.round(y + cs / 2));
         } else if (cell.type === 'dust') {
           // Draw a horizontal red line (dust)
           ctx.strokeStyle = '#b71c1c';
@@ -179,7 +201,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
             : '#8bc34a';
           ctx.fillRect(x, y, cs, cs);
           ctx.fillStyle = '#222';
-          ctx.font = 'bold 15px sans-serif';
+          ctx.font = '600 15px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           // Support both cell.note and cell.event.note for compatibility

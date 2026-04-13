@@ -7,8 +7,9 @@ import Select from '@mui/material/Select';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import HowToWireTutorial from './HowToWireTutorial';
 import SchematicGrid from './SchematicGrid';
-import { blockColor, blockLabel } from './schematicData';
+import { blockLabel } from './schematicData';
 
+import { supportColorByBlock } from '@constants';
 import type { TrackEvent, TracksByInstrumentLane } from '../../midi/trackEvents';
 
 interface SchematicPanelProps {
@@ -179,7 +180,7 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
 
             {/* Legend */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              {Object.entries(blockColor).map(([blockId, color]) => (
+              {Object.entries(supportColorByBlock).map(([blockId, color]) => (
                 <Box key={blockId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <span
                     style={{
