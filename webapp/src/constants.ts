@@ -23,6 +23,11 @@ export const instrumentByBlock: Record<string, string> = {
   'minecraft:dirt': 'harp',
 };
 
+export const blockByInstrument = (instrument: string): string => {
+  const block = Object.entries(instrumentByBlock).find(([_, inst]) => inst === instrument)?.[0];
+  return block ?? defaultInstrumentBlock;
+};
+
 export const blockByPatchId: Record<number, string> = {
   2: 'minecraft:glowstone',
   4: 'minecraft:glowstone',

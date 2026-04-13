@@ -1,5 +1,5 @@
 import ErrorBoundary from '@components/common/ErrorBoundary';
-import { minecraftBlockToBlock, supportColorByBlock } from '@constants';
+import { blockByInstrument, minecraftBlockToBlock, supportColorByBlock } from '@constants';
 import Box from '@mui/material/Box';
 // Tooltip info type
 interface NoteTooltipInfo {
@@ -61,15 +61,21 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
   let labelWidth = 80;
   if (ctxForLabel && instruments.length > 0) {
     ctxForLabel.font = '600 15px sans-serif';
+
     const maxLabel = instruments
-      .map((inst) => inst?.title ?? '')
+      .map((inst) => {
+        const instrument = inst?.title.split(' ')[0] ?? '';
+        const lane = inst?.title.split(' ')[2] ?? '';
+        const block = blockLabel(blockByInstrument(instrument));
+        return `${instrument} (${block}) lane ${lane}`;
+      })
       .reduce((a, b) => (a.length > b.length ? a : b), '');
     const measured = ctxForLabel.measureText(maxLabel);
     labelWidth = Math.ceil(measured.width) + 24; // 24px padding for left/right
   }
   const cellGap = 2;
   const fullGridWidth = labelWidth + columnCount * (cs + cellGap);
-  const canvasWidth = width > 0 ? width - cs : fullGridWidth - cs;
+  const canvasWidth = width > 0 ? width - cs * 4 : fullGridWidth - cs * 4;
   // Add one row for tick row
   const canvasHeight = Math.min((rowCount + 1) * (cs + cellGap), 800);
 
@@ -96,6 +102,31 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    // Draw gridlines (vertical and horizontal)
+    ctx.save();
+    ctx.strokeStyle = '#a1a1a1';
+    ctx.lineWidth = 1;
+    // Vertical gridlines
+    for (let colIdx = 0; colIdx <= renderColumnCount; ++colIdx) {
+      const x = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
+      if (x < labelWidth) continue;
+      if (x > canvasWidth) break;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvasHeight);
+      ctx.stroke();
+    }
+    // Horizontal gridlines
+    for (let rowIdx = 0; rowIdx <= rowCount + 1; ++rowIdx) {
+      const y = rowIdx * (cs + cellGap);
+      if (y > canvasHeight) break;
+      ctx.beginPath();
+      ctx.moveTo(labelWidth, y);
+      ctx.lineTo(canvasWidth, y);
+      ctx.stroke();
+    }
+    ctx.restore();
 
     // Draw tick row at the top
     ctx.font = 'bold 15px sans-serif';
@@ -129,7 +160,8 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
       // Draw label aligned left, with 8px left padding
       const instrument = instruments[rowIdx]?.title.split(' ')[0] ?? '';
       const lane = instruments[rowIdx]?.title.split(' ')[2] ?? '';
-      ctx.fillText(`${instrument} lane ${lane}`, 8, y + cs / 2);
+      const block = blockLabel(blockByInstrument(instrument));
+      ctx.fillText(`${instrument} (${block}) lane ${lane}`, 8, y + cs / 2);
 
       // Draw cells
       const row = visibleInstrumentRows[rowIdx];
