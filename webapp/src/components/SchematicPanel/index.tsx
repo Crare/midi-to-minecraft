@@ -36,41 +36,18 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
   const parentWidth = useContainerWidth(panelRef);
   // console.log('SchematicPanel parentWidth (CollapsiblePanel wrapper)', parentWidth);
 
-  // Utility: convert TracksByInstrumentLane[] to schematic instrument objects with .cells
+  // New: Directly use the new tick-major, column-by-column schematic data
   function convertTracksToSchematicInstruments(tracks: TracksByInstrumentLane[]): any[] {
-    // TODO: i think we can get rid of this conversion, because the tracks are already in the right format for schematic rendering (just need to update SchematicGrid to handle both .events and .cells formats). For now, this is a quick way to reuse the existing SchematicGrid without refactoring it.
     if (!Array.isArray(tracks)) return [];
-    return tracks.map((track, idx) => {
-      // Convert InstrumentLaneEvent[] to .cells array for schematic rendering
-      const cells: {
-        type: string;
-        ticks?: number;
-        note?: number;
-        pitch?: string;
-        instrument?: string;
-        block?: string;
-        key: string;
-        tick: number;
-      }[] = [];
-      track.events.forEach((event, i) => {
-        if (event.repeaterTicks) {
-          // Add one repeater cell for each event.repeaterTicks.
-          let ticks = event.repeaterTicks;
-          const t = Math.min(ticks, 4);
-          cells.push({ type: 'repeater', ticks: t, key: `rep-${i}-${t}`, tick: event.tick });
-          ticks -= t;
-        }
-        if (event.emptySpace) {
-          cells.push({ type: 'empty', key: `empty-${i}`, tick: event.tick });
-        }
-        if (event.redstone) {
-          cells.push({ type: 'dust', key: `dust-${i}`, tick: event.tick });
-        }
-        if (event.split) {
-          cells.push({ type: 'split', key: `split-${i}`, tick: event.tick });
-        }
-        if (event.note) {
-          cells.push({
+    return tracks.map((track) => ({
+      title: `${track.instrument} lane ${track.lane}`,
+      instrument: track.instrument,
+      lane: track.lane,
+      // Each event is already a cell for a tick
+      cells: track.events.map((event, i) => {
+        // Map InstrumentLaneEvent to cell for rendering
+        if (event.type === 'note' && event.note) {
+          return {
             type: 'note',
             note: event.note.note,
             pitch: event.note.pitch,
@@ -78,16 +55,41 @@ export default function SchematicPanel({ trackEvents, busy }: SchematicPanelProp
             block: event.note.block,
             key: `note-${i}`,
             tick: event.tick,
-          });
+          };
+        } else if (event.type === 'repeater') {
+          return {
+            type: 'repeater',
+            repeaterTicks: event.repeaterTicks ?? 1,
+            key: `rep-${i}`,
+            tick: event.tick,
+          };
+        } else if (event.type === 'empty') {
+          return {
+            type: 'empty',
+            key: `empty-${i}`,
+            tick: event.tick,
+          };
+        } else if (event.type === 'dust') {
+          return {
+            type: 'dust',
+            key: `dust-${i}`,
+            tick: event.tick,
+          };
+        } else if (event.type === 'split') {
+          return {
+            type: 'split',
+            key: `split-${i}`,
+            tick: event.tick,
+          };
         }
-      });
-      return {
-        title: `${track.instrument} lane ${track.lane}`,
-        instrument: track.instrument,
-        lane: track.lane,
-        cells,
-      };
-    });
+        // Fallback for unknown types
+        return {
+          type: event.type,
+          key: `cell-${i}`,
+          tick: event.tick,
+        };
+      }),
+    }));
   }
 
   // Accept both legacy TrackEvent[] and new TracksByInstrumentLane[]

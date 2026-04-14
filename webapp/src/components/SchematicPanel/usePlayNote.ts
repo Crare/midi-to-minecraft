@@ -1,7 +1,7 @@
 import { playPlacementSound } from '../../audio/noteblockAudio';
 
 export function playNoteCell(cell: any) {
-  console.log('playNoteCell', { cell: cell });
+  // console.log('playNoteCell', { cell: cell });
   if (!cell || cell.type !== 'note') return;
   // Use cell.note for note value, instrument from row
   playPlacementSound({

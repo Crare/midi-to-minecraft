@@ -25,7 +25,8 @@ interface SchematicGridProps {
 
 interface GridCell {
   type: string;
-  ticks?: number;
+  tick: number;
+  repeaterTicks?: number;
   note?: number;
   pitch?: string;
   instrument?: string;
@@ -143,7 +144,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
       ctx.fillStyle = '#e0e0e0';
       ctx.fillRect(x, 0, cs, cs);
       ctx.fillStyle = '#444';
-      const tickVal = cell && typeof cell.ticks !== 'undefined' ? cell.ticks : '';
+      const tickVal = cell && typeof cell.tick !== 'undefined' ? cell.tick : '';
       ctx.fillText(String(tickVal), Math.round(x + cs / 2), Math.round(cs / 2));
     }
 
@@ -201,7 +202,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
           ctx.font = '600 16px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(String(cell.ticks), Math.round(x + cs / 2), Math.round(y + cs / 2));
+          ctx.fillText(String(cell.repeaterTicks), Math.round(x + cs / 2), Math.round(y + cs / 2));
         } else if (cell.type === 'dust') {
           // Draw a horizontal red line (dust)
           ctx.strokeStyle = '#b71c1c';
@@ -316,7 +317,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
               // remove "minecraft." prefix for readability
               const block = cell.block ? blockLabel(cell.block) : '?';
               const uses = cell.note ?? 0;
-              const tick = cell.ticks ?? '?';
+              const tick = cell.tick ?? '?';
               return {
                 x: mouseX,
                 y: mouseY,
@@ -330,8 +331,8 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
               const instrument = instruments[rowIdx]?.title.split(' ')[0] ?? '';
               const lane = instruments[rowIdx]?.title.split(' ')[2] ?? '';
               const block = 'repeater';
-              const uses = cell.ticks;
-              const tick = cell.ticks ?? '?';
+              const uses = cell.repeaterTicks;
+              const tick = cell.tick ?? '?';
               return {
                 x: mouseX,
                 y: mouseY,

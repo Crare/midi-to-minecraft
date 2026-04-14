@@ -1,4 +1,4 @@
-import { supportColorByBlock } from '@constants';
+import { minecraftBlockToBlock, supportColorByBlock } from '@constants';
 
 export function blockColorFor(blockId) {
   return supportColorByBlock[minecraftBlockToBlock(blockId)] || '#8a8a8a';

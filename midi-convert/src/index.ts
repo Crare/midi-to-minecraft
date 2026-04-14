@@ -1,10 +1,10 @@
-import { read } from 'midifile-ts';
-import fs from 'fs';
-import path from 'path';
 import { Command } from 'commander';
+import fs from 'fs';
+import { read } from 'midifile-ts';
+import path from 'path';
 
-import getBlockPallette from './instrument-blocks.js';
 import generateBlockSequences from './generate-block-sequence.js';
+import getBlockPallette from './instrument-blocks.js';
 
 const program = new Command();
 program
