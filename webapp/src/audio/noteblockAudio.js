@@ -222,6 +222,7 @@ function minecraftFrequency(note) {
 
 function playTonalSound(context, placement) {
   const profile = tonalProfiles[placement.instrument] || tonalProfiles.harp;
+  // console.log('using tonal profile for instrument:', placement.instrument, profile);
   const { gainNode, stopAt } = createEnvelope(
     context,
     context.destination,
@@ -341,12 +342,24 @@ export async function playPlacementSound(placement) {
   if (!placement) return;
 
   const context = await prepareAudioPlayback();
+  // console.log('context state:', context.state, 'for placement:', placement);
 
-  if (placement.pitch === undefined) {
+  if (
+    placement.pitch === undefined ||
+    placement.instrument === 'basedrum' ||
+    placement.instrument === 'snare' ||
+    placement.instrument === 'hat' ||
+    placement.instrument === 'cow_bell'
+  ) {
+    // console.log(
+    //   'pitch is undefined, playing percussion sound for instrument:',
+    //   placement.instrument,
+    // );
     playPercussionSound(context, placement.instrument);
     return;
   }
 
+  // console.log('playing tonal sound for instrument:', placement.instrument, 'note:', placement.note);
   playTonalSound(context, placement);
 }
 

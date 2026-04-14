@@ -6,8 +6,8 @@ interface NoteTooltipInfo {
   x: number;
   y: number;
   block: string;
-  uses: number;
-  tick: number;
+  uses: number | undefined;
+  tick: number | string;
   instrument: string;
   lane: string;
 }
@@ -15,6 +15,7 @@ interface NoteTooltipInfo {
 import { useEffect, useRef, useState } from 'react';
 import { InstrumentGrid } from '.';
 import { blockLabel } from './schematicData';
+import { playNoteCell } from './usePlayNote';
 
 interface SchematicGridProps {
   grid?: InstrumentGrid;
@@ -75,7 +76,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
   }
   const cellGap = 2;
   const fullGridWidth = labelWidth + columnCount * (cs + cellGap);
-  const canvasWidth = width > 0 ? width - cs * 4 : fullGridWidth - cs * 4;
+  const canvasWidth = width > 0 ? width - cs * 2 : fullGridWidth - cs * 2;
   // Add one row for tick row
   const canvasHeight = Math.min((rowCount + 1) * (cs + cellGap), 800);
 
@@ -142,7 +143,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
       ctx.fillStyle = '#e0e0e0';
       ctx.fillRect(x, 0, cs, cs);
       ctx.fillStyle = '#444';
-      const tickVal = cell && typeof cell.tick !== 'undefined' ? cell.tick : '';
+      const tickVal = cell && typeof cell.ticks !== 'undefined' ? cell.ticks : '';
       ctx.fillText(String(tickVal), Math.round(x + cs / 2), Math.round(cs / 2));
     }
 
@@ -315,7 +316,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
               // remove "minecraft." prefix for readability
               const block = cell.block ? blockLabel(cell.block) : '?';
               const uses = cell.note ?? 0;
-              const tick = cell.tick ?? '?';
+              const tick = cell.ticks ?? '?';
               return {
                 x: mouseX,
                 y: mouseY,
@@ -330,7 +331,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
               const lane = instruments[rowIdx]?.title.split(' ')[2] ?? '';
               const block = 'repeater';
               const uses = cell.ticks;
-              const tick = cell.tick ?? '?';
+              const tick = cell.ticks ?? '?';
               return {
                 x: mouseX,
                 y: mouseY,
@@ -355,6 +356,34 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
   };
   const handleCanvasMouseLeave = () => {
     setTooltip(null);
+  };
+
+  // Play note on click
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Only play if not dragging
+    if (isDragging) return;
+    // Find cell under mouse
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    let yCursor = cs + cellGap; // skip tick row
+    for (let rowIdx = 0; rowIdx < rowCount; ++rowIdx) {
+      if (y >= yCursor && y < yCursor + cs) {
+        for (let colIdx = 0; colIdx < visibleInstrumentRows[rowIdx].length; ++colIdx) {
+          const cellX = labelWidth + colIdx * (cs + cellGap) + pixelOffset;
+          if (x >= cellX && x < cellX + cs) {
+            const cell = visibleInstrumentRows[rowIdx][colIdx];
+            if (cell && cell.type === 'note') {
+              playNoteCell(cell);
+              return;
+            }
+          }
+        }
+      }
+      yCursor += cs + cellGap;
+    }
   };
 
   return (
@@ -393,6 +422,7 @@ export default function SchematicGrid({ grid, cellSize, width }: SchematicGridPr
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
+              onClick={handleCanvasClick}
             />
             {tooltip && (
               <div
