@@ -387,7 +387,7 @@ export function drawSchematic(
           if (cell?.kind === "repeater") {
             drawRepeater(ctx, cx, sy, cs, cell.ticks);
             cellBorder(ctx, cx, sy, cs);
-          } else if (!row.row.isSub) {
+          } else if (cell?.kind === "dust" || (!row.row.isSub && !grid.buildMode)) {
             drawDust(ctx, cx, sy, cs);
           } else {
             cellBorder(ctx, cx, sy, cs);

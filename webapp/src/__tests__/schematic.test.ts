@@ -11,6 +11,7 @@ import {
   detectBranches,
   getUseCount,
   splitIntoSubLanes,
+  toMinecraftBuildGrid,
 } from "../components/SchematicPanel/schematicData";
 import { computeLayout, hitTest, HEADER_H } from "../components/SchematicPanel/canvasSchematic";
 import type { NoteEvent } from "../types";
@@ -119,5 +120,26 @@ describe("schematic helpers", () => {
   it("returns an empty grid for no events", () => {
     expect(buildTickGrid([])).toEqual({ instruments: [], anchors: [] });
     expect(computeSchematicDimensions({ instruments: [], anchors: [] })).toEqual({ x: 0, z: 0, y: 3 });
+  });
+
+  it("builds a Minecraft-accurate grid with gap rows and extra dust", () => {
+    const ev = (instrument: string, note: number): NoteEvent => ({
+      time: 0.5, endTime: 1, block: "minecraft:dirt", pitch: "C", note, instrument, trackIndex: 0, trackName: instrument,
+    });
+    const base = buildTickGrid([
+      { title: "harp", events: [ev("harp", 1), ev("harp", 3)] },
+      { title: "bass", events: [ev("bass", 2)] },
+    ] as never);
+    const built = toMinecraftBuildGrid(base);
+    expect(built.buildMode).toBe(true);
+    expect(built.instruments[0].rows.map((r) => !!r.isGap)).toEqual([false, true, false, true]);
+    expect(built.instruments[1].rows).toHaveLength(1);
+    const gap = built.instruments[0].rows[1];
+    const splitIdx = base.anchors.findIndex((a) => a.kind === "split");
+    expect(gap.anchorCells[splitIdx]).toMatchObject({ kind: "split-pass", connects: { up: true, down: true } });
+    built.instruments.flatMap((i) => i.rows).filter((r) => !r.isGap && (!r.isSub || r.anchorCells[splitIdx].kind === "split-branch")).forEach((r) => {
+      expect(r.segments[splitIdx + 1][0]).toEqual({ kind: "dust" });
+    });
+    expect(computeSchematicDimensions(built).z).toBe(5);
   });
 });

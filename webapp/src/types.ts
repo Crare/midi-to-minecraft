@@ -96,6 +96,7 @@ export interface GridRow {
   isSub: boolean;
   segments: SegmentCell[][];
   anchorCells: AnchorCell[];
+  isGap?: boolean;
 }
 
 export interface GridInstrument {
@@ -110,6 +111,7 @@ export interface GridInstrument {
 export interface TickGrid {
   instruments: GridInstrument[];
   anchors: GridAnchor[];
+  buildMode?: boolean;
 }
 
 // ── Canvas renderer ─────────────────────────────────────────────────────────

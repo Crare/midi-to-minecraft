@@ -16,11 +16,14 @@ import {
   buildTickGrid,
   computeRawResources,
   computeSchematicDimensions,
-  computeTickGridBlockCounts
+  computeTickGridBlockCounts,
+  toMinecraftBuildGrid
 } from "./schematicData";
 import SchematicCanvas from "./SchematicCanvas";
 import { buildSchematicWorkbook } from "./exportExcel";
 import { buildSchematicCsv, buildSchematicOds } from "./exportSpreadsheet";
+
+type LayoutMode = "schematic" | "compact" | "minecraft";
 
 export default function SchematicPanel({
   trackEvents
@@ -30,12 +33,14 @@ export default function SchematicPanel({
   const [open, setOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
 
-  const [compact, setCompact] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("minecraft");
 
-  const grid = useMemo(
-    () => (compact ? buildCompactGrid(trackEvents) : buildTickGrid(trackEvents)),
-    [trackEvents, compact]
-  );
+  const fullGrid = useMemo(() => buildTickGrid(trackEvents), [trackEvents]);
+  const grid = useMemo(() => {
+    if (layoutMode === "schematic") return fullGrid;
+    if (layoutMode === "minecraft") return toMinecraftBuildGrid(fullGrid);
+    return toMinecraftBuildGrid(buildCompactGrid(trackEvents));
+  }, [trackEvents, fullGrid, layoutMode]);
   const totalNotes = useMemo(
     () =>
       grid.instruments.reduce(
@@ -52,8 +57,8 @@ export default function SchematicPanel({
     [grid]
   );
   const totalRows = useMemo(
-    () => grid.instruments.reduce((s, inst) => s + inst.rows.length, 0),
-    [grid]
+    () => fullGrid.instruments.reduce((s, inst) => s + inst.rows.length, 0),
+    [fullGrid]
   );
 
   const totalBlockCounts = useMemo(() => {
@@ -114,25 +119,28 @@ export default function SchematicPanel({
             <option value={48}>XL (48px)</option>
           </select>
         </label>
-        <label className="option-row">
-          <input
-            type="checkbox"
-            checked={compact}
-            onChange={(e) => setCompact(e.target.checked)}
-          />
-          <span>Compact view (no ticks, minimal redstone dust)</span>
+        <label className="option-row option-row-stacked">
+          <span>Schematic build view</span>
+          <select
+            value={layoutMode}
+            onChange={(e) => setLayoutMode(e.target.value as LayoutMode)}
+          >
+            <option value="schematic">Classic</option>
+            <option value="compact">Compact build (no ticks, minimal padding)</option>
+            <option value="minecraft">Full Minecraft build</option>
+          </select>
         </label>
         <div className="schematic-export" role="group" aria-label="Export schematic">
           <button
             type="button"
-            onClick={() => void exportAs("schematic.xlsx", () => buildSchematicWorkbook(grid))}
+            onClick={() => void exportAs("schematic.xlsx", () => buildSchematicWorkbook(fullGrid))}
             disabled={grid.instruments.length === 0}
           >
             Export as Excel (.xlsx)
           </button>
           <button
             type="button"
-            onClick={() => void exportAs("schematic.ods", () => buildSchematicOds(grid))}
+            onClick={() => void exportAs("schematic.ods", () => buildSchematicOds(fullGrid))}
             disabled={grid.instruments.length === 0}
           >
             Export as OpenDocument (.ods)
@@ -142,7 +150,7 @@ export default function SchematicPanel({
             onClick={() =>
               void exportAs(
                 "schematic.csv",
-                () => new Blob([buildSchematicCsv(grid)], { type: "text/csv;charset=utf-8" })
+                () => new Blob([buildSchematicCsv(fullGrid)], { type: "text/csv;charset=utf-8" })
               )
             }
             disabled={grid.instruments.length === 0}
@@ -158,6 +166,9 @@ export default function SchematicPanel({
       ) : null}
 
       <p className="hint output-summary">
+        {layoutMode !== "schematic"
+          ? "Build view: rows are separated by an empty block row so neighbouring redstone does not connect and vertical rails pass through that row, and an extra redstone dust follows each rail so it powers its note block. "
+          : ""}
         Top-down schematic. Background color = instrument block. Each repeater
         shows its individual delay setting (1–4 t). Tracks starting later
         include leading repeaters. Harmonics are connected by a vertical
@@ -278,9 +289,16 @@ export default function SchematicPanel({
               <figure className="schematic-tutorial-figure">
                 <img
                   src={`${import.meta.env.BASE_URL}assets/example_schematic.png`}
-                  alt="Example schematic view"
+                  alt="Example schematic in the classic build view"
                 />
-                <figcaption>Schematic view (top-down)</figcaption>
+                <figcaption>Classic build view (top-down)</figcaption>
+              </figure>
+              <figure className="schematic-tutorial-figure">
+                <img
+                  src={`${import.meta.env.BASE_URL}assets/example_schematic_minecraft.png`}
+                  alt="Example schematic in the full Minecraft build view"
+                />
+                <figcaption>Full Minecraft build view (top-down)</figcaption>
               </figure>
               <figure className="schematic-tutorial-figure">
                 <img

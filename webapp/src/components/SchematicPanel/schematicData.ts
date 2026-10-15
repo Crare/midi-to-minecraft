@@ -584,6 +584,51 @@ export function anchorsOf(grid: TickGrid, inst: GridInstrument) {
   return inst.anchors ?? grid.anchors;
 }
 
+// Convert the logical grid into how it must really be built in Minecraft.
+// Redstone dust connects to any adjacent dust and only powers a note block it points at, so:
+//   - a gap row separates every pair of rows; the vertical bus runs through it with dust
+//   - an extra dust follows each split column so the branch points into its note block
+export function toMinecraftBuildGrid(grid: TickGrid): TickGrid {
+  const pointsRight = (cell: AnchorCell | undefined) =>
+    cell?.kind === 'split-branch' || cell?.kind === 'split-pass' ? !!cell.connects.right : false;
+
+  const withExtraDust = (row: GridRow, anchors: GridAnchor[]): GridRow => {
+    const segments = row.segments.map((seg) => [...seg]);
+    row.anchorCells.forEach((cell, ai) => {
+      if (anchors[ai]?.kind !== 'split') return;
+      if (row.isSub && !pointsRight(cell)) return;
+      segments[ai + 1] = [{ kind: 'dust' }, ...(segments[ai + 1] ?? [])];
+    });
+    return { ...row, segments };
+  };
+
+  const gapRow = (id: string, above: GridRow | null, anchors: GridAnchor[]): GridRow => ({
+    id,
+    isSub: true,
+    isGap: true,
+    segments: anchors.length === 0 ? [] : [...Array(anchors.length + 1)].map(() => []),
+    anchorCells: anchors.map((_, ai): AnchorCell => {
+      const cell = above?.anchorCells[ai];
+      const bus = anchors[ai].kind === 'split' && cell?.kind === 'split-branch' && cell.connects.down;
+      return bus
+        ? { kind: 'split-pass', connects: { left: false, right: false, up: true, down: true } }
+        : { kind: 'inactive' };
+    })
+  });
+
+  const instruments = grid.instruments.map((inst, ii): GridInstrument => {
+    const anchors = anchorsOf(grid, inst);
+    const rows: GridRow[] = [];
+    inst.rows.forEach((row, ri) => {
+      rows.push(withExtraDust(row, anchors));
+      if (ri < inst.rows.length - 1) rows.push(gapRow(`${inst.id}-gap-${ri}`, row, anchors));
+    });
+    if (ii < grid.instruments.length - 1) rows.push(gapRow(`${inst.id}-gap-end`, null, anchors));
+    return { ...inst, rows };
+  });
+  return { instruments, anchors: grid.anchors, buildMode: true };
+}
+
 // Compute the minimum real-world Minecraft block dimensions for the schematic.
 //
 // Layout in Minecraft space:
@@ -626,6 +671,10 @@ export function computeTickGridBlockCounts(grid: TickGrid) {
   grid.instruments.forEach((inst) => {
     inst.rows.forEach((row) => {
       row.anchorCells.forEach((cell) => {
+        if (grid.buildMode && cell.kind !== 'note' && cell.kind !== 'inactive') {
+          const c = cell.connects;
+          if (!row.isSub || c.left || c.right || c.up || c.down) dust++;
+        }
         if (cell.kind === 'note' && cell.note) {
           noteblocks++;
           const b = cell.note.block ?? inst.block;
@@ -640,11 +689,13 @@ export function computeTickGridBlockCounts(grid: TickGrid) {
           else if (cell.kind === 'dust') dust++;
         });
       });
-      dust++; // connector dust per row
+      if (!row.isGap) dust++; // connector dust per row
     });
     // Each split anchor adds vertical dust for all rows of the instrument.
-    const splitCount = anchorsOf(grid, inst).filter((a) => a.kind === 'split').length;
-    dust += splitCount * inst.rows.length;
+    if (!grid.buildMode) {
+      const splitCount = anchorsOf(grid, inst).filter((a) => a.kind === 'split').length;
+      dust += splitCount * inst.rows.length;
+    }
   });
   return { noteblocks, repeaters, dust, supportBlocks: noteblocks, supportMap };
 }
