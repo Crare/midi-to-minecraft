@@ -18,6 +18,7 @@ import {
   computeTickGridBlockCounts
 } from "./schematicData";
 import SchematicCanvas from "./SchematicCanvas";
+import { buildSchematicWorkbook } from "./exportExcel";
 
 export default function SchematicPanel({
   trackEvents
@@ -56,6 +57,22 @@ export default function SchematicPanel({
 
   const dimensions = useMemo(() => computeSchematicDimensions(grid), [grid]);
   const hasData = trackEvents.length > 0;
+  const [exportError, setExportError] = useState("");
+
+  async function exportExcel() {
+    setExportError("");
+    try {
+      const blob = await buildSchematicWorkbook(grid);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "schematic.xlsx";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "Excel export failed.");
+    }
+  }
 
   useEffect(() => {
     if (hasData) setOpen(true);
@@ -91,7 +108,19 @@ export default function SchematicPanel({
             <option value={48}>XL (48px)</option>
           </select>
         </label>
+        <button
+          type="button"
+          onClick={() => void exportExcel()}
+          disabled={grid.instruments.length === 0}
+        >
+          Export as Excel (.xlsx)
+        </button>
       </div>
+      {exportError ? (
+        <p className="hint" role="alert">
+          {exportError}
+        </p>
+      ) : null}
 
       <p className="hint output-summary">
         Top-down schematic. Background color = instrument block. Each repeater
