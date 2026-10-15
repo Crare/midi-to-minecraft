@@ -25,7 +25,6 @@ export default function SchematicPanel({
   trackEvents: TrackEvents[];
 }) {
   const [open, setOpen] = useState(false);
-  const [tutorialOpen, setTutorialOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
 
   const grid = useMemo(() => buildTickGrid(trackEvents), [trackEvents]);
@@ -106,57 +105,7 @@ export default function SchematicPanel({
         last-placed position.
       </p>
 
-      {/* Tutorial */}
-      <div className="schematic-tutorial">
-        <button
-          type="button"
-          className="schematic-tutorial-toggle"
-          onClick={() => setTutorialOpen((o) => !o)}
-          aria-expanded={tutorialOpen}
-        >
-          <span className="schematic-tutorial-toggle-label">
-            How to wire it in Minecraft
-          </span>
-          <span className="schematic-tutorial-toggle-arrow">
-            {tutorialOpen ? "▲" : "▼"}
-          </span>
-        </button>
-        {tutorialOpen && (
-          <div className="schematic-tutorial-body">
-            <p className="schematic-tutorial-note">
-              <strong>Note:</strong> The schematic is not an exact
-              representation of how the redstone needs to be wired. It shows
-              only the timeline and repeater delays. Wiring multiple note blocks
-              to play at the same time requires more redstone, as shown in the
-              example pictures below.
-            </p>
-            <div className="schematic-tutorial-images">
-              <figure className="schematic-tutorial-figure">
-                <img
-                  src={`${import.meta.env.BASE_URL}assets/example_schematic.png`}
-                  alt="Example schematic view"
-                />
-                <figcaption>Schematic view (top-down)</figcaption>
-              </figure>
-              <figure className="schematic-tutorial-figure">
-                <img
-                  src={`${import.meta.env.BASE_URL}assets/example_minecraft1.png`}
-                  alt="Example Minecraft wiring 1"
-                />
-                <figcaption>In-game wiring example 1</figcaption>
-              </figure>
-              <figure className="schematic-tutorial-figure">
-                <img
-                  src={`${import.meta.env.BASE_URL}assets/example_minecraft2.png`}
-                  alt="Example Minecraft wiring 2"
-                />
-                <figcaption>In-game wiring example 2</figcaption>
-              </figure>
-            </div>
-          </div>
-        )}
-      </div>
-
+      <div className="schematic-info-row">
       {/* Block totals and raw resource summary */}
       {grid.instruments.length > 0 &&
         (() => {
@@ -250,6 +199,44 @@ export default function SchematicPanel({
             </div>
           );
         })()}
+      {/* Tutorial */}
+      <div className="schematic-tutorial">
+        <h3 className="schematic-totals-heading">How to wire it in Minecraft</h3>
+        <div className="schematic-tutorial-body">
+            <p className="schematic-tutorial-note">
+              <strong>Note:</strong> The schematic is not an exact
+              representation of how the redstone needs to be wired. It shows
+              only the timeline and repeater delays. Wiring multiple note blocks
+              to play at the same time requires more redstone, as shown in the
+              example pictures below.
+            </p>
+            <div className="schematic-tutorial-images">
+              <figure className="schematic-tutorial-figure">
+                <img
+                  src={`${import.meta.env.BASE_URL}assets/example_schematic.png`}
+                  alt="Example schematic view"
+                />
+                <figcaption>Schematic view (top-down)</figcaption>
+              </figure>
+              <figure className="schematic-tutorial-figure">
+                <img
+                  src={`${import.meta.env.BASE_URL}assets/example_minecraft1.png`}
+                  alt="Example Minecraft wiring 1"
+                />
+                <figcaption>In-game wiring example 1</figcaption>
+              </figure>
+              <figure className="schematic-tutorial-figure">
+                <img
+                  src={`${import.meta.env.BASE_URL}assets/example_minecraft2.png`}
+                  alt="Example Minecraft wiring 2"
+                />
+                <figcaption>In-game wiring example 2</figcaption>
+              </figure>
+            </div>
+        </div>
+      </div>
+
+      </div>
 
       {/* Legend */}
       <div className="schematic-legend">
