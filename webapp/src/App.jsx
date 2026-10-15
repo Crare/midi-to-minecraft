@@ -1,5 +1,5 @@
 import { Midi } from "@tonejs/midi";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { playSuccessJingle } from "./audio/noteblockAudio";
 import ExamplePanel from "./components/ExamplePanel";
 import JsonOutputPanel from "./components/JsonOutputPanel";
@@ -23,7 +23,14 @@ export default function App() {
   const [downloadFiles, setDownloadFiles] = useState([]);
   const [zipFilename, setZipFilename] = useState("output.zip");
 
-  const onConvertRequest = async ({ file, outputName, trimLeadingSilence }) => {
+  const exampleLoadedRef = useRef(false);
+
+  const onConvertRequest = async ({
+    file,
+    outputName,
+    trimLeadingSilence,
+    silent = false
+  }) => {
     if (!file || busy) return;
 
     try {
@@ -60,7 +67,8 @@ export default function App() {
       setStatus(
         `Converted ${sequences.length} track(s), ${totalNotes} notes total.`
       );
-      setTimeout(() => playSuccessJingle(), 2000);
+      if (!silent) setTimeout(() => playSuccessJingle(), 2000);
+      return true;
     } catch (error) {
       console.error(error);
       setStatus(`Conversion failed: ${error.message || String(error)}`);
@@ -68,6 +76,35 @@ export default function App() {
       setBusy(false);
     }
   };
+
+  // Load the bundled example so the visualization is playable right away.
+  useEffect(() => {
+    if (exampleLoadedRef.current) return;
+    exampleLoadedRef.current = true;
+
+    (async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.BASE_URL}assets/example.mid`
+        );
+        if (!response.ok) return;
+        const file = new File([await response.blob()], "ode-to-joy.mid", {
+          type: "audio/midi"
+        });
+        const ok = await onConvertRequest({
+          file,
+          outputName: "output.json",
+          trimLeadingSilence: true,
+          silent: true
+        });
+        if (ok) setStatus(
+          "Loaded example: Ode to Joy. Press play in the visualization, or choose your own MIDI file."
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    })();
+  }, []);
 
   return (
     <>
