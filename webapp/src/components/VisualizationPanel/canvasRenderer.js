@@ -5,6 +5,7 @@ export const LANE_PAD = 4;
 export const TIMELINE_ORIGIN = 6;
 export const GRID_UNITS = 4;
 export const MIN_LANE_HEIGHT = 44;
+export const NOTE_STACK_STEP = 10;
 
 const BASE_UNIT = 34;
 const noteblockSrc = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
@@ -87,16 +88,16 @@ export function computeLaneLayout({ laneCount, availableHeight, baseUnit = BASE_
   };
 }
 
+// Simultaneous notes are stacked from the top, each offset by at least NOTE_STACK_STEP
+// so every note's number stays readable. The last note is drawn on top and may be
+// clipped by the lane bottom.
 function placementRects(count, laneTop, laneHeight, cell, showSupport) {
   const overlap = Math.round((4 * cell) / BASE_UNIT);
   const fullHeight = showSupport ? 2 * cell - overlap : cell;
-  const innerHeight = laneHeight - 2 * LANE_PAD;
-  const bottom = laneTop + laneHeight - LANE_PAD;
-  const step =
-    count > 1 ? Math.min(fullHeight, Math.max(2, (innerHeight - fullHeight) / (count - 1))) : 0;
+  const top = laneTop + LANE_PAD;
 
   return Array.from({ length: count }, (_, index) => ({
-    y: bottom - fullHeight - (count - 1 - index) * step,
+    y: top + index * NOTE_STACK_STEP,
     height: fullHeight,
     overlap,
   }));
