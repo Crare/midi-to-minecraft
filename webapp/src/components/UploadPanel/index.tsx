@@ -25,6 +25,7 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
       <div className="control-row">
         <input
           type="file"
+          aria-label="MIDI file"
           accept=".mid,.midi,audio/midi,audio/x-midi"
           onChange={(event) => {
             const nextFile = event.target.files?.[0] || null;
@@ -63,7 +64,7 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
         />
         <span>Remove empty space at the start of the song</span>
       </label>
-      <p id="status" className={busy ? 'status-busy' : undefined}>
+      <p id="status" className={busy ? 'status-busy' : undefined} role="status" aria-live="polite">
         {busy ? <span className="spinner" aria-hidden="true" /> : null}
         <span>{status}</span>
       </p>

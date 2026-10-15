@@ -109,22 +109,27 @@ export default function App() {
 
   return (
     <>
+      <a className="skip-link" href="#main">Skip to main content</a>
       <Header />
 
-      <main>
-        <ExamplePanel />
+      <main id="main" tabIndex={-1}>
+        <div className="top-row">
+          <div className="top-row__left">
+            <UploadPanel
+              busy={busy}
+              status={status}
+              onFileSelected={(filename) => setStatus(`Selected: ${filename}`)}
+              onConvertRequest={onConvertRequest}
+            />
 
-        <UploadPanel
-          busy={busy}
-          status={status}
-          onFileSelected={(filename) => setStatus(`Selected: ${filename}`)}
-          onConvertRequest={onConvertRequest}
-        />
+            <JsonOutputPanel
+              downloadFiles={downloadFiles}
+              zipFilename={zipFilename}
+            />
+          </div>
 
-        <JsonOutputPanel
-          downloadFiles={downloadFiles}
-          zipFilename={zipFilename}
-        />
+          <ExamplePanel />
+        </div>
 
         <VisualizationPanel trackEvents={trackEvents} />
 

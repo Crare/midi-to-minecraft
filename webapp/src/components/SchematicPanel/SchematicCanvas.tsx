@@ -142,6 +142,29 @@ export default function SchematicCanvas({
     return hitTest({ grid, layout, scrollX, scrollY, x: p.x, y: p.y });
   }
 
+  function onKeyDown(e: React.KeyboardEvent<HTMLCanvasElement>) {
+    const { maxScrollX: mx, maxScrollY: my } = limitsRef.current;
+    const stepX = layout.cs * 3;
+    const pageY = Math.max(layout.cs, height - HEADER_H - layout.cs);
+    const move: Record<string, [number, number]> = {
+      ArrowRight: [stepX, 0],
+      ArrowLeft: [-stepX, 0],
+      ArrowDown: [0, layout.cs * 2],
+      ArrowUp: [0, -layout.cs * 2],
+      PageDown: [0, pageY],
+      PageUp: [0, -pageY],
+      Home: [-Infinity, 0],
+      End: [Infinity, 0],
+    };
+    const delta = move[e.key];
+    if (!delta) return;
+    e.preventDefault();
+    setScroll((s) => ({
+      x: clamp(s.x + delta[0], 0, mx),
+      y: clamp(s.y + delta[1], 0, my),
+    }));
+  }
+
   function onPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     if (e.button !== 0) return;
     panRef.current = {
@@ -262,7 +285,9 @@ export default function SchematicCanvas({
         }}
         onPointerLeave={() => setTooltip(null)}
         role="img"
-        aria-label="Top-down build schematic"
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        aria-label={`Top-down build schematic with ${grid.instruments.length} instrument(s): ${grid.instruments.map((i) => i.label).join(", ")}. Use arrow keys to scroll.`}
       />
       {showV && (
         <button

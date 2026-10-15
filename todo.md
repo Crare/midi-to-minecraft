@@ -3,9 +3,12 @@
 - github action to build and publish to crare.github.io/midi-to-minecraft
     - with audit and outdated checks
     - with tests run
-- tests
+- [x] tests (vitest, PRs #5, #6)
 
-- convert the app to typescript
+- [x] convert the app to typescript (PR #7)
+
+- [x] accessibility pass (WCAG 2.2 AA: contrast, focus, keyboard, screen reader) - on branch `style/card-layout`, not yet merged
+- [x] card layout: bigger text, uniform cards, upload/example row, example image fullscreen
 
 - optimize the app
 
