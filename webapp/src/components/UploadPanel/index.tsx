@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import CollapsiblePanel from '../CollapsiblePanel';
+import { getOutputPrefix } from '../../utils';
 
 export interface ConvertRequest {
   file: File;
@@ -11,15 +12,13 @@ export interface ConvertRequest {
 interface UploadPanelProps {
   busy: boolean;
   status: string;
-  outputName: string;
-  onFileSelected: (filename: string) => void;
+  onFileSelected: (filename: string) => string;
   onConvertRequest: (request: ConvertRequest) => unknown;
 }
 
 export default function UploadPanel({
   busy,
   status,
-  outputName,
   onFileSelected,
   onConvertRequest
 }: UploadPanelProps) {
@@ -36,7 +35,7 @@ export default function UploadPanel({
           onChange={(event) => {
             const nextFile = event.target.files?.[0] || null;
             if (nextFile) {
-              onFileSelected(nextFile.name);
+              const outputName = onFileSelected(nextFile.name) || getOutputPrefix(undefined, nextFile.name);
               onConvertRequest({ file: nextFile, outputName, trimLeadingSilence });
             }
           }}

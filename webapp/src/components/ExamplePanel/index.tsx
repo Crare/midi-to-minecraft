@@ -46,7 +46,7 @@ export default function ExamplePanel() {
   }, [active]);
 
   return (
-    <CollapsiblePanel title="Example Output" collapsible={false}>
+    <CollapsiblePanel title="Example" collapsible={false}>
       <div className="example-panel__layout">
         <p className="example-panel__description">
           Upload any MIDI file and convert it into a Minecraft note block sequence.

@@ -7,13 +7,12 @@ afterEach(cleanup);
 
 describe("UploadPanel", () => {
   it("converts the selected file with the current options", () => {
-    const onFileSelected = vi.fn();
+    const onFileSelected = vi.fn(() => "song");
     const onConvertRequest = vi.fn();
     render(
       <UploadPanel
         busy={false}
         status="Choose a MIDI file to begin."
-        outputName="song"
         onFileSelected={onFileSelected}
         onConvertRequest={onConvertRequest}
       />

@@ -140,8 +140,12 @@ export default function App() {
             <UploadPanel
               busy={busy}
               status={status}
-              outputName={outputName}
-              onFileSelected={(filename) => setStatus(`Selected: ${filename}`)}
+              onFileSelected={(filename) => {
+                setStatus(`Selected: ${filename}`);
+                const prefix = getOutputPrefix(undefined, filename);
+                setOutputName(prefix);
+                return prefix;
+              }}
               onConvertRequest={onConvertRequest}
             />
 
