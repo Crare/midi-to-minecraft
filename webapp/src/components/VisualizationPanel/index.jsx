@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { playPlacementSound, playPlacementSoundSync, prepareAudioPlayback } from '../../audio/noteblockAudio';
+import {
+  getAudioClock,
+  playPlacementSound,
+  playPlacementSoundSync,
+  prepareAudioPlayback,
+} from '../../audio/noteblockAudio';
 import CollapsiblePanel from '../CollapsiblePanel';
 import {
   LANE_GAP,
@@ -18,6 +23,10 @@ import {
   getMaxTrackTick,
   findFirstNoteIndexAtOrAfter,
 } from './visualizationData';
+
+const START_DELAY_S = 0.06;
+const SCHEDULE_AHEAD_S = 0.15;
+const SCHEDULER_INTERVAL_MS = 25;
 
 export default function VisualizationPanel({ trackEvents }) {
   const [tracksOpen, setTracksOpen] = useState(false);
@@ -63,6 +72,8 @@ export default function VisualizationPanel({ trackEvents }) {
   const playbackLastStateSyncMsRef = useRef(0);
   const playbackAnimationFrameRef = useRef(0);
   const playbackStartMsRef = useRef(0);
+  const playbackAudioStartRef = useRef(null);
+  const playbackSchedulerRef = useRef(0);
   const playbackStartTickRef = useRef(0);
 
   const visibleTracks = useMemo(
@@ -220,6 +231,10 @@ export default function VisualizationPanel({ trackEvents }) {
       window.cancelAnimationFrame(playbackAnimationFrameRef.current);
       playbackAnimationFrameRef.current = 0;
     }
+    if (playbackSchedulerRef.current) {
+      window.clearInterval(playbackSchedulerRef.current);
+      playbackSchedulerRef.current = 0;
+    }
   }
 
   function syncViewportToTick(nextTick, { follow = 'anchor' } = {}) {
@@ -280,7 +295,13 @@ export default function VisualizationPanel({ trackEvents }) {
     stopPlayback(clampedStartTick);
     await prepareAudioPlayback();
 
-    playbackStartMsRef.current = performance.now();
+    // Notes are booked on the audio clock a little ahead of time, so main-thread
+    // stalls can't delay or bunch them. The same clock drives the playhead.
+    const audioNow = getAudioClock();
+    const useAudioClock = audioNow !== null;
+    const audioStart = useAudioClock ? audioNow + START_DELAY_S : null;
+    playbackAudioStartRef.current = audioStart;
+    playbackStartMsRef.current = performance.now() + START_DELAY_S * 1000;
     playbackStartTickRef.current = clampedStartTick;
     playbackCursorRef.current = findFirstNoteIndexAtOrAfter(
       playbackNotesRef.current,
@@ -289,23 +310,38 @@ export default function VisualizationPanel({ trackEvents }) {
     playbackLastStateSyncMsRef.current = 0;
     setIsPlaying(true);
 
-    const animationStep = () => {
-      const elapsedTicks = (performance.now() - playbackStartMsRef.current) / redstoneTickDurationMs;
-      const nextTick = Math.min(
-        playbackEndTickRef.current + 1,
-        playbackStartTickRef.current + elapsedTicks
-      );
+    const tickDurationS = redstoneTickDurationMs / 1000;
+    const elapsedSeconds = () =>
+      useAudioClock
+        ? (getAudioClock() ?? audioStart) - audioStart
+        : (performance.now() - playbackStartMsRef.current) / 1000;
 
+    const scheduleNotes = () => {
+      const notes = playbackNotesRef.current;
+      const horizonTick =
+        playbackStartTickRef.current + (elapsedSeconds() + SCHEDULE_AHEAD_S) / tickDurationS;
       while (
-        playbackCursorRef.current < playbackNotesRef.current.length &&
-        playbackNotesRef.current[playbackCursorRef.current].startTick <= nextTick + 0.0001
+        playbackCursorRef.current < notes.length &&
+        notes[playbackCursorRef.current].startTick <= horizonTick + 0.0001
       ) {
-        const note = playbackNotesRef.current[playbackCursorRef.current];
+        const note = notes[playbackCursorRef.current];
         if (!mutedTracksRef.current.has(note.trackId)) {
-          playPlacementSoundSync(note);
+          const when = useAudioClock
+            ? audioStart + (note.startTick - playbackStartTickRef.current) * tickDurationS
+            : undefined;
+          playPlacementSoundSync(note, when);
         }
         playbackCursorRef.current += 1;
       }
+    };
+
+    const animationStep = () => {
+      const nextTick = Math.min(
+        playbackEndTickRef.current + 1,
+        playbackStartTickRef.current + Math.max(0, elapsedSeconds()) / tickDurationS
+      );
+
+      scheduleNotes();
 
       const now = performance.now();
       const shouldSyncState =
@@ -331,6 +367,8 @@ export default function VisualizationPanel({ trackEvents }) {
       playbackAnimationFrameRef.current = window.requestAnimationFrame(animationStep);
     };
 
+    scheduleNotes();
+    playbackSchedulerRef.current = window.setInterval(scheduleNotes, SCHEDULER_INTERVAL_MS);
     playbackAnimationFrameRef.current = window.requestAnimationFrame(animationStep);
   }
 

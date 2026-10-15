@@ -1,5 +1,6 @@
 let audioContext;
 let noiseBuffer;
+let masterBus;
 
 const tonalProfiles = {
   harp: {
@@ -180,6 +181,21 @@ export async function prepareAudioPlayback() {
   return context;
 }
 
+// All voices share one compressor so large chords and drum hits sum without clipping.
+function getMasterBus(context) {
+  if (!masterBus || masterBus.context !== context) {
+    const compressor = context.createDynamicsCompressor();
+    compressor.threshold.value = -18;
+    compressor.knee.value = 12;
+    compressor.ratio.value = 6;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.15;
+    compressor.connect(context.destination);
+    masterBus = compressor;
+  }
+  return masterBus;
+}
+
 function getNoiseBuffer(context) {
   if (noiseBuffer) return noiseBuffer;
 
@@ -194,8 +210,8 @@ function getNoiseBuffer(context) {
   return buffer;
 }
 
-function createEnvelope(context, destination, attack, decay, gainAmount) {
-  const now = context.currentTime;
+function createEnvelope(context, destination, attack, decay, gainAmount, when) {
+  const now = when ?? context.currentTime;
   const gainNode = context.createGain();
   gainNode.gain.setValueAtTime(0.0001, now);
   gainNode.gain.linearRampToValueAtTime(gainAmount, now + attack);
@@ -220,14 +236,15 @@ function minecraftFrequency(note) {
   return baseFrequency * 2 ** (note / 12);
 }
 
-function playTonalSound(context, placement) {
+function playTonalSound(context, placement, when = context.currentTime) {
   const profile = tonalProfiles[placement.instrument] || tonalProfiles.harp;
   const { gainNode, stopAt } = createEnvelope(
     context,
-    context.destination,
+    getMasterBus(context),
     profile.attack,
     profile.decay,
-    profile.gain
+    profile.gain,
+    when
   );
   const target = createOptionalFilter(context, gainNode, profile.filter);
   const baseFrequency = minecraftFrequency(placement.note || 0);
@@ -236,27 +253,27 @@ function playTonalSound(context, placement) {
     const oscillator = context.createOscillator();
     const partialGain = context.createGain();
     oscillator.type = partial.type;
-    oscillator.frequency.setValueAtTime(baseFrequency * partial.ratio, context.currentTime);
-    partialGain.gain.setValueAtTime(partial.gain, context.currentTime);
+    oscillator.frequency.setValueAtTime(baseFrequency * partial.ratio, when);
+    partialGain.gain.setValueAtTime(partial.gain, when);
     oscillator.connect(partialGain);
     partialGain.connect(target);
-    oscillator.start();
+    oscillator.start(when);
     oscillator.stop(stopAt);
   });
 }
 
-function playBasedrum(context) {
-  const { gainNode, stopAt } = createEnvelope(context, context.destination, 0.001, 0.28, 0.26);
+function playBasedrum(context, when = context.currentTime) {
+  const { gainNode, stopAt } = createEnvelope(context, getMasterBus(context), 0.001, 0.28, 0.26, when);
   const oscillator = context.createOscillator();
   oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(140, context.currentTime);
-  oscillator.frequency.exponentialRampToValueAtTime(48, context.currentTime + 0.18);
+  oscillator.frequency.setValueAtTime(140, when);
+  oscillator.frequency.exponentialRampToValueAtTime(48, when + 0.18);
   oscillator.connect(gainNode);
-  oscillator.start();
+  oscillator.start(when);
   oscillator.stop(stopAt);
 }
 
-function playNoiseBurst(context, options) {
+function playNoiseBurst(context, options, when = context.currentTime) {
   const source = context.createBufferSource();
   source.buffer = getNoiseBuffer(context);
   const filter = context.createBiquadFilter();
@@ -265,37 +282,38 @@ function playNoiseBurst(context, options) {
   filter.Q.value = options.q ?? 0.7;
   const { gainNode, stopAt } = createEnvelope(
     context,
-    context.destination,
+    getMasterBus(context),
     options.attack,
     options.decay,
-    options.gain
+    options.gain,
+    when
   );
 
   source.connect(filter);
   filter.connect(gainNode);
-  source.start();
+  source.start(when);
   source.stop(stopAt);
 }
 
-function playSnare(context) {
+function playSnare(context, when = context.currentTime) {
   playNoiseBurst(context, {
     filterType: 'highpass',
     frequency: 1200,
     attack: 0.001,
     decay: 0.18,
     gain: 0.18,
-  });
+  }, when);
 
-  const { gainNode, stopAt } = createEnvelope(context, context.destination, 0.001, 0.12, 0.08);
+  const { gainNode, stopAt } = createEnvelope(context, getMasterBus(context), 0.001, 0.12, 0.08, when);
   const oscillator = context.createOscillator();
   oscillator.type = 'triangle';
-  oscillator.frequency.setValueAtTime(180, context.currentTime);
+  oscillator.frequency.setValueAtTime(180, when);
   oscillator.connect(gainNode);
-  oscillator.start();
+  oscillator.start(when);
   oscillator.stop(stopAt);
 }
 
-function playHat(context) {
+function playHat(context, when = context.currentTime) {
   playNoiseBurst(context, {
     filterType: 'highpass',
     frequency: 5500,
@@ -303,37 +321,37 @@ function playHat(context) {
     attack: 0.001,
     decay: 0.08,
     gain: 0.1,
-  });
+  }, when);
 }
 
-function playCowBell(context) {
-  const { gainNode, stopAt } = createEnvelope(context, context.destination, 0.001, 0.25, 0.09);
+function playCowBell(context, when = context.currentTime) {
+  const { gainNode, stopAt } = createEnvelope(context, getMasterBus(context), 0.001, 0.25, 0.09, when);
   [540, 800].forEach((frequency) => {
     const oscillator = context.createOscillator();
     oscillator.type = 'square';
-    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+    oscillator.frequency.setValueAtTime(frequency, when);
     oscillator.connect(gainNode);
-    oscillator.start();
+    oscillator.start(when);
     oscillator.stop(stopAt);
   });
 }
 
-function playPercussionSound(context, instrument) {
+function playPercussionSound(context, instrument, when = context.currentTime) {
   switch (instrument) {
     case 'basedrum':
-      playBasedrum(context);
+      playBasedrum(context, when);
       break;
     case 'snare':
-      playSnare(context);
+      playSnare(context, when);
       break;
     case 'hat':
-      playHat(context);
+      playHat(context, when);
       break;
     case 'cow_bell':
-      playCowBell(context);
+      playCowBell(context, when);
       break;
     default:
-      playTonalSound(context, { instrument: 'harp', note: 0 });
+      playTonalSound(context, { instrument: 'harp', note: 0 }, when);
   }
 }
 
@@ -370,13 +388,21 @@ export async function playSuccessJingle() {
 
 // Synchronous version for the hot playback loop — skips async overhead.
 // Only fires if the AudioContext is already running (call prepareAudioPlayback once before loop).
-export function playPlacementSoundSync(placement) {
+export function playPlacementSoundSync(placement, when) {
   if (!placement || !audioContext || audioContext.state !== 'running') return;
 
+  // Never schedule in the past; that would just play late anyway.
+  const startAt = Math.max(when ?? 0, audioContext.currentTime);
+
   if (placement.pitch === undefined) {
-    playPercussionSound(audioContext, placement.instrument);
+    playPercussionSound(audioContext, placement.instrument, startAt);
     return;
   }
 
-  playTonalSound(audioContext, placement);
+  playTonalSound(audioContext, placement, startAt);
+}
+
+// Current time of the audio hardware clock in seconds (or null if unavailable).
+export function getAudioClock() {
+  return audioContext && audioContext.state === 'running' ? audioContext.currentTime : null;
 }
