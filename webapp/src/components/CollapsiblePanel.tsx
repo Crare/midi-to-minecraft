@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 
 interface CollapsiblePanelProps {
   title: ReactNode;
@@ -21,6 +21,7 @@ export default function CollapsiblePanel({
   className,
   children,
 }: CollapsiblePanelProps) {
+  const bodyId = useId();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
@@ -36,19 +37,22 @@ export default function CollapsiblePanel({
 
   return (
     <section className={`panel${className ? ` ${className}` : ''}`}>
-      <button
-        type="button"
-        className="panel-header panel-header-toggle"
-        onClick={toggle}
-        aria-expanded={open}
-        disabled={disabled}
-      >
-        <h2>{title}</h2>
-        <span className="panel-header-meta">
-          {meta !== undefined ? meta : (open ? 'Hide' : 'Show')}
-        </span>
-      </button>
-      {open ? <div className="panel-body">{children}</div> : null}
+      <h2 className="panel-heading">
+        <button
+          type="button"
+          className="panel-header panel-header-toggle"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-controls={bodyId}
+          aria-disabled={disabled || undefined}
+        >
+          <span className="panel-title">{title}</span>
+          <span className="panel-header-meta">
+            {meta !== undefined ? meta : (open ? 'Hide' : 'Show')}
+          </span>
+        </button>
+      </h2>
+      {open ? <div className="panel-body" id={bodyId}>{children}</div> : null}
     </section>
   );
 }

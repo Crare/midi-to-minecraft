@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import type {
   CanvasLane,
   CanvasOpts,
@@ -315,6 +315,37 @@ export default function VisualizationPanel({ trackEvents }: { trackEvents: Track
 
     if (draw) requestDraw();
   }
+
+  const onPlayheadKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    const step = event.shiftKey ? 10 : 1;
+    const current = Math.round(playheadTickRef.current);
+    let next: number | null = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowUp') next = current + step;
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') next = current - step;
+    else if (event.key === 'PageUp') next = current + 50;
+    else if (event.key === 'PageDown') next = current - 50;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = maxVisibleTick;
+    if (next === null) return;
+    event.preventDefault();
+    setPlayheadPosition(Math.min(maxVisibleTick, Math.max(0, next)), { syncState: true, syncScroll: true });
+  };
+
+  const onCanvasKeyDown = (event: ReactKeyboardEvent<HTMLCanvasElement>) => {
+    const page = Math.max(80, canvasWidth * 0.8);
+    const delta =
+      event.key === 'ArrowRight' ? 60
+      : event.key === 'ArrowLeft' ? -60
+      : event.key === 'PageDown' ? page
+      : event.key === 'PageUp' ? -page
+      : event.key === 'End' ? Infinity
+      : event.key === 'Home' ? -Infinity
+      : 0;
+    if (delta === 0) return;
+    event.preventDefault();
+    scrollLeftRef.current = Math.min(getMaxScrollLeft(), Math.max(0, scrollLeftRef.current + delta));
+    requestDraw();
+  };
 
   function stopPlayback(nextTick?: number) {
     clearPlaybackTimers();
@@ -728,7 +759,8 @@ export default function VisualizationPanel({ trackEvents }: { trackEvents: Track
                       title={mutedTracks.has(track.id) ? 'Unmute' : 'Mute'}
                       onClick={(e) => { e.stopPropagation(); toggleMuteCallbacks.get(track.id)?.(); }}
                       onPointerDown={(e) => e.stopPropagation()}
-                      aria-label={mutedTracks.has(track.id) ? 'Unmute track' : 'Mute track'}
+                      aria-label={`${mutedTracks.has(track.id) ? 'Unmute' : 'Mute'} ${track.title}`}
+                      aria-pressed={mutedTracks.has(track.id)}
                     >
                       <svg viewBox="0 0 16 16" aria-hidden="true">
                         {mutedTracks.has(track.id) ? (
@@ -757,7 +789,9 @@ export default function VisualizationPanel({ trackEvents }: { trackEvents: Track
                   ref={canvasRef}
                   className="track-canvas"
                   role="img"
-                  aria-label={`Track visualization with ${visibleTracks.length} lane(s). Drag to pan, click a note to hear it.`}
+                  tabIndex={0}
+                  onKeyDown={onCanvasKeyDown}
+                  aria-label={`Track visualization with ${visibleTracks.length} lane(s). ${visibleTracks.map((t) => `${t.title}: ${t.subtitle}`).join('; ')}. Use left and right arrow keys to pan, and the play position slider to seek.`}
                   onPointerDown={onCanvasPointerDown}
                   onPointerMove={onCanvasPointerMove}
                   onPointerUp={onCanvasPointerUp}
@@ -773,7 +807,14 @@ export default function VisualizationPanel({ trackEvents }: { trackEvents: Track
                   onPointerMove={onPlayheadPointerMove}
                   onPointerUp={onPlayheadPointerUp}
                   onPointerCancel={finishPlayheadDrag}
-                  aria-label="Drag play position"
+                  onKeyDown={onPlayheadKeyDown}
+                  role="slider"
+                  aria-label="Play position"
+                  aria-orientation="horizontal"
+                  aria-valuemin={0}
+                  aria-valuemax={maxVisibleTick}
+                  aria-valuenow={Math.round(playheadTick)}
+                  aria-valuetext={`Tick ${Math.round(playheadTick)} of ${maxVisibleTick}`}
                 >
                   <span className="playhead-line" aria-hidden="true" />
                   <span className="playhead-head" aria-hidden="true" />
