@@ -380,38 +380,6 @@ button:disabled {
   font-size: 0.92rem;
 }
 
-.track-wrap {
-  display: grid;
-  gap: 0.35rem;
-  min-width: 100%;
-}
-
-.track-scroll-proxy-top {
-  overflow-x: scroll;
-  overflow-y: hidden;
-}
-
-.track-scroll-spacer {
-  height: 1px;
-  pointer-events: none;
-}
-
-.track-scroll-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 0.4rem;
-}
-
-.track-stage {
-  position: relative;
-  width: max-content;
-  min-width: max(100%, calc(var(--timeline-unit-count, 1) * var(--track-unit-size)));
-}
-
 .drag-scroll-area {
   cursor: grab;
   touch-action: pan-y pinch-zoom;
@@ -423,14 +391,17 @@ button:disabled {
 }
 
 .track-area {
-  /* single column — no flex layout needed */
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .track-headers {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.35rem;
+  flex: 0 0 auto;
+  width: clamp(8rem, 18%, 12rem);
+  gap: var(--lane-gap, 6px);
 }
 
 .track-header {
@@ -439,26 +410,65 @@ button:disabled {
   align-items: center;
   gap: 0.5rem;
   font-weight: 700;
-  padding: 0.2rem 0.5rem;
+  padding: 0 0.5rem;
   background: #9dc378;
   border: 1px solid rgba(66, 97, 38, 0.65);
   border-radius: 4px;
   transition: opacity 140ms ease, filter 140ms ease;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
-.track-scroll-column {
-  width: 100%;
+.track-header-text {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  line-height: 1.2;
 }
 
-.track-row {
-  border: 1px solid rgba(66, 97, 38, 0.65);
+.track-header-text > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-canvas-wrap {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.track-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: pan-y pinch-zoom;
+}
+
+.track-canvas:active {
+  cursor: grabbing;
+}
+
+.canvas-tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 8px));
+  min-width: max-content;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid rgba(34, 44, 21, 0.9);
   border-radius: 4px;
-  background: rgba(219, 233, 194, 0.34);
-  padding: 0.35rem 0.45rem 0.35rem 0.45rem;
-  width: max-content;
-  transition: opacity 140ms ease, filter 140ms ease;
+  background: rgba(26, 33, 14, 0.96);
+  color: #f7f3dd;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.canvas-tooltip-below {
+  transform: translate(-50%, 8px);
 }
 
 .track-row-dimmed {
@@ -525,157 +535,11 @@ button:disabled {
   color: var(--muted);
 }
 
-.track-line {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  min-height: 120px;
-  white-space: nowrap;
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent calc(4 * (var(--track-unit-size) + 2px) - 2px),
-    rgba(66, 97, 38, 0.3) calc(4 * (var(--track-unit-size) + 2px) - 2px),
-    rgba(66, 97, 38, 0.3) calc(4 * (var(--track-unit-size) + 2px))
-  );
-}
-
-.track-row-empty .track-line {
-  min-height: 20px;
-}
-
 .track-mute-btn {
   width: 1.4rem;
   height: 1.4rem;
   min-width: unset;
   flex-shrink: 0;
-}
-
-.note-unit {
-  width: var(--track-unit-size);
-  min-width: var(--track-unit-size);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.note-stack-item {
-  width: var(--track-unit-size);
-  min-width: var(--track-unit-size);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.note-unit-button {
-  cursor: pointer;
-  border-radius: 4px;
-  outline: none;
-  transition: transform 120ms ease, background-color 120ms ease;
-  position: relative;
-}
-
-.note-corner-color {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 9px;
-  height: 9px;
-  border: 1px solid rgba(22, 33, 14, 0.8);
-  border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28);
-  z-index: 2;
-}
-
-.note-use-count {
-  position: absolute;
-  top: 4px;
-  left: 3px;
-  min-width: 14px;
-  padding: 0 3px;
-  border-radius: 3px;
-  background: rgba(26, 33, 14, 0.82);
-  color: #f7f3dd;
-  font-size: 0.58rem;
-  font-weight: 700;
-  line-height: 1.2;
-  text-align: center;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.note-unit-button:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.note-unit-button:active {
-  transform: translateY(1px);
-}
-
-.note-unit-button:focus-visible {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35), 0 0 0 4px rgba(61, 95, 34, 0.85);
-}
-
-.cell-tooltip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-  min-width: max-content;
-  max-width: 180px;
-  padding: 0.35rem 0.45rem;
-  border: 1px solid rgba(34, 44, 21, 0.9);
-  border-radius: 4px;
-  background: rgba(26, 33, 14, 0.96);
-  color: #f7f3dd;
-  font-size: 0.72rem;
-  line-height: 1.35;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 120ms ease;
-  z-index: 20;
-}
-
-.cell-tooltip-below {
-  top: calc(100% + 8px);
-  bottom: auto;
-}
-
-.cell-tooltip::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: rgba(26, 33, 14, 0.96);
-}
-
-.cell-tooltip-below::after {
-  top: auto;
-  bottom: 100%;
-  border-top-color: transparent;
-  border-bottom-color: rgba(26, 33, 14, 0.96);
-}
-
-.note-unit-button:hover .cell-tooltip,
-.note-unit-button:focus-visible .cell-tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
-.note-img {
-  width: var(--track-unit-size);
-  height: var(--track-unit-size);
-  image-rendering: pixelated;
-}
-
-.support-img {
-  margin-top: -4px;
-  width: var(--track-unit-size);
-  height: var(--track-unit-size);
-  image-rendering: pixelated;
 }
 
 @keyframes spin {
@@ -789,180 +653,20 @@ button:disabled {
   flex-shrink: 0;
 }
 
-.schematic-scroll {
-  overflow-x: auto;
-  overflow-y: visible;
-  padding-bottom: 0.4rem;
-  cursor: grab;
-}
-
-.schematic-scroll:active {
-  cursor: grabbing;
-}
-
-/* ─── Per-instrument schematic table ───────────────────────────────────────── */
-.schematic-table {
-  border-collapse: collapse;
-  width: max-content;
-  table-layout: auto;
-}
-
-.schematic-table th,
-.schematic-table td {
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  padding: 0;
-  vertical-align: middle;
-}
-
-/* Sticky top-left corner in thead */
-.schematic-th-corner {
-  position: sticky;
-  left: 0;
-  z-index: 6;
-  background: var(--panel);
-}
-
-/* Segment column header — no content, minimal width */
-.schematic-th-seg {
-  background: var(--panel);
-  border-right-color: transparent;
-}
-
-/* Anchor column header — tick number */
-.schematic-th-anchor {
-  background: var(--panel);
-  text-align: center;
-  vertical-align: bottom;
-  border-bottom: 2px solid rgba(240, 192, 64, 0.5);
-}
-
-/* Tick-number button inside thead anchor cell */
-.schematic-tick-btn {
-  display: block;
-  width: 100%;
-  padding: 3px 0 2px;
-  font-size: 0.58rem;
-  font-weight: 700;
-  font-family: monospace;
-  color: #000;
-  text-align: center;
-  background: rgba(240, 192, 64, 0.12);
-  border: 0;
-  box-shadow: none;
-  border-radius: 0;
-  cursor: pointer;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.schematic-tick-btn:hover {
-  background: rgba(240, 192, 64, 0.35);
-  color: #000;
-}
-
-/* Sticky connector column in tbody */
-.schematic-td-connector {
-  position: sticky;
-  left: 0;
-  z-index: 5;
-  background: var(--panel);
-  padding: 0;
-}
-
-/* Segment data cell — contains inline flex of repeater SVGs */
-.schematic-td-seg {
-  padding: 0;
-  background: var(--panel);
-  border-right-color: transparent;
-}
-
-/* Anchor data cell — note block or split indicator */
-.schematic-td-anchor {
-  padding: 0;
-}
-
-/* Pass-through cell — instrument wire running through a tick it doesn't play */
-.schematic-cell--passthrough {
-  opacity: 0.35;
-}
-
-/* Instrument label row — spans all columns, acts as a group header */
-.schematic-instrument-label-row td {
-  background: var(--panel-dark, #c8d8a8);
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: var(--muted);
-  padding: 3px 6px;
-  border-top: 2px solid rgba(0, 0, 0, 0.2);
-  position: sticky;
-  left: 0;
-}
-
-/* Keep legacy class for any non-table references */
-.schematic-grid {
-  width: max-content;
-}
-
-.schematic-row {
-  /* rows are now display:contents inside the shared grid — this class is kept for
-     any legacy references but no longer drives the layout */
-  display: contents;
-}
-
-.schematic-connector {
-  flex-shrink: 0;
-}
-
-/* Group label and separator span all columns (gridColumn set inline) */
-.schematic-group-label {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: var(--muted);
-  padding: 2px 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.schematic-group-separator {
-  height: 8px;
-}
-
-/* Per-instrument compact layout */
-.schematic-multi-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.schematic-instrument-section {
-  display: block;
-}
-
-.schematic-group-label--full {
-  display: block;
-  width: max-content;
-}
-
-.schematic-group-separator--full {
-  display: block;
-  height: 8px;
-}
-
-.schematic-row {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.schematic-connector {
-  flex-shrink: 0;
-}
-
-.schematic-content {
+.schematic-canvas-wrap {
   position: relative;
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.schematic-canvas {
+  display: block;
+  cursor: grab;
+  touch-action: pan-y pinch-zoom;
+}
+
+.schematic-canvas:active {
+  cursor: grabbing;
 }
 
 .schematic-indicator {
@@ -1048,64 +752,6 @@ button:disabled {
 
 .schematic-h-indicator:focus-visible .schematic-h-indicator-line {
   background: #e6f3ff;
-}
-
-/* Last-pressed noteblock highlight */
-.schematic-cell--last-pressed {
-  position: relative;
-  z-index: 1;
-  outline: 2px solid #ff8c00;
-  outline-offset: -1px;
-  box-shadow: 0 0 6px 1px rgba(255, 140, 0, 0.55);
-}
-
-/* Wrapper for each track group — display:contents so cells participate in shared grid */
-.schematic-group {
-  display: contents;
-}
-
-/* Sub-lane container — display:contents in the shared grid */
-.schematic-sublanes {
-  display: contents;
-}
-
-/* Legacy ruler classes — kept for any remaining references */
-.schematic-ruler-corner {
-  position: sticky;
-  left: 0;
-  z-index: 6;
-  background: var(--panel);
-}
-
-/* ─── Connector button (sticky is now on the <td>, not the button) ─────────── */
-.schematic-connector--sticky {
-  background: var(--panel);
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.schematic-connector--sticky:hover {
-  background: var(--panel-light);
-}
-
-.schematic-connector--sticky:hover svg {
-  opacity: 0.85;
-}
-
-.schematic-group-title {
-  font-weight: 700;
-}
-
-.schematic-group-counts {
-  font-weight: 400;
-  opacity: 0.85;
 }
 
 /* ─── Block totals / raw resource summary ──────────────────────────────────── */
@@ -1224,83 +870,6 @@ button:disabled {
   font-size: 0.68rem;
   color: var(--accent);
   font-style: italic;
-}
-
-.schematic-cell {
-  flex-shrink: 0;
-  position: relative;
-  image-rendering: pixelated;
-  background: var(--panel);
-}
-
-.schematic-cell--empty {
-  background: var(--panel);
-}
-
-/* Segment containers (flex rows of repeater cells) — dark bg so gaps between
-   repeaters render cleanly; empty segments collapse to zero width so no solid
-   dark stripe appears between anchors that have nothing in between. */
-.schematic-segment {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  background: var(--panel);
-}
-
-.schematic-cell-tip {
-  cursor: pointer;
-  outline: none;
-}
-
-.schematic-cell-tip:hover .cell-tooltip,
-.schematic-cell-tip:focus-visible .cell-tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* Portal tooltip — renders into document.body as position:fixed to escape     */
-/* the scroll container's overflow clip (overflow-x:auto coerces overflow-y).  */
-.cell-tooltip-portal {
-  position: fixed;
-  transform: translateX(-50%) translateY(-100%);
-  min-width: max-content;
-  max-width: 180px;
-  padding: 0.35rem 0.45rem;
-  border: 1px solid rgba(34, 44, 21, 0.9);
-  border-radius: 4px;
-  background: rgba(26, 33, 14, 0.96);
-  color: #f7f3dd;
-  font-size: 0.72rem;
-  line-height: 1.35;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-.cell-tooltip-portal::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: rgba(26, 33, 14, 0.96);
-}
-
-.cell-tooltip-portal-below {
-  transform: translateX(-50%);
-}
-
-.cell-tooltip-portal-below::after {
-  top: auto;
-  bottom: 100%;
-  border-top-color: transparent;
-  border-bottom-color: rgba(26, 33, 14, 0.96);
-}
-
-.schematic-cell svg {
-  display: block;
-  image-rendering: pixelated;
 }
 
 @media (max-width: 700px) {
