@@ -1,44 +1,8 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { Midi } from "@tonejs/midi";
+import { midiFixtures as fixtures, TICK_S } from "./helpers";
 import { buildNoteList, buildTrackEvents } from "../utils.jsx";
 import { buildVisualizationTracks } from "../components/VisualizationPanel/visualizationData";
 import { buildTickGrid } from "../components/SchematicPanel/schematicData";
-
-const TICK_S = 0.1;
-
-const load = (name) =>
-  new Midi(
-    readFileSync(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)))
-  );
-
-// Synthetic song with chords, drums and gaps so no third-party MIDI is needed.
-function buildSyntheticMidi() {
-  const midi = new Midi();
-  const lead = midi.addTrack();
-  [0, 0.25, 0.5, 1.0, 1.05, 3.7].forEach((time, i) => {
-    [60, 64, 67, 71, 74, 79].slice(0, (i % 6) + 1).forEach((m) =>
-      lead.addNote({ midi: m, time, duration: 0.2 })
-    );
-  });
-  const bass = midi.addTrack();
-  bass.instrument.number = 32;
-  [0, 0.5, 1, 2.3].forEach((time) =>
-    bass.addNote({ midi: 40, time, duration: 0.4 })
-  );
-  const drums = midi.addTrack();
-  drums.channel = 9;
-  [0, 0.5, 1, 1.5].forEach((time, i) =>
-    drums.addNote({ midi: i % 2 ? 38 : 36, time, duration: 0.1 })
-  );
-  return new Midi(midi.toArray());
-}
-
-const fixtures = [
-  ["example.mid", () => load("example.mid")],
-  ["synthetic chords", buildSyntheticMidi],
-];
 
 // Expected notes straight from the MIDI, independent of the app's conversion.
 function expectedNotes(midi) {
