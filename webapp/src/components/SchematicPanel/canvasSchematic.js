@@ -93,7 +93,6 @@ function fill(ctx, x, y, k, rx, ry, w, h, color, alpha = 1) {
 
 function drawDust(ctx, x, y, cs, alpha = 1) {
   const k = cs / 28;
-  fill(ctx, x, y, k, 0, 0, 28, 28, "#888", 0.15 * alpha);
   fill(ctx, x, y, k, 0, 11, 28, 6, RED, alpha);
 }
 
@@ -114,7 +113,6 @@ function drawRepeater(ctx, x, y, cs, ticks) {
 function drawSplit(ctx, x, y, cs, c) {
   const k = cs / 28;
   const any = c.left || c.right || c.up || c.down;
-  fill(ctx, x, y, k, 0, 0, 28, 28, RED, 0.1);
   if (c.left) fill(ctx, x, y, k, 0, 11, 14, 6, RED);
   if (c.right) fill(ctx, x, y, k, 14, 11, 14, 6, RED);
   if (c.up) fill(ctx, x, y, k, 11, 0, 6, 14, RED);
@@ -136,10 +134,18 @@ function noteBlockOf(inst, cell) {
   return cell.note.block ?? inst.block;
 }
 
-function drawAnchor(ctx, x, y, cs, inst, cell) {
-  if (!cell || cell.kind === "inactive") return;
+// Returns true when the cell is plain wire (drawn without a grid border so the
+// line reads as continuous).
+function drawAnchor(ctx, x, y, cs, inst, cell, isSub) {
+  if (!cell || cell.kind === "inactive") return false;
   if (cell.kind === "split-pass") {
-    drawSplit(ctx, x, y, cs, cell.connects ?? {});
+    const c = cell.connects ?? {};
+    if (!isSub && !c.left && !c.right && !c.up && !c.down) {
+      drawDust(ctx, x, y, cs);
+      return true;
+    }
+    drawSplit(ctx, x, y, cs, c);
+    return !!(c.left && c.right && !c.up && !c.down);
   } else if (cell.kind === "split-branch") {
     drawSplit(
       ctx,
@@ -149,9 +155,11 @@ function drawAnchor(ctx, x, y, cs, inst, cell) {
       cell.connects ?? { left: true, right: true, up: false, down: true }
     );
   } else if (cell.kind === "note") {
-    if (!cell.note) drawDust(ctx, x, y, cs, 0.35);
-    else
-      drawNote(
+    if (!cell.note) {
+      drawDust(ctx, x, y, cs);
+      return true;
+    }
+    drawNote(
         ctx,
         x,
         y,
@@ -160,6 +168,7 @@ function drawAnchor(ctx, x, y, cs, inst, cell) {
         String(getUseCount(cell.note.note))
       );
   }
+  return false;
 }
 
 function cellBorder(ctx, x, y, cs) {
@@ -232,13 +241,26 @@ export function drawSchematic(
           const cx = sx + i * cs;
           if (cx + cs < cs || cx > width) continue;
           const cell = seg[i];
-          if (cell?.kind === "repeater") drawRepeater(ctx, cx, sy, cs, cell.ticks);
-          else if (!row.row.isSub) drawDust(ctx, cx, sy, cs);
-          cellBorder(ctx, cx, sy, cs);
+          if (cell?.kind === "repeater") {
+            drawRepeater(ctx, cx, sy, cs, cell.ticks);
+            cellBorder(ctx, cx, sy, cs);
+          } else if (!row.row.isSub) {
+            drawDust(ctx, cx, sy, cs);
+          } else {
+            cellBorder(ctx, cx, sy, cs);
+          }
         }
       } else {
-        drawAnchor(ctx, sx, sy, cs, row.inst, row.row.anchorCells[info.ai]);
-        cellBorder(ctx, sx, sy, cs);
+        const isWire = drawAnchor(
+          ctx,
+          sx,
+          sy,
+          cs,
+          row.inst,
+          row.row.anchorCells[info.ai],
+          row.row.isSub
+        );
+        if (!isWire) cellBorder(ctx, sx, sy, cs);
         if (lastPressed === `${row.row.id}:${info.ai}`) {
           ctx.strokeStyle = "#ff8c00";
           ctx.lineWidth = 2;
@@ -276,7 +298,7 @@ export function drawSchematic(
     } else {
       const sy = bodyTop + row.y - scrollY;
       if (!row.row.isSub) drawDust(ctx, 0, sy, cs);
-      cellBorder(ctx, 0, sy, cs);
+      else cellBorder(ctx, 0, sy, cs);
     }
   }
   ctx.restore();
