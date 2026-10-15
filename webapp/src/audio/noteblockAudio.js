@@ -370,19 +370,16 @@ export async function playPlacementSound(placement) {
 
 export async function playSuccessJingle() {
   const context = await prepareAudioPlayback();
-  const beat = 250; // ms
+  const beat = 0.25; // seconds
   const notes = [
-    { delay: beat,        instrument: 'pling', note: 6  },
-    { delay: beat * 2,     instrument: 'pling', note: 10 },
-    { delay: beat * 3, instrument: 'pling', note: 13 },
-    { delay: beat * 4, instrument: 'bell',  note: 18 },
+    { instrument: 'pling', note: 6 },
+    { instrument: 'pling', note: 10 },
+    { instrument: 'pling', note: 13 },
+    { instrument: 'bell', note: 18 },
   ];
-  notes.forEach(({ delay, instrument, note }) => {
-    if (delay === 0) {
-      playTonalSound(context, { instrument, note });
-    } else {
-      setTimeout(() => playTonalSound(context, { instrument, note }), delay);
-    }
+  const start = context.currentTime;
+  notes.forEach(({ instrument, note }, i) => {
+    playTonalSound(context, { instrument, note }, start + i * beat);
   });
 }
 

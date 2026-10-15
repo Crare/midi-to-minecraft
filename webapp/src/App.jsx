@@ -67,7 +67,7 @@ export default function App() {
       setStatus(
         `Converted ${sequences.length} track(s), ${totalNotes} notes total.`
       );
-      if (!silent) setTimeout(() => playSuccessJingle(), 2000);
+      if (!silent) playSuccessJingle();
       return true;
     } catch (error) {
       console.error(error);
