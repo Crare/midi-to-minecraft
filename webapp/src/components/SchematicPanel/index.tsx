@@ -12,6 +12,7 @@ import {
   blockColor,
   blockColorFor,
   blockLabel,
+  buildCompactGrid,
   buildTickGrid,
   computeRawResources,
   computeSchematicDimensions,
@@ -29,7 +30,12 @@ export default function SchematicPanel({
   const [open, setOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);
 
-  const grid = useMemo(() => buildTickGrid(trackEvents), [trackEvents]);
+  const [compact, setCompact] = useState(false);
+
+  const grid = useMemo(
+    () => (compact ? buildCompactGrid(trackEvents) : buildTickGrid(trackEvents)),
+    [trackEvents, compact]
+  );
   const totalNotes = useMemo(
     () =>
       grid.instruments.reduce(
@@ -107,6 +113,14 @@ export default function SchematicPanel({
             <option value={36}>Large (36px)</option>
             <option value={48}>XL (48px)</option>
           </select>
+        </label>
+        <label className="option-row">
+          <input
+            type="checkbox"
+            checked={compact}
+            onChange={(e) => setCompact(e.target.checked)}
+          />
+          <span>Compact view (no ticks, minimal redstone dust)</span>
         </label>
         <div className="schematic-export" role="group" aria-label="Export schematic">
           <button

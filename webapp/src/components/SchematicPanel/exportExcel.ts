@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import type { TickGrid } from '../../types';
 import {
+  anchorsOf,
   blockColorFor,
   blockLabel,
   computeRawResources,
@@ -45,6 +46,7 @@ export function buildSchematicSheet(grid: TickGrid): SheetData {
 
   grid.instruments.forEach((inst) => {
     const instFill = blockColorFor(inst.block).replace('#', '').toUpperCase();
+    const anchors = anchorsOf(grid, inst);
     inst.rows.forEach((row) => {
       const cells: SheetRow = [
         cell(inst.label, instFill),
@@ -52,11 +54,11 @@ export function buildSchematicSheet(grid: TickGrid): SheetData {
         cell('•', DUST_FILL)
       ];
 
-      for (let ai = 0; ai <= grid.anchors.length; ai++) {
+      for (let ai = 0; ai <= anchors.length; ai++) {
         (row.segments[ai] ?? []).forEach((seg) => {
           cells.push(seg.kind === 'repeater' ? cell(`R${seg.ticks}`, REPEATER_FILL) : cell('•', DUST_FILL));
         });
-        if (ai >= grid.anchors.length) continue;
+        if (ai >= anchors.length) continue;
 
         if (anchorColumns.length <= ai) anchorColumns.push(cells.length);
         const anchor = row.anchorCells[ai];
@@ -83,7 +85,9 @@ export function buildSchematicSheet(grid: TickGrid): SheetData {
   const width = bodyRows.reduce((m, r) => Math.max(m, r.length), 0);
   const header: SheetRow = [cell('Instrument', HEADER_FILL, true), cell('Lane', HEADER_FILL, true), cell('Start', HEADER_FILL, true)];
   while (header.length < width) header.push(null);
-  anchorColumns.forEach((col, i) => {
+  // The compact grid has no shared tick columns, so it has no tick header.
+  const showTicks = grid.instruments.every((inst) => !inst.anchors);
+  (showTicks ? anchorColumns : []).forEach((col, i) => {
     header[col] = cell(grid.anchors[i].kind === 'split' ? `split t${grid.anchors[i].tick}` : `t${grid.anchors[i].tick}`, HEADER_FILL, true);
   });
 

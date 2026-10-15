@@ -1,6 +1,7 @@
 import type {
   AnchorCell,
   Connects,
+  GridAnchor,
   GridInstrument,
   GridRow,
   GridNote,
@@ -16,23 +17,40 @@ const PANEL_DARK = "#537b32";
 const RED = "#c0392b";
 const GRID_LINE = "rgba(0,0,0,0.15)";
 
-export type LayoutRow =
-  | { type: "label"; y: number; h: number; inst: GridInstrument }
-  | { type: "row"; y: number; h: number; inst: GridInstrument; row: GridRow };
-
 export type ColInfo = { kind: "seg" | "anchor"; ai: number };
 
-export interface Layout {
-  cs: number;
-  width: number;
-  height: number;
+/** Column positions; shared by every row, or per instrument in the compact grid. */
+export interface Columns {
   segLen: number[];
   segX: number[];
   anchorX: number[];
-  rows: LayoutRow[];
-  rowStarts: number[];
   colStarts: number[];
   colInfo: ColInfo[];
+}
+
+export type LayoutRow =
+  | { type: "label"; y: number; h: number; inst: GridInstrument }
+  | {
+      type: "row";
+      y: number;
+      h: number;
+      inst: GridInstrument;
+      row: GridRow;
+      /** Set in compact mode, where each instrument has its own columns. */
+      cols?: Columns;
+    };
+
+export interface Layout extends Columns {
+  cs: number;
+  width: number;
+  height: number;
+  rows: LayoutRow[];
+  rowStarts: number[];
+}
+
+/** The compact grid has no shared tick columns, so the tick header is hidden. */
+export function headerHeight(grid: TickGrid) {
+  return grid.instruments.some((inst) => inst.anchors) ? 0 : HEADER_H;
 }
 
 export type HitResult =
@@ -76,8 +94,11 @@ function indexAt(starts: number[], value: number) {
 
 // Positions of every column and row in content space. Body rows start at y=0
 // (the sticky header is drawn separately above them).
-export function computeLayout(grid: TickGrid, cs: number): Layout {
-  const { instruments, anchors } = grid;
+function computeColumns(
+  anchors: GridAnchor[],
+  instruments: GridInstrument[],
+  cs: number
+): Columns & { width: number } {
   const segLen = anchors.map(() => 0);
   for (const inst of instruments) {
     for (const row of inst.rows) {
@@ -97,17 +118,6 @@ export function computeLayout(grid: TickGrid, cs: number): Layout {
     x += cs;
   });
 
-  const rows: LayoutRow[] = [];
-  let y = 0;
-  for (const inst of instruments) {
-    rows.push({ type: "label", y, h: LABEL_H, inst });
-    y += LABEL_H;
-    for (const row of inst.rows) {
-      rows.push({ type: "row", y, h: cs, inst, row });
-      y += cs;
-    }
-  }
-
   const colStarts: number[] = [];
   const colInfo: ColInfo[] = [];
   anchors.forEach((_, ai) => {
@@ -119,17 +129,45 @@ export function computeLayout(grid: TickGrid, cs: number): Layout {
     colInfo.push({ kind: "anchor", ai });
   });
 
+  return { segLen, segX, anchorX, colStarts, colInfo, width: x };
+}
+
+export function computeLayout(grid: TickGrid, cs: number): Layout {
+  const { instruments, anchors } = grid;
+  const compact = instruments.some((inst) => inst.anchors);
+  const shared = computeColumns(compact ? [] : anchors, compact ? [] : instruments, cs);
+  let width = shared.width;
+  const sharedCols: Columns = {
+    segLen: shared.segLen,
+    segX: shared.segX,
+    anchorX: shared.anchorX,
+    colStarts: shared.colStarts,
+    colInfo: shared.colInfo
+  };
+
+  const rows: LayoutRow[] = [];
+  let y = 0;
+  for (const inst of instruments) {
+    rows.push({ type: "label", y, h: LABEL_H, inst });
+    y += LABEL_H;
+    const own = compact ? computeColumns(inst.anchors ?? [], [inst], cs) : null;
+    if (own) width = Math.max(width, own.width);
+    const cols: Columns | undefined = own
+      ? { segLen: own.segLen, segX: own.segX, anchorX: own.anchorX, colStarts: own.colStarts, colInfo: own.colInfo }
+      : undefined;
+    for (const row of inst.rows) {
+      rows.push({ type: "row", y, h: cs, inst, row, ...(cols ? { cols } : {}) });
+      y += cs;
+    }
+  }
+
   return {
     cs,
-    width: x,
+    width,
     height: y,
-    segLen,
-    segX,
-    anchorX,
+    ...sharedCols,
     rows,
-    rowStarts: rows.map((r) => r.y),
-    colStarts,
-    colInfo
+    rowStarts: rows.map((r) => r.y)
   };
 }
 
@@ -282,13 +320,14 @@ export function drawSchematic(
   { grid, layout, scrollX, scrollY, width, height, dpr, lastPressed }: DrawParams
 ) {
   const { cs, rows, rowStarts, colStarts, colInfo, anchorX } = layout;
+  const headerH = headerHeight(grid);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = PANEL;
   ctx.fillRect(0, 0, width, height);
 
-  const bodyTop = HEADER_H;
+  const bodyTop = headerH;
   const viewY0 = scrollY;
-  const viewY1 = scrollY + (height - HEADER_H);
+  const viewY1 = scrollY + (height - headerH);
   const firstRow = Math.max(0, indexAt(rowStarts, viewY0));
   const lastRow = Math.min(rows.length - 1, indexAt(rowStarts, viewY1));
 
@@ -331,12 +370,17 @@ export function drawSchematic(
     const row = rows[r];
     if (row.type !== "row") continue;
     const sy = bodyTop + row.y - scrollY;
-    for (let c = firstCol; c <= lastCol; c++) {
-      const info = colInfo[c];
-      const sx = colStarts[c] - scrollX;
+    const cols = row.cols ?? layout;
+    const rowFirst = row.cols ? Math.max(0, indexAt(cols.colStarts, viewX0)) : firstCol;
+    const rowLast = row.cols
+      ? Math.min(cols.colStarts.length - 1, indexAt(cols.colStarts, viewX1))
+      : lastCol;
+    for (let c = rowFirst; c <= rowLast; c++) {
+      const info = cols.colInfo[c];
+      const sx = cols.colStarts[c] - scrollX;
       if (info.kind === "seg") {
         const seg = row.row.segments[info.ai] ?? [];
-        for (let i = 0; i < layout.segLen[info.ai]; i++) {
+        for (let i = 0; i < cols.segLen[info.ai]; i++) {
           const cx = sx + i * cs;
           if (cx + cs < cs || cx > width) continue;
           const cell = seg[i];
@@ -402,7 +446,8 @@ export function drawSchematic(
   }
   ctx.restore();
 
-  // Sticky tick header.
+  // Sticky tick header (hidden in the compact grid).
+  if (headerH === 0) return;
   ctx.fillStyle = PANEL;
   ctx.fillRect(0, 0, width, HEADER_H);
   ctx.save();
@@ -445,7 +490,8 @@ export function hitTest({
   y: number;
 }): HitResult | null {
   const { cs } = layout;
-  if (y < HEADER_H) {
+  const headerH = headerHeight(grid);
+  if (y < headerH) {
     if (x < cs) return null;
     const cx = x + scrollX;
     const c = indexAt(layout.colStarts, cx);
@@ -461,29 +507,30 @@ export function hitTest({
     };
   }
 
-  const cy = y - HEADER_H + scrollY;
+  const cy = y - headerH + scrollY;
   const r = indexAt(layout.rowStarts, cy);
   if (r < 0 || cy >= layout.height) return null;
   const row = layout.rows[r];
   if (row.type !== "row") return null;
-  const rowTop = HEADER_H + row.y - scrollY;
+  const rowTop = headerH + row.y - scrollY;
 
   if (x < cs) {
     return { type: "connector", cy: row.y + cs / 2, rowTop };
   }
 
+  const cols = row.cols ?? layout;
   const cx = x + scrollX;
-  const c = indexAt(layout.colStarts, cx);
+  const c = indexAt(cols.colStarts, cx);
   if (c < 0) return null;
-  const info = layout.colInfo[c];
+  const info = cols.colInfo[c];
   if (info.kind === "seg") {
-    const i = Math.floor((cx - layout.colStarts[c]) / cs);
+    const i = Math.floor((cx - cols.colStarts[c]) / cs);
     const cell = (row.row.segments[info.ai] ?? [])[i];
     if (cell?.kind !== "repeater") return null;
     return {
       type: "repeater",
       ticks: cell.ticks,
-      left: layout.colStarts[c] + i * cs,
+      left: cols.colStarts[c] + i * cs,
       top: row.y,
       size: cs
     };
@@ -496,7 +543,7 @@ export function hitTest({
     note: cell.note,
     instrument: cell.note.instrument ?? row.inst.label,
     block: noteBlockOf(row.inst, cell),
-    left: layout.anchorX[info.ai],
+    left: cols.anchorX[info.ai],
     top: row.y,
     size: cs
   };
