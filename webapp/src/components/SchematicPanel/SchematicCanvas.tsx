@@ -2,9 +2,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { TickGrid } from "../../types";
 import { playPlacementSound } from "../../audio/noteblockAudio";
 import {
-  HEADER_H,
   computeLayout,
   drawSchematic,
+  headerHeight,
   hitTest
 } from "./canvasSchematic";
 import { blockLabel, getUseCount } from "./schematicData";
@@ -58,10 +58,11 @@ export default function SchematicCanvas({
   const markerDragRef = useRef<MarkerDrag | null>(null);
 
   const layout = useMemo(() => computeLayout(grid, cellSize), [grid, cellSize]);
+  const headerH = headerHeight(grid);
   const maxViewportH = Math.max(300, windowHeight - 340);
-  const height = Math.min(layout.height + HEADER_H, maxViewportH);
+  const height = Math.min(layout.height + headerH, maxViewportH);
   const maxScrollX = Math.max(0, layout.width - width);
-  const maxScrollY = Math.max(0, layout.height - (height - HEADER_H));
+  const maxScrollY = Math.max(0, layout.height - (height - headerH));
   const scrollX = clamp(scroll.x, 0, maxScrollX);
   const scrollY = clamp(scroll.y, 0, maxScrollY);
 
@@ -144,7 +145,7 @@ export default function SchematicCanvas({
   function onKeyDown(e: React.KeyboardEvent<HTMLCanvasElement>) {
     const { maxScrollX: mx, maxScrollY: my } = limitsRef.current;
     const stepX = layout.cs * 3;
-    const pageY = Math.max(layout.cs, height - HEADER_H - layout.cs);
+    const pageY = Math.max(layout.cs, height - headerH - layout.cs);
     const move: Record<string, [number, number]> = {
       ArrowRight: [stepX, 0],
       ArrowLeft: [-stepX, 0],
@@ -196,7 +197,7 @@ export default function SchematicCanvas({
       return;
     }
     const left = h.left - scrollX + h.size / 2;
-    const top = HEADER_H + h.top - scrollY;
+    const top = headerH + h.top - scrollY;
     const below = top < 90;
     setTooltip({
       left,
@@ -262,9 +263,9 @@ export default function SchematicCanvas({
   }
 
   const markerScreenX = indicatorX - scrollX;
-  const markerScreenY = HEADER_H + indicatorY - scrollY;
+  const markerScreenY = headerH + indicatorY - scrollY;
   const showV = markerScreenX >= 0 && markerScreenX <= width;
-  const showH = markerScreenY >= HEADER_H && markerScreenY <= height;
+  const showH = markerScreenY >= headerH && markerScreenY <= height;
 
   return (
     <div

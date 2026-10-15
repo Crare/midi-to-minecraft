@@ -103,6 +103,8 @@ export interface GridInstrument {
   label: string;
   block: string;
   rows: GridRow[];
+  /** Own column set; only present in the compact grid, where instruments don't share columns. */
+  anchors?: GridAnchor[];
 }
 
 export interface TickGrid {

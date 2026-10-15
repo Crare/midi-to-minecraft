@@ -567,6 +567,23 @@ export function buildTickGrid(trackEvents: TrackEvents[]): TickGrid {
   return { instruments, anchors };
 }
 
+// Compact grid: every instrument is built on its own, so nothing is padded to line up
+// with other instruments. Redstone dust remains only where a lane has to split into
+// several lanes, and tick numbers are dropped (the repeater delays still carry the timing).
+export function buildCompactGrid(trackEvents: TrackEvents[]): TickGrid {
+  const titles = [...new Set(trackEvents.map((track) => track.title))];
+  const instruments = titles.flatMap((title) => {
+    const single = buildTickGrid(trackEvents.filter((track) => track.title === title));
+    return single.instruments.map((inst) => ({ ...inst, anchors: single.anchors }));
+  });
+  return { instruments, anchors: [] };
+}
+
+// Anchors an instrument's cells are indexed by (its own in the compact grid).
+export function anchorsOf(grid: TickGrid, inst: GridInstrument) {
+  return inst.anchors ?? grid.anchors;
+}
+
 // Compute the minimum real-world Minecraft block dimensions for the schematic.
 //
 // Layout in Minecraft space:
@@ -580,17 +597,20 @@ export function buildTickGrid(trackEvents: TrackEvents[]): TickGrid {
 export function computeSchematicDimensions(grid: TickGrid | null) {
   if (!grid || grid.instruments.length === 0) return { x: 0, z: 0, y: 3 };
 
-  // Take the first main row — all rows are padded to the same width.
-  const firstInst = grid.instruments[0];
-  const mainRow = firstInst.rows[0];
-  const anchorCount = grid.anchors.length;
+  // All rows of an instrument are padded to the same width (all instruments, unless compact).
+  let x = 0;
+  for (const inst of grid.instruments) {
+    const mainRow = inst.rows[0];
+    const anchorCount = anchorsOf(grid, inst).length;
 
-  // X = connector (1) + each segment's cell count + each anchor (1)
-  let x = 1; // connector
-  for (let ai = 0; ai <= anchorCount; ai++) {
-    const seg = mainRow.segments[ai] ?? [];
-    x += seg.length; // segment cells (repeaters + dust padding)
-    if (ai < anchorCount) x += 1; // anchor cell (note block or split indicator)
+    // X = connector (1) + each segment's cell count + each anchor (1)
+    let instX = 1; // connector
+    for (let ai = 0; ai <= anchorCount; ai++) {
+      const seg = mainRow.segments[ai] ?? [];
+      instX += seg.length; // segment cells (repeaters + dust padding)
+      if (ai < anchorCount) instX += 1; // anchor cell (note block or split indicator)
+    }
+    x = Math.max(x, instX);
   }
 
   // Z = total number of schematic rows across all instruments
@@ -623,7 +643,7 @@ export function computeTickGridBlockCounts(grid: TickGrid) {
       dust++; // connector dust per row
     });
     // Each split anchor adds vertical dust for all rows of the instrument.
-    const splitCount = grid.anchors.filter((a) => a.kind === 'split').length;
+    const splitCount = anchorsOf(grid, inst).filter((a) => a.kind === 'split').length;
     dust += splitCount * inst.rows.length;
   });
   return { noteblocks, repeaters, dust, supportBlocks: noteblocks, supportMap };
