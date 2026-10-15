@@ -13,14 +13,11 @@ describe("UploadPanel", () => {
       <UploadPanel
         busy={false}
         status="Choose a MIDI file to begin."
+        outputName="song"
         onFileSelected={onFileSelected}
         onConvertRequest={onConvertRequest}
       />
     );
-
-    fireEvent.change(screen.getByLabelText("output filename"), {
-      target: { value: "song.json" },
-    });
     fireEvent.click(
       screen.getByLabelText("Remove empty space at the start of the song")
     );
@@ -32,7 +29,7 @@ describe("UploadPanel", () => {
     expect(onFileSelected).toHaveBeenCalledWith("song.mid");
     expect(onConvertRequest).toHaveBeenCalledWith({
       file,
-      outputName: "song.json",
+      outputName: "song",
       trimLeadingSilence: false,
     });
     expect(screen.queryByRole("button", { name: /convert/i })).toBeNull();

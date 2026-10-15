@@ -13,6 +13,7 @@ import { Header } from "./components/Header";
 import {
   buildTrackEvents,
   eventsToPlacements,
+  getOutputPrefix,
   getZipFilename,
   splitOutputTarget
 } from "./utils";
@@ -22,7 +23,9 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [trackEvents, setTrackEvents] = useState<TrackEvents[]>([]);
   const [downloadFiles, setDownloadFiles] = useState<DownloadFile[]>([]);
-  const [zipFilename, setZipFilename] = useState("output.zip");
+  const [outputName, setOutputName] = useState("output");
+  const [zipFilename, setZipFilename] = useState("output-json.zip");
+  const [convertedInputName, setConvertedInputName] = useState("");
 
   const exampleLoadedRef = useRef(false);
 
@@ -60,6 +63,8 @@ export default function App() {
             }));
 
       setDownloadFiles(files);
+      setConvertedInputName(file.name);
+      setOutputName(getOutputPrefix(outputName, file.name));
       setZipFilename(getZipFilename(outputName, file.name));
       const totalNotes = sequences.reduce(
         (sum, track) => sum + track.length,
@@ -78,6 +83,23 @@ export default function App() {
     }
   };
 
+  const onOutputNameChange = (nextOutputName: string) => {
+    setOutputName(nextOutputName);
+    if (!convertedInputName || downloadFiles.length === 0) return;
+
+    const target = splitOutputTarget(convertedInputName, nextOutputName);
+    setDownloadFiles((currentFiles) =>
+      currentFiles.map((file, index) => ({
+        ...file,
+        name:
+          currentFiles.length <= 1
+            ? `${target.dir}/${target.stem}${target.ext}`
+            : `${target.dir}/${target.stem}.${index}${target.ext}`
+      }))
+    );
+    setZipFilename(getZipFilename(nextOutputName, convertedInputName));
+  };
+
   // Load the bundled example so the visualization is playable right away.
   useEffect(() => {
     if (exampleLoadedRef.current) return;
@@ -94,7 +116,7 @@ export default function App() {
         });
         const ok = await onConvertRequest({
           file,
-          outputName: "output.json",
+          outputName: "output",
           trimLeadingSilence: true,
           silent: true
         });
@@ -118,6 +140,7 @@ export default function App() {
             <UploadPanel
               busy={busy}
               status={status}
+              outputName={outputName}
               onFileSelected={(filename) => setStatus(`Selected: ${filename}`)}
               onConvertRequest={onConvertRequest}
             />
@@ -125,6 +148,8 @@ export default function App() {
             <JsonOutputPanel
               downloadFiles={downloadFiles}
               zipFilename={zipFilename}
+              outputName={outputName}
+              onOutputNameChange={onOutputNameChange}
               trackEvents={trackEvents}
             />
           </div>

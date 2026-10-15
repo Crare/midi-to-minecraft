@@ -11,12 +11,18 @@ export interface ConvertRequest {
 interface UploadPanelProps {
   busy: boolean;
   status: string;
+  outputName: string;
   onFileSelected: (filename: string) => void;
   onConvertRequest: (request: ConvertRequest) => unknown;
 }
 
-export default function UploadPanel({ busy, status, onFileSelected, onConvertRequest }: UploadPanelProps) {
-  const [outputName, setOutputName] = useState('output.json');
+export default function UploadPanel({
+  busy,
+  status,
+  outputName,
+  onFileSelected,
+  onConvertRequest
+}: UploadPanelProps) {
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
 
   return (
@@ -34,12 +40,6 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
               onConvertRequest({ file: nextFile, outputName, trimLeadingSilence });
             }
           }}
-        />
-        <input
-          value={outputName}
-          onChange={(event) => setOutputName(event.target.value)}
-          placeholder="output.json"
-          aria-label="output filename"
         />
       </div>
       <label className="option-row">

@@ -10,7 +10,7 @@ Convert `.midi` files into Minecraft note block build data and visualize, play b
 
 1. **Upload** any `.mid` / `.midi` file.
 2. **Convert** — the app maps each MIDI instrument track to a Minecraft note block instrument and calculates the redstone tick delays between notes.
-3. **Download** — get one JSON file per instrument lane, ready to use with a build script.
+3. **Download** — get one JSON file per instrument lane, spreadsheet exports, Java/Bedrock build functions, and an importable Bedrock `.mcpack` behavior pack.
 4. **Visualize** — see every lane as a horizontal timeline. Play it back in the browser with note block sounds, mute individual lanes, and scrub the playhead.
 5. **Schematic** — a top-down grid shows every note block, repeater, and redstone dust placement. Includes block counts, raw resource totals, and minimum build dimensions.
 
