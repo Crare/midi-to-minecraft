@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent, type ReactNode, type Ref, type RefCallback, type MutableRefObject } from 'react';
+import { useRef, useState, type PointerEvent, type ReactNode, type Ref, type MutableRefObject } from 'react';
 
 interface DragScrollAreaProps {
   className?: string;

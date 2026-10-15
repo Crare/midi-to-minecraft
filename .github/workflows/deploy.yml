@@ -34,11 +34,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Audit dependencies
-        run: yarn audit --level moderate || true
+      - name: Audit production dependencies
+        run: yarn audit --groups dependencies --level moderate
 
       - name: Check for outdated packages
         run: yarn outdated || true
+
+      - name: Type check
+        run: yarn typecheck
+
+      - name: Run tests
+        run: yarn test
 
       - name: Build
         run: yarn build
