@@ -4,7 +4,7 @@ export const defaultPercussiveBlock = "minecraft:sand";
 export const MINI = 18;
 export const CELL = 28; // default cell size in pixels
 
-export const instrumentByBlock = {
+export const instrumentByBlock: Record<string, string> = {
   "minecraft:acacia_log": "bass",
   "minecraft:sand": "snare",
   "minecraft:glass": "hat",
@@ -23,7 +23,7 @@ export const instrumentByBlock = {
   "minecraft:dirt": "harp"
 };
 
-export const blockByPatchId = {
+export const blockByPatchId: Record<number, string> = {
   2: "minecraft:glowstone",
   4: "minecraft:glowstone",
   5: "minecraft:glowstone",
@@ -63,7 +63,7 @@ export const blockByPatchId = {
   112: "minecraft:packed_ice"
 };
 
-export const blockByPercussiveNote = {
+export const blockByPercussiveNote: Record<number, string> = {
   35: "minecraft:stone",
   36: "minecraft:stone",
   38: "minecraft:sand",
@@ -104,7 +104,7 @@ export const noteColorByStep = [
   "#AE00A9"
 ];
 
-export const supportColorByBlock = {
+export const supportColorByBlock: Record<string, string> = {
   acacia_log: "#8b5a2b",
   sand: "#d4be7d",
   glass: "#8cd9e9",

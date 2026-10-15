@@ -28,7 +28,7 @@ describe.each(midiFixtures)("%s visualization data", (_name, getMidi) => {
 
   it("max tick equals the last note's tick", () => {
     const tracks = buildVisualizationTracks(trackEvents);
-    const last = Math.max(...tracks.map((t) => t.notes.at(-1).startTick));
+    const last = Math.max(...tracks.map((t) => t.notes.at(-1)!.startTick));
     expect(getMaxTrackTick(tracks)).toBe(last);
   });
 });
@@ -54,7 +54,7 @@ describe("visualization helpers", () => {
     const lines = getNoteTooltipLines({ instrument: "harp", pitch: "C", note: 6, block: "minecraft:dirt" });
     expect(lines[0]).toBe("Instrument: harp");
     expect(lines).toContain("Block: minecraft:dirt");
-    expect(getNoteTooltipLines({ instrument: "snare", note: 0, block: "minecraft:sand" })).toContain("Pitch: drum");
+    expect(getNoteTooltipLines({ instrument: "snare", pitch: undefined, note: 0, block: "minecraft:sand" })).toContain("Pitch: drum");
   });
 });
 
@@ -76,7 +76,7 @@ describe("hit testing stacked notes", () => {
     expect(NOTE_STACK_STEP).toBe(10);
   });
 
-  const mk = (n) => ({ block: "minecraft:dirt", pitch: "C", note: n, instrument: "harp" });
+  const mk = (n: number) => ({ block: "minecraft:dirt", pitch: "C", note: n, instrument: "harp" });
   const lanes = [
     { notes: [{ startTick: 2, redstoneTickDelay: 2, placements: [mk(1), mk(2), mk(3)] }] },
     { notes: [{ startTick: 0, redstoneTickDelay: 0, placements: [mk(9)] }] },
@@ -88,25 +88,25 @@ describe("hit testing stacked notes", () => {
   it("returns each stacked placement at its 10px offset", () => {
     [0, 1, 2].forEach((i) => {
       const hit = hitTest({ lanes, view, opts, x: noteX, y: LANE_PAD + i * NOTE_STACK_STEP + 1 });
-      expect(hit.placement.note).toBe(i + 1);
-      expect(hit.key).toBe(`0:0:${i}`);
+      expect(hit!.placement.note).toBe(i + 1);
+      expect(hit!.key).toBe(`0:0:${i}`);
     });
   });
 
   it("prefers the topmost drawn note where they overlap", () => {
     const hit = hitTest({ lanes, view, opts, x: noteX, y: LANE_PAD + NOTE_STACK_STEP + 2 });
-    expect(hit.placement.note).toBe(2);
+    expect(hit!.placement.note).toBe(2);
   });
 
   it("hits notes in the second lane", () => {
     const y = view.laneHeight + LANE_GAP + LANE_PAD + 1;
-    expect(hitTest({ lanes, view, opts, x: tickToX(0, view.pitch) + 2, y }).placement.note).toBe(9);
+    expect(hitTest({ lanes, view, opts, x: tickToX(0, view.pitch) + 2, y })!.placement.note).toBe(9);
   });
 
   it("returns null on empty space and respects horizontal scroll", () => {
     expect(hitTest({ lanes, view, opts, x: 0, y: 10 })).toBeNull();
     expect(hitTest({ lanes, view, opts, x: noteX, y: view.laneHeight + 1 })).toBeNull();
     const scrolled = { ...view, scrollLeft: 100 };
-    expect(hitTest({ lanes, view: scrolled, opts, x: noteX - 100, y: LANE_PAD + 1 }).key).toBe("0:0:0");
+    expect(hitTest({ lanes, view: scrolled, opts, x: noteX - 100, y: LANE_PAD + 1 })!.key).toBe("0:0:0");
   });
 });

@@ -1,20 +1,21 @@
+import type { Midi } from "@tonejs/midi";
 import { describe, expect, it } from "vitest";
 import { midiFixtures as fixtures, TICK_S } from "./helpers";
-import { buildNoteList, buildTrackEvents } from "../utils.jsx";
+import { buildNoteList, buildTrackEvents } from "../utils";
 import { buildVisualizationTracks } from "../components/VisualizationPanel/visualizationData";
 import { buildTickGrid } from "../components/SchematicPanel/schematicData";
 
 // Expected notes straight from the MIDI, independent of the app's conversion.
-function expectedNotes(midi) {
-  const all = [];
+function expectedNotes(midi: Midi) {
+  const all: { time: number; midi: number }[] = [];
   midi.tracks.forEach((track) =>
     track.notes.forEach((n) => all.push({ time: n.time, midi: n.midi }))
   );
   return all;
 }
 
-const key = (tick, note) => `${tick}:${note}`;
-const sortedKeys = (arr) => [...arr].sort();
+const key = (tick: number, note: number) => `${tick}:${note}`;
+const sortedKeys = (arr: string[]) => [...arr].sort();
 
 describe.each(fixtures)("%s", (_name, getMidi) => {
   const midi = getMidi();
@@ -38,7 +39,7 @@ describe.each(fixtures)("%s", (_name, getMidi) => {
 
   it("playback ticks land within half a tick of the MIDI time", () => {
     const tracks = buildVisualizationTracks(trackEvents, "instrument");
-    const played = [];
+    const played: number[] = [];
     tracks.forEach((t) =>
       t.notes.forEach((n) =>
         n.placements.forEach(() => played.push(n.startTick * TICK_S))
@@ -67,11 +68,11 @@ describe.each(fixtures)("%s", (_name, getMidi) => {
     const grid = buildTickGrid(trackEvents);
 
     it("contains exactly the MIDI notes (tick, note, instrument)", () => {
-      const want = [];
+      const want: string[] = [];
       noteList.forEach((n) =>
         want.push(`${n.instrument}@${key(Math.round(n.time * 10), n.note)}`)
       );
-      const got = [];
+      const got: string[] = [];
       grid.instruments.forEach((inst) =>
         inst.rows.forEach((row) =>
           row.anchorCells.forEach((c) => {

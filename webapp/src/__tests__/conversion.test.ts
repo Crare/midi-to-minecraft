@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildNoteList, buildTrackEvents, eventsToPlacements } from "../utils";
+import type { NoteEvent } from "../types";
 import { midiFixtures } from "./helpers";
 
 // Golden output: the JSON the user downloads. Any refactor must keep it byte-identical.
@@ -49,8 +50,8 @@ describe("drums", () => {
 
 describe("eventsToPlacements", () => {
   it("accumulates delays into absolute ticks", () => {
-    const events = [0, 0.3, 0.3, 1.0].map((time) => ({
-      time, block: "minecraft:dirt", pitch: "C", note: 1, instrument: "harp", trackIndex: 0, trackName: "t",
+    const events = [0, 0.3, 0.3, 1.0].map((time): NoteEvent => ({
+      time, endTime: time + 0.1, block: "minecraft:dirt", pitch: "C", note: 1, instrument: "harp", trackIndex: 0, trackName: "t",
     }));
     const p = eventsToPlacements(events);
     expect(p.map((x) => x.redstoneTickDelay)).toEqual([0, 3, 0, 7]);

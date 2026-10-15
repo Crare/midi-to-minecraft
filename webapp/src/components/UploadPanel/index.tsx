@@ -1,8 +1,22 @@
 import { useState } from 'react';
 import CollapsiblePanel from '../CollapsiblePanel';
 
-export default function UploadPanel({ busy, status, onFileSelected, onConvertRequest }) {
-  const [file, setFile] = useState(null);
+export interface ConvertRequest {
+  file: File;
+  outputName: string;
+  trimLeadingSilence: boolean;
+  silent?: boolean;
+}
+
+interface UploadPanelProps {
+  busy: boolean;
+  status: string;
+  onFileSelected: (filename: string) => void;
+  onConvertRequest: (request: ConvertRequest) => unknown;
+}
+
+export default function UploadPanel({ busy, status, onFileSelected, onConvertRequest }: UploadPanelProps) {
+  const [file, setFile] = useState<File | null>(null);
   const [outputName, setOutputName] = useState('output.json');
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
 

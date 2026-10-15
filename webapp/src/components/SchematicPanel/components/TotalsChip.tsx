@@ -1,4 +1,6 @@
-export function stackLabel(n) {
+import type { ReactNode } from "react";
+
+export function stackLabel(n: number) {
   const s = Math.floor(n / 64);
   const r = n % 64;
   if (s === 0) return "< 1 stack";
@@ -6,7 +8,15 @@ export function stackLabel(n) {
   return `${s}×64 + ${r}`;
 }
 
-export function TotalsChip({ icon, count, label }) {
+export function TotalsChip({
+  icon,
+  count,
+  label
+}: {
+  icon: ReactNode;
+  count: number;
+  label: string;
+}) {
   return (
     <div className="totals-chip">
       {icon}

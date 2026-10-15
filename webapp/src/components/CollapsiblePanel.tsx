@@ -1,4 +1,15 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+
+interface CollapsiblePanelProps {
+  title: ReactNode;
+  meta?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  defaultOpen?: boolean;
+  disabled?: boolean;
+  className?: string;
+  children?: ReactNode;
+}
 
 export default function CollapsiblePanel({
   title,
@@ -9,7 +20,7 @@ export default function CollapsiblePanel({
   disabled = false,
   className,
   children,
-}) {
+}: CollapsiblePanelProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;

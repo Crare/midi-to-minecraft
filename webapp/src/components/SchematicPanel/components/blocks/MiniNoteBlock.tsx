@@ -1,7 +1,13 @@
 import { MINI } from "../../../../constants";
 import { blockColorFor } from "../../schematicData";
 
-export function MiniNoteBlock({ block, size = MINI }) {
+export function MiniNoteBlock({
+  block,
+  size = MINI
+}: {
+  block?: string;
+  size?: number;
+}) {
   const col = blockColorFor(block || "minecraft:dirt");
   return (
     <svg

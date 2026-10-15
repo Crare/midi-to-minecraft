@@ -4,7 +4,8 @@ import { playSuccessJingle } from "./audio/noteblockAudio";
 import ExamplePanel from "./components/ExamplePanel";
 import JsonOutputPanel from "./components/JsonOutputPanel";
 import SchematicPanel from "./components/SchematicPanel";
-import UploadPanel from "./components/UploadPanel";
+import UploadPanel, { type ConvertRequest } from "./components/UploadPanel";
+import type { DownloadFile, TrackEvents } from "./types";
 import VisualizationPanel from "./components/VisualizationPanel";
 
 import { Footer } from "./components/Footer";
@@ -19,8 +20,8 @@ import {
 export default function App() {
   const [status, setStatus] = useState("Choose a MIDI file to begin.");
   const [busy, setBusy] = useState(false);
-  const [trackEvents, setTrackEvents] = useState([]);
-  const [downloadFiles, setDownloadFiles] = useState([]);
+  const [trackEvents, setTrackEvents] = useState<TrackEvents[]>([]);
+  const [downloadFiles, setDownloadFiles] = useState<DownloadFile[]>([]);
   const [zipFilename, setZipFilename] = useState("output.zip");
 
   const exampleLoadedRef = useRef(false);
@@ -30,7 +31,7 @@ export default function App() {
     outputName,
     trimLeadingSilence,
     silent = false
-  }) => {
+  }: ConvertRequest) => {
     if (!file || busy) return;
 
     try {
@@ -71,7 +72,7 @@ export default function App() {
       return true;
     } catch (error) {
       console.error(error);
-      setStatus(`Conversion failed: ${error.message || String(error)}`);
+      setStatus(`Conversion failed: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setBusy(false);
     }

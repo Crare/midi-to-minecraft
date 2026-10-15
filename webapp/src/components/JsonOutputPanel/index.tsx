@@ -1,8 +1,14 @@
 import DownloadRow from './DownloadRow';
 import { useEffect, useState } from 'react';
 import CollapsiblePanel from '../CollapsiblePanel';
+import type { DownloadFile } from '../../types';
 
-export default function JsonOutputPanel({ downloadFiles, zipFilename }) {
+interface JsonOutputPanelProps {
+  downloadFiles: DownloadFile[];
+  zipFilename: string;
+}
+
+export default function JsonOutputPanel({ downloadFiles, zipFilename }: JsonOutputPanelProps) {
   const [outputsOpen, setOutputsOpen] = useState(false);
 
   useEffect(() => {

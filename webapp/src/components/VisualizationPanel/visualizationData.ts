@@ -1,3 +1,5 @@
+import type { TrackEvents, NoteEvent, VisualizationNote, VisualizationTrack } from '../../types';
+
 export const playbackScopes = {
   all: 'all',
   single: 'single',
@@ -10,21 +12,21 @@ export const viewModes = {
 
 export const redstoneTickDurationMs = 100;
 
-export function formatInstrumentName(instrument) {
+export function formatInstrumentName(instrument: string): string {
   return instrument
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 }
 
-export function getMaxTrackTick(tracks) {
+export function getMaxTrackTick(tracks: { notes: { startTick?: number }[] }[]): number {
   return tracks.reduce(
     (maxTick, track) => Math.max(maxTick, ...track.notes.map((note) => note.startTick ?? 0), 0),
     0
   );
 }
 
-export function findFirstNoteIndexAtOrAfter(notes, startTick) {
+export function findFirstNoteIndexAtOrAfter(notes: { startTick: number }[], startTick: number): number {
   let low = 0;
   let high = notes.length;
 
@@ -40,8 +42,11 @@ export function findFirstNoteIndexAtOrAfter(notes, startTick) {
   return low;
 }
 
-export function buildVisualizationTracks(trackEvents, mode = 'instrument') {
-  const groups = new Map();
+export function buildVisualizationTracks(
+  trackEvents: TrackEvents[],
+  mode: string = 'instrument'
+): VisualizationTrack[] {
+  const groups = new Map<string, TrackEvents>();
 
   if (mode === 'track') {
     // Group by original MIDI track index.
@@ -51,7 +56,7 @@ export function buildVisualizationTracks(trackEvents, mode = 'instrument') {
         if (!groups.has(key)) {
           groups.set(key, { id: `original-track-${event.trackIndex}`, title: event.trackName, events: [] });
         }
-        groups.get(key).events.push(event);
+        groups.get(key)!.events.push(event);
       });
     });
   } else {
@@ -61,7 +66,7 @@ export function buildVisualizationTracks(trackEvents, mode = 'instrument') {
       if (!groups.has(key)) {
         groups.set(key, { id: track.id, title: track.title, events: [] });
       }
-      groups.get(key).events.push(...track.events);
+      groups.get(key)!.events.push(...track.events);
     });
   }
 
@@ -70,15 +75,15 @@ export function buildVisualizationTracks(trackEvents, mode = 'instrument') {
     .map(({ id, title, events }) => {
       // Sort all events by absolute time and group simultaneous ones by tick.
       const sorted = [...events].sort((a, b) => a.time - b.time);
-      const byTick = new Map();
+      const byTick = new Map<number, NoteEvent[]>();
       sorted.forEach((event) => {
         const tick = Math.round(event.time * 10);
         if (!byTick.has(tick)) byTick.set(tick, []);
-        byTick.get(tick).push(event);
+        byTick.get(tick)!.push(event);
       });
 
       let prevTick = 0;
-      const notes = [...byTick.entries()]
+      const notes: VisualizationNote[] = [...byTick.entries()]
         .sort(([a], [b]) => a - b)
         .map(([tick, tickEvents]) => {
           const redstoneTickDelay = tick - prevTick;

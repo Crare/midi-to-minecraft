@@ -1,7 +1,13 @@
 import JSZip from 'jszip';
 import { useEffect, useState } from 'react';
+import type { DownloadFile } from '../../types';
 
-export default function DownloadRow({ filename, files }) {
+interface DownloadRowProps {
+  filename: string;
+  files: DownloadFile[];
+}
+
+export default function DownloadRow({ filename, files }: DownloadRowProps) {
   const [href, setHref] = useState('');
 
   useEffect(() => {

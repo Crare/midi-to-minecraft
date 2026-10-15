@@ -1,33 +1,62 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { TickGrid } from "../../types";
 import { playPlacementSound } from "../../audio/noteblockAudio";
 import {
   HEADER_H,
   computeLayout,
   drawSchematic,
-  hitTest
+  hitTest,
+  type HitResult
 } from "./canvasSchematic";
 import { blockLabel, getUseCount } from "./schematicData";
 
 const DRAG_THRESHOLD = 4;
 
-function clamp(v, lo, hi) {
+interface Tooltip {
+  left: number;
+  top: number;
+  below: boolean;
+  lines: string[];
+}
+
+interface PanState {
+  startX: number;
+  startY: number;
+  baseX: number;
+  baseY: number;
+  moved: boolean;
+}
+
+interface MarkerDrag {
+  axis: "x" | "y";
+  start: number;
+  base: number;
+}
+
+function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(v, hi));
 }
 
 // Canvas-rendered schematic. Only the visible cells are painted; the viewport
 // is sized to fit the window and panned by drag / wheel instead of scrollbars.
-export default function SchematicCanvas({ grid, cellSize }) {
-  const wrapRef = useRef(null);
-  const canvasRef = useRef(null);
+export default function SchematicCanvas({
+  grid,
+  cellSize
+}: {
+  grid: TickGrid;
+  cellSize: number;
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [width, setWidth] = useState(0);
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [scroll, setScroll] = useState({ x: 0, y: 0 });
-  const [lastPressed, setLastPressed] = useState(null);
-  const [tooltip, setTooltip] = useState(null);
+  const [lastPressed, setLastPressed] = useState<string | null>(null);
+  const [tooltip, setTooltip] = useState<Tooltip | null>(null);
   const [indicatorX, setIndicatorX] = useState(15);
   const [indicatorY, setIndicatorY] = useState(30);
-  const panRef = useRef(null);
-  const markerDragRef = useRef(null);
+  const panRef = useRef<PanState | null>(null);
+  const markerDragRef = useRef<MarkerDrag | null>(null);
 
   const layout = useMemo(() => computeLayout(grid, cellSize), [grid, cellSize]);
   const maxViewportH = Math.max(300, windowHeight - 340);
@@ -37,7 +66,7 @@ export default function SchematicCanvas({ grid, cellSize }) {
   const scrollX = clamp(scroll.x, 0, maxScrollX);
   const scrollY = clamp(scroll.y, 0, maxScrollY);
 
-  const limitsRef = useRef({});
+  const limitsRef = useRef({ maxScrollX: 0, maxScrollY: 0 });
   limitsRef.current = { maxScrollX, maxScrollY };
 
   useEffect(() => {
@@ -61,6 +90,7 @@ export default function SchematicCanvas({ grid, cellSize }) {
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     const ctx = canvas.getContext("2d");
+    if (!ctx) return;
     drawSchematic(ctx, {
       grid,
       layout,
@@ -78,7 +108,7 @@ export default function SchematicCanvas({ grid, cellSize }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
-    const onWheel = (e) => {
+    const onWheel = (e: WheelEvent) => {
       const { maxScrollX: mx, maxScrollY: my } = limitsRef.current;
       const horizontal = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY);
       const dx = horizontal ? (e.shiftKey ? e.deltaY : e.deltaX) : 0;
@@ -103,16 +133,16 @@ export default function SchematicCanvas({ grid, cellSize }) {
   const scrollRefValue = useRef(scroll);
   scrollRefValue.current = { x: scrollX, y: scrollY };
 
-  function localPoint(e) {
-    const r = canvasRef.current.getBoundingClientRect();
+  function localPoint(e: React.PointerEvent) {
+    const r = canvasRef.current!.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
 
-  function hit(p) {
+  function hit(p: { x: number; y: number }) {
     return hitTest({ grid, layout, scrollX, scrollY, x: p.x, y: p.y });
   }
 
-  function onPointerDown(e) {
+  function onPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     if (e.button !== 0) return;
     panRef.current = {
       startX: e.clientX,
@@ -121,10 +151,10 @@ export default function SchematicCanvas({ grid, cellSize }) {
       baseY: scrollY,
       moved: false
     };
-    canvasRef.current.setPointerCapture(e.pointerId);
+    canvasRef.current!.setPointerCapture(e.pointerId);
   }
 
-  function onPointerMove(e) {
+  function onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
     const pan = panRef.current;
     if (pan) {
       const dx = e.clientX - pan.startX;
@@ -162,7 +192,7 @@ export default function SchematicCanvas({ grid, cellSize }) {
     });
   }
 
-  function onPointerUp(e) {
+  function onPointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
     const pan = panRef.current;
     panRef.current = null;
     if (!pan || pan.moved) return;
@@ -182,8 +212,8 @@ export default function SchematicCanvas({ grid, cellSize }) {
     }
   }
 
-  function startMarkerDrag(axis) {
-    return (e) => {
+  function startMarkerDrag(axis: "x" | "y") {
+    return (e: React.PointerEvent<HTMLButtonElement>) => {
       e.preventDefault();
       e.stopPropagation();
       markerDragRef.current = {
@@ -195,7 +225,7 @@ export default function SchematicCanvas({ grid, cellSize }) {
     };
   }
 
-  function moveMarkerDrag(e) {
+  function moveMarkerDrag(e: React.PointerEvent<HTMLButtonElement>) {
     const d = markerDragRef.current;
     if (!d) return;
     if (d.axis === "x") {
