@@ -9,6 +9,7 @@ import { buildSchematicCsv, buildSchematicOds } from '../SchematicPanel/exportSp
 import { buildMinecraftFunction, type MinecraftEdition } from '../SchematicPanel/exportMinecraft';
 import { buildBedrockMcpack } from '../SchematicPanel/exportMcpack';
 import { getOutputPrefix } from '../../utils';
+import { buildExportAllArchive } from './buildExportAll';
 
 interface JsonOutputPanelProps {
   downloadFiles: DownloadFile[];
@@ -97,6 +98,22 @@ export default function JsonOutputPanel({
       if (await exportAs(`${outputPrefix}-spreadsheet.zip`, () => blob)) setSpreadsheetModalOpen(false);
     } catch (error) {
       setExportError(error instanceof Error ? error.message : 'Spreadsheet export failed.');
+    }
+  }
+
+  async function exportAll() {
+    setExportError('');
+    try {
+      const archive = await buildExportAllArchive({
+        outputPrefix,
+        jsonFiles: downloadFiles,
+        spreadsheetGrid,
+        fullGrid,
+        compactGrid
+      });
+      await exportAs(`${outputPrefix}-all.zip`, () => archive);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'Export all failed.');
     }
   }
 
@@ -199,11 +216,6 @@ export default function JsonOutputPanel({
               Export spreadsheet (.xlsx, .ods, .csv)
             </button>
           </div>
-          {exportError ? (
-            <p className="hint" role="alert">
-              {exportError}
-            </p>
-          ) : null}
         </section>
         <section className="output-export-box" aria-labelledby="minecraft-export-title">
           <h3 id="minecraft-export-title">Minecraft function / .mcpack export</h3>
@@ -224,6 +236,20 @@ export default function JsonOutputPanel({
             Minecraft functions use relative coordinates from the ground-level origin. Java exports preserve note pitches; Bedrock exports need manual tuning after placement, with target pitches listed in comments.
           </p>
         </section>
+      </div>
+      {exportError ? (
+        <p className="hint" role="alert">
+          {exportError}
+        </p>
+      ) : null}
+      <div className="output-export-row output-export-all">
+        <button
+          type="button"
+          onClick={() => void exportAll()}
+          disabled={fullGrid.instruments.length === 0}
+        >
+          Export all
+        </button>
       </div>
       {spreadsheetModalOpen ? (
         <div
