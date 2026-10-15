@@ -125,6 +125,7 @@ export default function App() {
             <JsonOutputPanel
               downloadFiles={downloadFiles}
               zipFilename={zipFilename}
+              trackEvents={trackEvents}
             />
           </div>
 

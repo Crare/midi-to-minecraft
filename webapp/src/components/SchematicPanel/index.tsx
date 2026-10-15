@@ -20,8 +20,6 @@ import {
   toMinecraftBuildGrid
 } from "./schematicData";
 import SchematicCanvas from "./SchematicCanvas";
-import { buildSchematicWorkbook } from "./exportExcel";
-import { buildSchematicCsv, buildSchematicOds } from "./exportSpreadsheet";
 
 type LayoutMode = "schematic" | "compact" | "minecraft";
 
@@ -36,11 +34,12 @@ export default function SchematicPanel({
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("minecraft");
 
   const fullGrid = useMemo(() => buildTickGrid(trackEvents), [trackEvents]);
+  const compactGrid = useMemo(() => buildCompactGrid(trackEvents), [trackEvents]);
   const grid = useMemo(() => {
     if (layoutMode === "schematic") return fullGrid;
     if (layoutMode === "minecraft") return toMinecraftBuildGrid(fullGrid);
-    return toMinecraftBuildGrid(buildCompactGrid(trackEvents));
-  }, [trackEvents, fullGrid, layoutMode]);
+    return toMinecraftBuildGrid(compactGrid);
+  }, [fullGrid, compactGrid, layoutMode]);
   const totalNotes = useMemo(
     () =>
       grid.instruments.reduce(
@@ -69,21 +68,6 @@ export default function SchematicPanel({
 
   const dimensions = useMemo(() => computeSchematicDimensions(grid), [grid]);
   const hasData = trackEvents.length > 0;
-  const [exportError, setExportError] = useState("");
-
-  async function exportAs(filename: string, build: () => Blob | Promise<Blob>) {
-    setExportError("");
-    try {
-      const url = URL.createObjectURL(await build());
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (error) {
-      setExportError(error instanceof Error ? error.message : "Export failed.");
-    }
-  }
 
   useEffect(() => {
     if (hasData) setOpen(true);
@@ -130,40 +114,7 @@ export default function SchematicPanel({
             <option value="minecraft">Full Minecraft build</option>
           </select>
         </label>
-        <div className="schematic-export" role="group" aria-label="Export schematic">
-          <button
-            type="button"
-            onClick={() => void exportAs("schematic.xlsx", () => buildSchematicWorkbook(fullGrid))}
-            disabled={grid.instruments.length === 0}
-          >
-            Export as Excel (.xlsx)
-          </button>
-          <button
-            type="button"
-            onClick={() => void exportAs("schematic.ods", () => buildSchematicOds(fullGrid))}
-            disabled={grid.instruments.length === 0}
-          >
-            Export as OpenDocument (.ods)
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              void exportAs(
-                "schematic.csv",
-                () => new Blob([buildSchematicCsv(fullGrid)], { type: "text/csv;charset=utf-8" })
-              )
-            }
-            disabled={grid.instruments.length === 0}
-          >
-            Export as CSV (.csv)
-          </button>
-        </div>
       </div>
-      {exportError ? (
-        <p className="hint" role="alert">
-          {exportError}
-        </p>
-      ) : null}
 
       <p className="hint output-summary">
         {layoutMode !== "schematic"
