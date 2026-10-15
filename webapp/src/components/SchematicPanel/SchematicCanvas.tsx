@@ -5,8 +5,7 @@ import {
   HEADER_H,
   computeLayout,
   drawSchematic,
-  hitTest,
-  type HitResult
+  hitTest
 } from "./canvasSchematic";
 import { blockLabel, getUseCount } from "./schematicData";
 

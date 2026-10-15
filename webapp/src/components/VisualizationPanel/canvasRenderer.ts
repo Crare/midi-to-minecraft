@@ -148,7 +148,8 @@ function roundedRect(
   r: number
 ) {
   ctx.beginPath();
-  ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h);
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
+  else ctx.rect(x, y, w, h);
 }
 
 function drawPlacement(
