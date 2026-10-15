@@ -19,6 +19,7 @@ import {
 } from "./schematicData";
 import SchematicCanvas from "./SchematicCanvas";
 import { buildSchematicWorkbook } from "./exportExcel";
+import { buildSchematicCsv, buildSchematicOds } from "./exportSpreadsheet";
 
 export default function SchematicPanel({
   trackEvents
@@ -59,18 +60,17 @@ export default function SchematicPanel({
   const hasData = trackEvents.length > 0;
   const [exportError, setExportError] = useState("");
 
-  async function exportExcel() {
+  async function exportAs(filename: string, build: () => Blob | Promise<Blob>) {
     setExportError("");
     try {
-      const blob = await buildSchematicWorkbook(grid);
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(await build());
       const link = document.createElement("a");
       link.href = url;
-      link.download = "schematic.xlsx";
+      link.download = filename;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) {
-      setExportError(error instanceof Error ? error.message : "Excel export failed.");
+      setExportError(error instanceof Error ? error.message : "Export failed.");
     }
   }
 
@@ -108,13 +108,34 @@ export default function SchematicPanel({
             <option value={48}>XL (48px)</option>
           </select>
         </label>
-        <button
-          type="button"
-          onClick={() => void exportExcel()}
-          disabled={grid.instruments.length === 0}
-        >
-          Export as Excel (.xlsx)
-        </button>
+        <div className="schematic-export" role="group" aria-label="Export schematic">
+          <button
+            type="button"
+            onClick={() => void exportAs("schematic.xlsx", () => buildSchematicWorkbook(grid))}
+            disabled={grid.instruments.length === 0}
+          >
+            Export as Excel (.xlsx)
+          </button>
+          <button
+            type="button"
+            onClick={() => void exportAs("schematic.ods", () => buildSchematicOds(grid))}
+            disabled={grid.instruments.length === 0}
+          >
+            Export as OpenDocument (.ods)
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void exportAs(
+                "schematic.csv",
+                () => new Blob([buildSchematicCsv(grid)], { type: "text/csv;charset=utf-8" })
+              )
+            }
+            disabled={grid.instruments.length === 0}
+          >
+            Export as CSV (.csv)
+          </button>
+        </div>
       </div>
       {exportError ? (
         <p className="hint" role="alert">

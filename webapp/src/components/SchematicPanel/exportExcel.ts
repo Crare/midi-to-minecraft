@@ -138,7 +138,7 @@ export function columnName(index: number): string {
   return name;
 }
 
-function escapeXml(value: string): string {
+export function escapeXml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -148,7 +148,7 @@ function escapeXml(value: string): string {
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 }
 
-function isDarkFill(hex: string): boolean {
+export function isDarkFill(hex: string): boolean {
   const r = parseInt(hex.slice(0, 2), 16);
   const g = parseInt(hex.slice(2, 4), 16);
   const b = parseInt(hex.slice(4, 6), 16);

@@ -1296,3 +1296,9 @@ input[type='checkbox'] {
   font-family: 'Courier New', 'Lucida Console', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
 }
+
+.schematic-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
