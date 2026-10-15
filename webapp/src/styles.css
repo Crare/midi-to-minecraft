@@ -1328,6 +1328,10 @@ input[type='checkbox'] {
   flex: 1 1 auto;
 }
 
+.output-export-all {
+  margin-top: 0.75rem;
+}
+
 .function-preview-backdrop {
   position: fixed;
   inset: 0;
