@@ -1,0 +1,4454 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`example.mid visualization data > tracks grouped by instrument 1`] = `
+[
+  {
+    "id": "instrument-harp-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 15,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 20,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 25,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 30,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 35,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 40,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 45,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 50,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 55,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 60,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 8,
+        "startTick": 68,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 70,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 80,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 85,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 90,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 95,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 100,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 105,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 110,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 115,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 120,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 125,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 130,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 135,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 140,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 8,
+        "startTick": 148,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 150,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 160,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 165,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 170,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 175,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 180,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 185,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 3,
+        "startTick": 188,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 190,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 195,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 200,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 205,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 3,
+        "startTick": 208,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 210,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 215,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 220,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 225,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 230,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 240,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 245,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 250,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 255,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 260,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 265,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 270,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 275,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 280,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 285,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 290,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 295,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 300,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 8,
+        "startTick": 308,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 310,
+      },
+    ],
+    "subtitle": "62 notes",
+    "title": "Harp",
+  },
+  {
+    "id": "instrument-bass-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 20,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 30,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 40,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 50,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 60,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 70,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 80,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 90,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 100,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 110,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 120,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 130,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 140,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 150,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 160,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 170,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 180,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 190,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 200,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 210,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 220,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 230,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 240,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 250,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 260,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 270,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 280,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 290,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 300,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 310,
+      },
+    ],
+    "subtitle": "32 notes",
+    "title": "Bass",
+  },
+  {
+    "id": "instrument-basedrum-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 20,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 30,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 40,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 50,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 60,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 70,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 80,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 90,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 100,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 110,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 120,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 130,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 140,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 150,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 160,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 170,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 180,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 190,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 200,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 210,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 220,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 230,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 240,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 250,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 260,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 270,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 280,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 290,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 300,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 310,
+      },
+    ],
+    "subtitle": "32 notes",
+    "title": "Basedrum",
+  },
+  {
+    "id": "instrument-snare-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 15,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 25,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 35,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 45,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 55,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 65,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 75,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 85,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 95,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 105,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 115,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 125,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 135,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 145,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 155,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 165,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 175,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 185,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 195,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 205,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 215,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 225,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 235,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 245,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 255,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 265,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 275,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 285,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 295,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 305,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 315,
+      },
+    ],
+    "subtitle": "32 notes",
+    "title": "Snare",
+  },
+]
+`;
+
+exports[`example.mid visualization data > tracks grouped by track 1`] = `
+[
+  {
+    "id": "original-track-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 15,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 20,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 25,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 30,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 35,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 40,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 45,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 50,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 55,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 60,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 8,
+        "startTick": 68,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 70,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 80,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 85,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 90,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 95,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 100,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 105,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 110,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 115,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 120,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 125,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 130,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 135,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 140,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 8,
+        "startTick": 148,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 150,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 160,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 165,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 170,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 175,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 180,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 185,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 3,
+        "startTick": 188,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 190,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 195,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 200,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 205,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 3,
+        "startTick": 208,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 210,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 215,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 220,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 225,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 230,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 240,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 245,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 250,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 255,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 260,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 11,
+            "pitch": "F",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 265,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 270,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 275,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 280,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 285,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 290,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 295,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 8,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 300,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 8,
+        "startTick": 308,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 310,
+      },
+    ],
+    "subtitle": "62 notes",
+    "title": "Melody",
+  },
+  {
+    "id": "original-track-1",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 20,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 30,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 40,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 50,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 60,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 70,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 80,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 90,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 100,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 110,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 120,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 130,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 140,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 150,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 160,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 170,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 180,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 190,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 200,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 210,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 220,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 230,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 240,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 250,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 260,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 270,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 280,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 290,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 300,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 310,
+      },
+    ],
+    "subtitle": "32 notes",
+    "title": "Bass",
+  },
+  {
+    "id": "original-track-2",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 15,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 20,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 25,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 30,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 35,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 40,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 45,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 50,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 55,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 60,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 65,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 70,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 75,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 80,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 85,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 90,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 95,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 100,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 105,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 110,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 115,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 120,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 125,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 130,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 135,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 140,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 145,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 150,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 155,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 160,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 165,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 170,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 175,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 180,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 185,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 190,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 195,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 200,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 205,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 210,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 215,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 220,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 225,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 230,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 235,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 240,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 245,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 250,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 255,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 260,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 265,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 270,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 275,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 280,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 285,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 290,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 295,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 300,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 305,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 310,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 315,
+      },
+    ],
+    "subtitle": "64 notes",
+    "title": "Drums",
+  },
+]
+`;
+
+exports[`lane layout > fits lanes into the available height 1`] = `
+{
+  "cell": 34,
+  "height": 399,
+  "laneHeight": 75,
+  "pitch": 36,
+}
+`;
+
+exports[`lane layout > fits lanes into the available height 2`] = `
+{
+  "cell": 34,
+  "height": 76,
+  "laneHeight": 76,
+  "pitch": 36,
+}
+`;
+
+exports[`lane layout > fits lanes into the available height 3`] = `
+{
+  "cell": 20,
+  "height": 1494,
+  "laneHeight": 44,
+  "pitch": 22,
+}
+`;
+
+exports[`synthetic chords visualization data > tracks grouped by instrument 1`] = `
+[
+  {
+    "id": "instrument-harp-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 3,
+        "startTick": 3,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 17,
+            "pitch": "B",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 17,
+            "pitch": "B",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 20,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 1,
+        "startTick": 11,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 17,
+            "pitch": "B",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 20,
+            "pitch": "D",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 26,
+        "startTick": 37,
+      },
+    ],
+    "subtitle": "21 notes",
+    "title": "Harp",
+  },
+  {
+    "id": "instrument-bass-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 13,
+        "startTick": 23,
+      },
+    ],
+    "subtitle": "4 notes",
+    "title": "Bass",
+  },
+  {
+    "id": "instrument-basedrum-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 10,
+      },
+    ],
+    "subtitle": "2 notes",
+    "title": "Basedrum",
+  },
+  {
+    "id": "instrument-snare-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 10,
+        "startTick": 15,
+      },
+    ],
+    "subtitle": "2 notes",
+    "title": "Snare",
+  },
+]
+`;
+
+exports[`synthetic chords visualization data > tracks grouped by track 1`] = `
+[
+  {
+    "id": "original-track-0",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 3,
+        "startTick": 3,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 2,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 17,
+            "pitch": "B",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 17,
+            "pitch": "B",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 20,
+            "pitch": "D",
+          },
+        ],
+        "redstoneTickDelay": 1,
+        "startTick": 11,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 6,
+            "pitch": "C",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 10,
+            "pitch": "E",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 13,
+            "pitch": "G",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 17,
+            "pitch": "B",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 20,
+            "pitch": "D",
+          },
+          {
+            "block": "minecraft:dirt",
+            "instrument": "harp",
+            "note": 1,
+            "pitch": "G",
+          },
+        ],
+        "redstoneTickDelay": 26,
+        "startTick": 37,
+      },
+    ],
+    "subtitle": "21 notes",
+    "title": "Track 1",
+  },
+  {
+    "id": "original-track-1",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:acacia_log",
+            "instrument": "bass",
+            "note": 10,
+            "pitch": "E",
+          },
+        ],
+        "redstoneTickDelay": 13,
+        "startTick": 23,
+      },
+    ],
+    "subtitle": "4 notes",
+    "title": "Track 2",
+  },
+  {
+    "id": "original-track-2",
+    "notes": [
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 0,
+        "startTick": 0,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 5,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:stone",
+            "instrument": "basedrum",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 10,
+      },
+      {
+        "placements": [
+          {
+            "block": "minecraft:sand",
+            "instrument": "snare",
+            "note": 0,
+            "pitch": undefined,
+          },
+        ],
+        "redstoneTickDelay": 5,
+        "startTick": 15,
+      },
+    ],
+    "subtitle": "4 notes",
+    "title": "Track 3",
+  },
+]
+`;
