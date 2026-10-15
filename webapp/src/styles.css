@@ -1291,3 +1291,14 @@ input[type='checkbox'] {
 .schematic-tutorial .schematic-tutorial-figure {
   flex: 1 1 180px;
 }
+
+.mono-value {
+  font-family: 'Courier New', 'Lucida Console', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.schematic-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

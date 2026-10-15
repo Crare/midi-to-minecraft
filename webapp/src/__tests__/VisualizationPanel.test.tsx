@@ -83,9 +83,9 @@ describe("VisualizationPanel", () => {
     const minutes = Math.floor(seconds / 60);
     const rest = (seconds - minutes * 60).toFixed(1).padStart(4, "0");
     expect(
-      screen.getByText(`Track length: ${Math.ceil(max)} ticks (${minutes}:${rest})`)
+      screen.getByText(`${Math.ceil(max)} ticks (${minutes}:${rest})`)
     ).toBeTruthy();
-    expect(screen.getByText(/Position: 0\.0 ticks \(0:00\.0\)/)).toBeTruthy();
+    expect(screen.getByText(/^0\.0 ticks \(0:00\.0\)/)).toBeTruthy();
   });
 
   it("opens with one mute button per lane and a labelled canvas", () => {

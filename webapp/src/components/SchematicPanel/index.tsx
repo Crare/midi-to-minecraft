@@ -18,6 +18,8 @@ import {
   computeTickGridBlockCounts
 } from "./schematicData";
 import SchematicCanvas from "./SchematicCanvas";
+import { buildSchematicWorkbook } from "./exportExcel";
+import { buildSchematicCsv, buildSchematicOds } from "./exportSpreadsheet";
 
 export default function SchematicPanel({
   trackEvents
@@ -56,6 +58,21 @@ export default function SchematicPanel({
 
   const dimensions = useMemo(() => computeSchematicDimensions(grid), [grid]);
   const hasData = trackEvents.length > 0;
+  const [exportError, setExportError] = useState("");
+
+  async function exportAs(filename: string, build: () => Blob | Promise<Blob>) {
+    setExportError("");
+    try {
+      const url = URL.createObjectURL(await build());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "Export failed.");
+    }
+  }
 
   useEffect(() => {
     if (hasData) setOpen(true);
@@ -91,7 +108,40 @@ export default function SchematicPanel({
             <option value={48}>XL (48px)</option>
           </select>
         </label>
+        <div className="schematic-export" role="group" aria-label="Export schematic">
+          <button
+            type="button"
+            onClick={() => void exportAs("schematic.xlsx", () => buildSchematicWorkbook(grid))}
+            disabled={grid.instruments.length === 0}
+          >
+            Export as Excel (.xlsx)
+          </button>
+          <button
+            type="button"
+            onClick={() => void exportAs("schematic.ods", () => buildSchematicOds(grid))}
+            disabled={grid.instruments.length === 0}
+          >
+            Export as OpenDocument (.ods)
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void exportAs(
+                "schematic.csv",
+                () => new Blob([buildSchematicCsv(grid)], { type: "text/csv;charset=utf-8" })
+              )
+            }
+            disabled={grid.instruments.length === 0}
+          >
+            Export as CSV (.csv)
+          </button>
+        </div>
       </div>
+      {exportError ? (
+        <p className="hint" role="alert">
+          {exportError}
+        </p>
+      ) : null}
 
       <p className="hint output-summary">
         Top-down schematic. Background color = instrument block. Each repeater
