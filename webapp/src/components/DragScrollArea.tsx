@@ -1,11 +1,17 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type PointerEvent, type ReactNode, type Ref, type RefCallback, type MutableRefObject } from 'react';
 
-export default function DragScrollArea({ className = '', children, containerRef: externalRef }) {
-  const containerRef = useRef(null);
-  const dragRef = useRef({ active: false, pointerId: null, lastClientX: 0 });
+interface DragScrollAreaProps {
+  className?: string;
+  children?: ReactNode;
+  containerRef?: Ref<HTMLDivElement>;
+}
+
+export default function DragScrollArea({ className = '', children, containerRef: externalRef }: DragScrollAreaProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{ active: boolean; pointerId: number | null; lastClientX: number }>({ active: false, pointerId: null, lastClientX: 0 });
   const [dragging, setDragging] = useState(false);
 
-  const setContainerRef = (node) => {
+  const setContainerRef = (node: HTMLDivElement | null) => {
     containerRef.current = node;
 
     if (!externalRef) return;
@@ -14,7 +20,7 @@ export default function DragScrollArea({ className = '', children, containerRef:
       return;
     }
 
-    externalRef.current = node;
+    (externalRef as MutableRefObject<HTMLDivElement | null>).current = node;
   };
 
   const finishDrag = () => {
@@ -22,7 +28,7 @@ export default function DragScrollArea({ className = '', children, containerRef:
     setDragging(false);
   };
 
-  const onPointerDown = (event) => {
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
     dragRef.current = {
@@ -35,7 +41,7 @@ export default function DragScrollArea({ className = '', children, containerRef:
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const onPointerMove = (event) => {
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!dragRef.current.active || dragRef.current.pointerId !== event.pointerId) return;
 
     const container = containerRef.current;

@@ -13,9 +13,11 @@ import {
   splitIntoSubLanes,
 } from "../components/SchematicPanel/schematicData";
 import { computeLayout, hitTest, HEADER_H } from "../components/SchematicPanel/canvasSchematic";
+import type { NoteEvent } from "../types";
+import type { LanePlacement, SubLane } from "../components/SchematicPanel/schematicData";
 import { midiFixtures } from "./helpers";
 
-const countMap = (c) => ({ ...c, supportMap: c.supportMap && Object.fromEntries(c.supportMap) });
+const countMap = (c: ReturnType<typeof computeTickGridBlockCounts>) => ({ ...c, supportMap: c.supportMap && Object.fromEntries(c.supportMap) });
 
 describe.each(midiFixtures)("%s schematic", (_name, getMidi) => {
   const trackEvents = buildTrackEvents(getMidi());
@@ -61,7 +63,7 @@ describe.each(midiFixtures)("%s schematic", (_name, getMidi) => {
           y: HEADER_H + r.y + cs / 2,
         });
         expect(hit?.type).toBe("note");
-        expect(hit.note).toBe(cell.note);
+        expect(hit && "note" in hit && hit.note).toBe(cell.note);
         found++;
       });
     });
@@ -83,7 +85,9 @@ describe("schematic helpers", () => {
   });
 
   it("splits overlapping events into sub-lanes", () => {
-    const ev = (time, endTime) => ({ time, endTime, note: 0 });
+    const ev = (time: number, endTime: number): NoteEvent => ({
+      time, endTime, note: 0, block: "minecraft:dirt", pitch: "C", instrument: "harp", trackIndex: 0, trackName: "t",
+    });
     const lanes = splitIntoSubLanes([ev(0, 1), ev(0, 1), ev(1, 2), ev(0.5, 0.6)]);
     expect(lanes.length).toBe(3);
     lanes.forEach((l) => {
@@ -92,14 +96,17 @@ describe("schematic helpers", () => {
   });
 
   it("detects branches only for later lanes", () => {
-    const lane = (ticks) => ({ notes: ticks.map((t) => ({ startTick: t })) });
+    const lane = (ticks: number[]) =>
+      ({ notes: ticks.map((t) => ({ startTick: t })) }) as SubLane;
     const res = detectBranches([lane([0, 4, 8]), lane([6, 10])]);
     expect(res[0]).toBeNull();
     expect(res[1]).toEqual({ sourceIndex: 0, savedTicks: 6 });
   });
 
   it("builds cells with repeaters and dust", () => {
-    const n = (startTick, delay) => ({ startTick, delay, block: "minecraft:dirt", instrument: "harp", note: 0 });
+    const n = (startTick: number, delay: number): LanePlacement => ({
+      startTick, delay, block: "minecraft:dirt", instrument: "harp", note: 0, pitch: "C",
+    });
     expect(buildCells([n(5, 5), n(5, 0)]).map((c) => c.type)).toMatchSnapshot();
   });
 

@@ -1,4 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import type {
+  CanvasLane,
+  CanvasOpts,
+  CanvasView,
+  SpriteStore,
+  TrackEvents,
+  VisualizationPlacement,
+} from '../../types';
 import {
   getAudioClock,
   playPlacementSound,
@@ -28,7 +37,22 @@ const START_DELAY_S = 0.06;
 const SCHEDULE_AHEAD_S = 0.15;
 const SCHEDULER_INTERVAL_MS = 25;
 
-export default function VisualizationPanel({ trackEvents }) {
+interface RenderParams extends CanvasOpts {
+  layout: ReturnType<typeof computeLaneLayout>;
+  width: number;
+  lanes: CanvasLane[];
+}
+
+interface TooltipState {
+  lines: string[];
+  left: number;
+  top: number;
+  below: boolean;
+}
+
+type PlaybackNote = VisualizationPlacement & { startTick: number; trackId: string };
+
+export default function VisualizationPanel({ trackEvents }: { trackEvents: TrackEvents[] }) {
   const [tracksOpen, setTracksOpen] = useState(false);
   const [showColor, setShowColor] = useState(true);
   const [showNumber, setShowNumber] = useState(true);
@@ -39,7 +63,7 @@ export default function VisualizationPanel({ trackEvents }) {
   const [playheadTick, setPlayheadTick] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playheadDragging, setPlayheadDragging] = useState(false);
-  const [mutedTracks, setMutedTracks] = useState(new Set());
+  const [mutedTracks, setMutedTracks] = useState<Set<string>>(new Set());
   const mutedTracksRef = useRef(mutedTracks);
   const [trackUnitSize, setTrackUnitSize] = useState(() =>
     typeof window !== 'undefined' && window.innerWidth <= 700 ? 30 : 34
@@ -49,30 +73,35 @@ export default function VisualizationPanel({ trackEvents }) {
   const [windowHeight, setWindowHeight] = useState(() =>
     typeof window !== 'undefined' ? window.innerHeight : 800
   );
-  const [tooltip, setTooltip] = useState(null);
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  const canvasWrapRef = useRef(null);
-  const canvasRef = useRef(null);
-  const playheadRef = useRef(null);
+  const canvasWrapRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const playheadRef = useRef<HTMLButtonElement>(null);
   const scrollLeftRef = useRef(0);
   const drawFrameRef = useRef(0);
-  const renderParamsRef = useRef(null);
-  const spritesRef = useRef(null);
-  const canvasPanRef = useRef({ pointerId: null, startX: 0, startScroll: 0, moved: false });
-  const hoveredKeyRef = useRef(null);
-  const playheadDragRef = useRef({
+  const renderParamsRef = useRef<RenderParams | null>(null);
+  const spritesRef = useRef<SpriteStore | null>(null);
+  const canvasPanRef = useRef<{
+    pointerId: number | null;
+    startX: number;
+    startScroll: number;
+    moved: boolean;
+  }>({ pointerId: null, startX: 0, startScroll: 0, moved: false });
+  const hoveredKeyRef = useRef<string | null>(null);
+  const playheadDragRef = useRef<{ active: boolean; pointerId: number | null; grabOffsetTicks: number }>({
     active: false,
     pointerId: null,
     grabOffsetTicks: 0,
   });
   const playheadTickRef = useRef(0);
-  const playbackNotesRef = useRef([]);
+  const playbackNotesRef = useRef<PlaybackNote[]>([]);
   const playbackEndTickRef = useRef(0);
   const playbackCursorRef = useRef(0);
   const playbackLastStateSyncMsRef = useRef(0);
   const playbackAnimationFrameRef = useRef(0);
   const playbackStartMsRef = useRef(0);
-  const playbackAudioStartRef = useRef(null);
+  const playbackAudioStartRef = useRef<number | null>(null);
   const playbackSchedulerRef = useRef(0);
   const playbackStartTickRef = useRef(0);
 
@@ -103,7 +132,7 @@ export default function VisualizationPanel({ trackEvents }) {
   // Stable per-track toggle callbacks — only recreated when the track list changes,
   // not on every playheadTick update. This keeps TrackRow memo intact during playback.
   const toggleMuteCallbacks = useMemo(() => {
-    const map = new Map();
+    const map = new Map<string, () => void>();
     visibleTracks.forEach((track) => {
       map.set(track.id, () => {
         setMutedTracks((prev) => {
@@ -154,8 +183,9 @@ export default function VisualizationPanel({ trackEvents }) {
   );
 
   function getMaxScrollLeft() {
-    const { pitch } = renderParamsRef.current.layout;
-    return Math.max(0, tickToX(timelineUnitCount, pitch) - renderParamsRef.current.width);
+    const params = renderParamsRef.current!;
+    const { pitch } = params.layout;
+    return Math.max(0, tickToX(timelineUnitCount, pitch) - params.width);
   }
 
   function drawFrame() {
@@ -175,11 +205,11 @@ export default function VisualizationPanel({ trackEvents }) {
     if (!spritesRef.current) spritesRef.current = createSpriteStore(requestDraw);
 
     const scrollLeft = scrollLeftRef.current;
-    renderTracks(canvas.getContext('2d'), {
+    renderTracks(canvas.getContext('2d')!, {
       lanes,
       view: { ...laneLayout, width, scrollLeft },
       opts: { showColor: color, showNumber: number, showSupport: support },
-      sprites: spritesRef.current,
+      sprites: spritesRef.current!,
       dpr,
     });
 
@@ -237,7 +267,10 @@ export default function VisualizationPanel({ trackEvents }) {
     }
   }
 
-  function syncViewportToTick(nextTick, { follow = 'anchor' } = {}) {
+  function syncViewportToTick(
+    nextTick: number,
+    { follow = 'anchor' }: { follow?: 'anchor' | 'visible' } = {}
+  ) {
     const params = renderParamsRef.current;
     if (!params || params.width === 0) return;
 
@@ -260,7 +293,15 @@ export default function VisualizationPanel({ trackEvents }) {
     }
   }
 
-  function setPlayheadPosition(nextTick, { syncState = false, syncScroll = false, follow, draw = true } = {}) {
+  function setPlayheadPosition(
+    nextTick: number,
+    {
+      syncState = false,
+      syncScroll = false,
+      follow,
+      draw = true,
+    }: { syncState?: boolean; syncScroll?: boolean; follow?: 'anchor' | 'visible'; draw?: boolean } = {}
+  ) {
     const clampedTick = Math.max(0, nextTick);
     playheadTickRef.current = clampedTick;
 
@@ -275,7 +316,7 @@ export default function VisualizationPanel({ trackEvents }) {
     if (draw) requestDraw();
   }
 
-  function stopPlayback(nextTick) {
+  function stopPlayback(nextTick?: number) {
     clearPlaybackTimers();
     setIsPlaying(false);
 
@@ -299,7 +340,7 @@ export default function VisualizationPanel({ trackEvents }) {
     // stalls can't delay or bunch them. The same clock drives the playhead.
     const audioNow = getAudioClock();
     const useAudioClock = audioNow !== null;
-    const audioStart = useAudioClock ? audioNow + START_DELAY_S : null;
+    const audioStart: number | null = useAudioClock ? audioNow + START_DELAY_S : null;
     playbackAudioStartRef.current = audioStart;
     playbackStartMsRef.current = performance.now() + START_DELAY_S * 1000;
     playbackStartTickRef.current = clampedStartTick;
@@ -313,7 +354,7 @@ export default function VisualizationPanel({ trackEvents }) {
     const tickDurationS = redstoneTickDurationMs / 1000;
     const elapsedSeconds = () =>
       useAudioClock
-        ? (getAudioClock() ?? audioStart) - audioStart
+        ? (getAudioClock() ?? audioStart!) - audioStart!
         : (performance.now() - playbackStartMsRef.current) / 1000;
 
     const scheduleNotes = () => {
@@ -327,7 +368,7 @@ export default function VisualizationPanel({ trackEvents }) {
         const note = notes[playbackCursorRef.current];
         if (!mutedTracksRef.current.has(note.trackId)) {
           const when = useAudioClock
-            ? audioStart + (note.startTick - playbackStartTickRef.current) * tickDurationS
+            ? audioStart! + (note.startTick - playbackStartTickRef.current) * tickDurationS
             : undefined;
           playPlacementSoundSync(note, when);
         }
@@ -381,13 +422,13 @@ export default function VisualizationPanel({ trackEvents }) {
     setPlayheadDragging(false);
   }
 
-  function pointerToTick(clientX) {
-    const rect = canvasWrapRef.current.getBoundingClientRect();
-    const { pitch } = renderParamsRef.current.layout;
+  function pointerToTick(clientX: number) {
+    const rect = canvasWrapRef.current!.getBoundingClientRect();
+    const { pitch } = renderParamsRef.current!.layout;
     return (clientX - rect.left + scrollLeftRef.current - tickToX(0, pitch)) / pitch;
   }
 
-  const onPlayheadPointerDown = (event) => {
+  const onPlayheadPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (visibleTracks.length === 0) return;
 
     event.preventDefault();
@@ -402,7 +443,7 @@ export default function VisualizationPanel({ trackEvents }) {
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const onPlayheadPointerMove = (event) => {
+  const onPlayheadPointerMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (
       !playheadDragRef.current.active ||
       playheadDragRef.current.pointerId !== event.pointerId
@@ -422,18 +463,18 @@ export default function VisualizationPanel({ trackEvents }) {
     });
   };
 
-  const onPlayheadPointerUp = (event) => {
+  const onPlayheadPointerUp = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (playheadDragRef.current.pointerId !== event.pointerId) return;
     finishPlayheadDrag();
   };
 
-  function getCanvasPoint(event) {
-    const rect = canvasRef.current.getBoundingClientRect();
+  function getCanvasPoint(event: { clientX: number; clientY: number }) {
+    const rect = canvasRef.current!.getBoundingClientRect();
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
-  function hitTestAt(event) {
-    const params = renderParamsRef.current;
+  function hitTestAt(event: { clientX: number; clientY: number }) {
+    const params = renderParamsRef.current!;
     const { x, y } = getCanvasPoint(event);
     return hitTest({
       lanes: params.lanes,
@@ -450,7 +491,7 @@ export default function VisualizationPanel({ trackEvents }) {
     setTooltip(null);
   }
 
-  const onCanvasPointerDown = (event) => {
+  const onCanvasPointerDown = (event: ReactPointerEvent<HTMLCanvasElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     canvasPanRef.current = {
       pointerId: event.pointerId,
@@ -461,7 +502,7 @@ export default function VisualizationPanel({ trackEvents }) {
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const onCanvasPointerMove = (event) => {
+  const onCanvasPointerMove = (event: ReactPointerEvent<HTMLCanvasElement>) => {
     const pan = canvasPanRef.current;
     if (pan.pointerId === event.pointerId) {
       const deltaX = event.clientX - pan.startX;
@@ -481,7 +522,7 @@ export default function VisualizationPanel({ trackEvents }) {
     }
     if (hit.key === hoveredKeyRef.current) return;
     hoveredKeyRef.current = hit.key;
-    const wrapWidth = renderParamsRef.current.width;
+    const wrapWidth = renderParamsRef.current!.width;
     const below = hit.y < 140;
     setTooltip({
       lines: getNoteTooltipLines(hit.placement),
@@ -491,7 +532,7 @@ export default function VisualizationPanel({ trackEvents }) {
     });
   };
 
-  const onCanvasPointerUp = (event) => {
+  const onCanvasPointerUp = (event: ReactPointerEvent<HTMLCanvasElement>) => {
     const pan = canvasPanRef.current;
     if (pan.pointerId !== event.pointerId) return;
     canvasPanRef.current = { pointerId: null, startX: 0, startScroll: 0, moved: false };
@@ -569,7 +610,7 @@ export default function VisualizationPanel({ trackEvents }) {
     observer.observe(wrap);
 
     // Horizontal wheel/trackpad gestures pan the timeline; vertical wheel still scrolls the page.
-    const onWheel = (event) => {
+    const onWheel = (event: WheelEvent) => {
       const horizontal = event.shiftKey ? event.deltaY : event.deltaX;
       if (!event.shiftKey && Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
       event.preventDefault();
@@ -673,7 +714,7 @@ export default function VisualizationPanel({ trackEvents }) {
             ? 'No tracks to visualize.'
             : `${visibleTracks.length} ${viewMode === viewModes.track ? 'track' : 'instrument'} lane(s) ready. Drag or scroll horizontally for long tracks.`}
         </p>
-        <div className="track-area" style={{ '--lane-gap': `${LANE_GAP}px` }}>
+        <div className="track-area" style={{ '--lane-gap': `${LANE_GAP}px` } as CSSProperties}>
               <div className="track-headers">
                 {visibleTracks.map((track) => (
                   <div

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { TrackEvents } from "../../types";
 import CollapsiblePanel from "../CollapsiblePanel";
 import {
   MiniBlock,
@@ -18,7 +19,11 @@ import {
 } from "./schematicData";
 import SchematicCanvas from "./SchematicCanvas";
 
-export default function SchematicPanel({ trackEvents }) {
+export default function SchematicPanel({
+  trackEvents
+}: {
+  trackEvents: TrackEvents[];
+}) {
   const [open, setOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [cellSize, setCellSize] = useState(28);

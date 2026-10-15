@@ -1,3 +1,5 @@
+import type { Midi } from "@tonejs/midi";
+import type { NoteEvent, Placement, TrackEvents } from "./types";
 import {
   blockByPatchId,
   blockByPercussiveNote,
@@ -6,7 +8,7 @@ import {
   instrumentByBlock
 } from "./constants";
 
-export function midiToPitchClass(noteNumber) {
+export function midiToPitchClass(noteNumber: number): string {
   const scale = [
     "C",
     "C#",
@@ -24,15 +26,18 @@ export function midiToPitchClass(noteNumber) {
   return scale[noteNumber % 12];
 }
 
-export function midiToMinecraftNote(noteNumber) {
+export function midiToMinecraftNote(noteNumber: number): number {
   return (((noteNumber - 6) % 24) + 24) % 24;
 }
 
-export function sanitizeFilename(name) {
+export function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-export function splitOutputTarget(inputName, outputName) {
+export function splitOutputTarget(
+  inputName: string,
+  outputName?: string
+): { dir: string; stem: string; ext: string } {
   const safeInput = sanitizeFilename(
     inputName.replace(/\.[^.]+$/, "") || "song"
   );
@@ -49,12 +54,12 @@ export function splitOutputTarget(inputName, outputName) {
   return { dir, stem, ext };
 }
 
-export function getZipFilename(outputName, inputName) {
+export function getZipFilename(outputName: string | undefined, inputName: string): string {
   const target = splitOutputTarget(inputName, outputName);
   return `${target.stem}.zip`;
 }
 
-export function getSongStartTime(midi) {
+export function getSongStartTime(midi: Midi): number {
   let earliestTime = Infinity;
 
   midi.tracks.forEach((track) => {
@@ -67,9 +72,12 @@ export function getSongStartTime(midi) {
 }
 
 // Builds a single flat list of all notes across all MIDI tracks, sorted by absolute start time.
-export function buildNoteList(midi, { trimLeadingSilence = false } = {}) {
+export function buildNoteList(
+  midi: Midi,
+  { trimLeadingSilence = false }: { trimLeadingSilence?: boolean } = {}
+): NoteEvent[] {
   const songStartTime = trimLeadingSilence ? getSongStartTime(midi) : 0;
-  const notes = [];
+  const notes: NoteEvent[] = [];
 
   midi.tracks.forEach((track, trackIndex) => {
     const channel = typeof track.channel === "number" ? track.channel : 0;
@@ -105,21 +113,24 @@ export function buildNoteList(midi, { trimLeadingSilence = false } = {}) {
 }
 
 // Groups the unified note list by instrument, splitting into lanes when notes overlap in time.
-export function buildTrackEvents(midi, { trimLeadingSilence = false } = {}) {
+export function buildTrackEvents(
+  midi: Midi,
+  { trimLeadingSilence = false }: { trimLeadingSilence?: boolean } = {}
+): TrackEvents[] {
   const noteList = buildNoteList(midi, { trimLeadingSilence });
-  const instrumentMap = new Map();
+  const instrumentMap = new Map<string, NoteEvent[]>();
 
   noteList.forEach((note) => {
     if (!instrumentMap.has(note.instrument))
       instrumentMap.set(note.instrument, []);
-    instrumentMap.get(note.instrument).push(note);
+    instrumentMap.get(note.instrument)!.push(note);
   });
 
-  const tracks = [];
+  const tracks: TrackEvents[] = [];
   const epsilon = 1e-6;
 
   instrumentMap.forEach((events, instrument) => {
-    const lanes = [];
+    const lanes: { lastEndTime: number; events: NoteEvent[] }[] = [];
 
     events.forEach((event) => {
       let lane = lanes.find((l) => event.time + epsilon >= l.lastEndTime);
@@ -143,7 +154,7 @@ export function buildTrackEvents(midi, { trimLeadingSilence = false } = {}) {
   return tracks;
 }
 
-export function eventsToPlacements(events) {
+export function eventsToPlacements(events: NoteEvent[]): Placement[] {
   let lastTime = 0;
   let lastTick = 0;
 

@@ -1,3 +1,13 @@
+import type {
+  CanvasLane,
+  CanvasOpts,
+  CanvasView,
+  HitResult,
+  SpriteStore,
+  TuningInfo,
+  VisualizationNote,
+  VisualizationPlacement,
+} from '../../types';
 import { noteColorByStep, notePitchNames, supportColorByBlock } from '../../constants';
 
 export const LANE_GAP = 6;
@@ -10,7 +20,7 @@ export const NOTE_STACK_STEP = 10;
 const BASE_UNIT = 34;
 const noteblockSrc = `${import.meta.env.BASE_URL}assets/noteblock.svg`;
 
-export function getMinecraftTuningInfo(useCount) {
+export function getMinecraftTuningInfo(useCount: number): TuningInfo {
   const normalizedUseCount = ((useCount % 24) + 24) % 24;
   const noteStep = normalizedUseCount % 12;
   return {
@@ -21,7 +31,7 @@ export function getMinecraftTuningInfo(useCount) {
   };
 }
 
-export function getNoteTooltipLines(placement) {
+export function getNoteTooltipLines(placement: VisualizationPlacement): string[] {
   const tuning = placement.pitch ? getMinecraftTuningInfo(placement.note) : null;
   return [
     `Instrument: ${placement.instrument}`,
@@ -32,10 +42,10 @@ export function getNoteTooltipLines(placement) {
     tuning ? `Playsound pitch: ${tuning.playsoundPitch.toFixed(6)}` : null,
     tuning ? `Color: ${tuning.color}` : null,
     `Block: ${placement.block}`,
-  ].filter(Boolean);
+  ].filter((line): line is string => line !== null);
 }
 
-function supportSvgUri(blockId) {
+function supportSvgUri(blockId: string | undefined) {
   const blockName = (blockId || 'minecraft:dirt').replace('minecraft:', '');
   const color = supportColorByBlock[blockName] || '#8a8a8a';
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' shape-rendering='crispEdges'>
@@ -48,11 +58,11 @@ function supportSvgUri(blockId) {
 }
 
 // Loads sprites lazily and calls onLoad when one finishes so the caller can redraw.
-export function createSpriteStore(onLoad) {
-  const images = new Map();
+export function createSpriteStore(onLoad: () => void): SpriteStore {
+  const images = new Map<string, HTMLImageElement>();
 
-  function load(key, src) {
-    if (images.has(key)) return images.get(key);
+  function load(key: string, src: string): HTMLImageElement {
+    if (images.has(key)) return images.get(key)!;
     const img = new Image();
     img.onload = onLoad;
     img.src = src;
@@ -60,19 +70,27 @@ export function createSpriteStore(onLoad) {
     return img;
   }
 
-  const ready = (img) => (img.complete && img.naturalWidth > 0 ? img : null);
+  const ready = (img: HTMLImageElement) => (img.complete && img.naturalWidth > 0 ? img : null);
 
   return {
     noteblock: () => ready(load('noteblock', noteblockSrc)),
-    support: (blockId) => ready(load(`support:${blockId}`, supportSvgUri(blockId))),
+    support: (blockId: string) => ready(load(`support:${blockId}`, supportSvgUri(blockId))),
   };
 }
 
-export function tickToX(tick, pitch) {
+export function tickToX(tick: number, pitch: number): number {
   return TIMELINE_ORIGIN + tick * pitch;
 }
 
-export function computeLaneLayout({ laneCount, availableHeight, baseUnit = BASE_UNIT }) {
+export function computeLaneLayout({
+  laneCount,
+  availableHeight,
+  baseUnit = BASE_UNIT,
+}: {
+  laneCount: number;
+  availableHeight: number;
+  baseUnit?: number;
+}) {
   const count = Math.max(1, laneCount);
   const gaps = (count - 1) * LANE_GAP;
   const maxLaneHeight = 2 * baseUnit + 2 * LANE_PAD;
@@ -91,7 +109,13 @@ export function computeLaneLayout({ laneCount, availableHeight, baseUnit = BASE_
 // Simultaneous notes are stacked from the top, each offset by at least NOTE_STACK_STEP
 // so every note's number stays readable. The last note is drawn on top and may be
 // clipped by the lane bottom.
-function placementRects(count, laneTop, laneHeight, cell, showSupport) {
+function placementRects(
+  count: number,
+  laneTop: number,
+  laneHeight: number,
+  cell: number,
+  showSupport: boolean
+) {
   const overlap = Math.round((4 * cell) / BASE_UNIT);
   const fullHeight = showSupport ? 2 * cell - overlap : cell;
   const top = laneTop + LANE_PAD;
@@ -104,7 +128,7 @@ function placementRects(count, laneTop, laneHeight, cell, showSupport) {
 }
 
 // First note whose startTick is >= tick (notes are sorted ascending by startTick).
-function lowerBound(notes, tick) {
+function lowerBound(notes: VisualizationNote[], tick: number): number {
   let low = 0;
   let high = notes.length;
   while (low < high) {
@@ -115,12 +139,27 @@ function lowerBound(notes, tick) {
   return low;
 }
 
-function roundedRect(ctx, x, y, w, h, r) {
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
   ctx.beginPath();
   ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h);
 }
 
-function drawPlacement(ctx, placement, x, rect, cell, opts, sprites) {
+function drawPlacement(
+  ctx: CanvasRenderingContext2D,
+  placement: VisualizationPlacement,
+  x: number,
+  rect: { y: number; overlap: number },
+  cell: number,
+  opts: CanvasOpts,
+  sprites: SpriteStore
+) {
   const k = cell / BASE_UNIT;
   const noteImg = sprites.noteblock();
   if (noteImg) ctx.drawImage(noteImg, x, rect.y, cell, cell);
@@ -164,7 +203,14 @@ function drawPlacement(ctx, placement, x, rect, cell, opts, sprites) {
   }
 }
 
-function drawLane(ctx, lane, laneTop, view, opts, sprites) {
+function drawLane(
+  ctx: CanvasRenderingContext2D,
+  lane: CanvasLane,
+  laneTop: number,
+  view: CanvasView,
+  opts: CanvasOpts,
+  sprites: SpriteStore
+) {
   const { scrollLeft, width, laneHeight, cell, pitch } = view;
 
   ctx.save();
@@ -209,7 +255,22 @@ function drawLane(ctx, lane, laneTop, view, opts, sprites) {
   ctx.restore();
 }
 
-export function renderTracks(ctx, { lanes, view, opts, sprites, dpr }) {
+export function renderTracks(
+  ctx: CanvasRenderingContext2D,
+  {
+    lanes,
+    view,
+    opts,
+    sprites,
+    dpr,
+  }: {
+    lanes: CanvasLane[];
+    view: CanvasView;
+    opts: CanvasOpts;
+    sprites: SpriteStore;
+    dpr: number;
+  }
+) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, view.width, view.height);
   ctx.imageSmoothingEnabled = false;
@@ -222,7 +283,19 @@ export function renderTracks(ctx, { lanes, view, opts, sprites, dpr }) {
 }
 
 // Maps a point in canvas CSS pixels to a note placement, or null on empty space.
-export function hitTest({ lanes, view, opts, x, y }) {
+export function hitTest({
+  lanes,
+  view,
+  opts,
+  x,
+  y,
+}: {
+  lanes: CanvasLane[];
+  view: CanvasView;
+  opts: Pick<CanvasOpts, 'showSupport'>;
+  x: number;
+  y: number;
+}): HitResult | null {
   const laneIndex = Math.floor(y / (view.laneHeight + LANE_GAP));
   const lane = lanes[laneIndex];
   if (!lane) return null;

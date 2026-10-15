@@ -1,6 +1,12 @@
 import { MINI } from "../../../../constants";
 
-export function MiniBlock({ color, size = MINI }) {
+export function MiniBlock({
+  color,
+  size = MINI
+}: {
+  color: string;
+  size?: number;
+}) {
   return (
     <svg
       width={size}

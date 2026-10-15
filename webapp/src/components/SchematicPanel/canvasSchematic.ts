@@ -1,3 +1,11 @@
+import type {
+  AnchorCell,
+  Connects,
+  GridInstrument,
+  GridRow,
+  GridNote,
+  TickGrid
+} from "../../types";
 import { blockColorFor, blockLabel, getUseCount } from "./schematicData";
 
 export const HEADER_H = 20;
@@ -8,7 +16,49 @@ const PANEL_DARK = "#537b32";
 const RED = "#c0392b";
 const GRID_LINE = "rgba(0,0,0,0.15)";
 
-function lowerBound(arr, value) {
+export type LayoutRow =
+  | { type: "label"; y: number; h: number; inst: GridInstrument }
+  | { type: "row"; y: number; h: number; inst: GridInstrument; row: GridRow };
+
+export type ColInfo = { kind: "seg" | "anchor"; ai: number };
+
+export interface Layout {
+  cs: number;
+  width: number;
+  height: number;
+  segLen: number[];
+  segX: number[];
+  anchorX: number[];
+  rows: LayoutRow[];
+  rowStarts: number[];
+  colStarts: number[];
+  colInfo: ColInfo[];
+}
+
+export type HitResult =
+  | { type: "tick"; tick: number; cx: number }
+  | { type: "connector"; cy: number; rowTop: number }
+  | {
+      type: "repeater";
+      ticks: number;
+      left: number;
+      top: number;
+      size: number;
+    }
+  | {
+      type: "note";
+      key: string;
+      note: GridNote;
+      instrument: string;
+      block: string;
+      left: number;
+      top: number;
+      size: number;
+    };
+
+type Ctx = CanvasRenderingContext2D;
+
+function lowerBound(arr: number[], value: number) {
   let lo = 0;
   let hi = arr.length;
   while (lo < hi) {
@@ -20,13 +70,13 @@ function lowerBound(arr, value) {
 }
 
 // Largest index whose start is <= value (or -1).
-function indexAt(starts, value) {
+function indexAt(starts: number[], value: number) {
   return lowerBound(starts, value + 1e-6) - 1;
 }
 
 // Positions of every column and row in content space. Body rows start at y=0
 // (the sticky header is drawn separately above them).
-export function computeLayout(grid, cs) {
+export function computeLayout(grid: TickGrid, cs: number): Layout {
   const { instruments, anchors } = grid;
   const segLen = anchors.map(() => 0);
   for (const inst of instruments) {
@@ -37,8 +87,8 @@ export function computeLayout(grid, cs) {
     }
   }
 
-  const segX = [];
-  const anchorX = [];
+  const segX: number[] = [];
+  const anchorX: number[] = [];
   let x = cs;
   anchors.forEach((_, ai) => {
     segX.push(x);
@@ -47,7 +97,7 @@ export function computeLayout(grid, cs) {
     x += cs;
   });
 
-  const rows = [];
+  const rows: LayoutRow[] = [];
   let y = 0;
   for (const inst of instruments) {
     rows.push({ type: "label", y, h: LABEL_H, inst });
@@ -58,8 +108,8 @@ export function computeLayout(grid, cs) {
     }
   }
 
-  const colStarts = [];
-  const colInfo = [];
+  const colStarts: number[] = [];
+  const colInfo: ColInfo[] = [];
   anchors.forEach((_, ai) => {
     if (segLen[ai] > 0) {
       colStarts.push(segX[ai]);
@@ -84,19 +134,36 @@ export function computeLayout(grid, cs) {
 }
 
 // ── Cell painters (drawn in a 28×28 design space scaled to cs) ───────────────
-function fill(ctx, x, y, k, rx, ry, w, h, color, alpha = 1) {
+function fill(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  k: number,
+  rx: number,
+  ry: number,
+  w: number,
+  h: number,
+  color: string,
+  alpha = 1
+) {
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
   ctx.fillRect(x + rx * k, y + ry * k, w * k, h * k);
   ctx.globalAlpha = 1;
 }
 
-function drawDust(ctx, x, y, cs, alpha = 1) {
+function drawDust(ctx: Ctx, x: number, y: number, cs: number, alpha = 1) {
   const k = cs / 28;
   fill(ctx, x, y, k, 0, 11, 28, 6, RED, alpha);
 }
 
-function drawRepeater(ctx, x, y, cs, ticks) {
+function drawRepeater(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  cs: number,
+  ticks: number
+) {
   const k = cs / 28;
   fill(ctx, x, y, k, 0, 0, 28, 28, "#b9b3a8");
   fill(ctx, x, y, k, 2, 2, 24, 24, "#ddd7ca");
@@ -110,7 +177,13 @@ function drawRepeater(ctx, x, y, cs, ticks) {
   ctx.fillText(String(ticks), x + 14 * k, y + 10 * k);
 }
 
-function drawSplit(ctx, x, y, cs, c) {
+function drawSplit(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  cs: number,
+  c: Partial<Connects>
+) {
   const k = cs / 28;
   const any = c.left || c.right || c.up || c.down;
   if (c.left) fill(ctx, x, y, k, 0, 11, 14, 6, RED);
@@ -120,7 +193,14 @@ function drawSplit(ctx, x, y, cs, c) {
   if (any) fill(ctx, x, y, k, 11, 11, 6, 6, RED);
 }
 
-function drawNote(ctx, x, y, cs, color, label) {
+function drawNote(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  cs: number,
+  color: string,
+  label: string
+) {
   const k = cs / 28;
   fill(ctx, x, y, k, 0, 0, 28, 28, color);
   ctx.fillStyle = "#000000aa";
@@ -130,16 +210,24 @@ function drawNote(ctx, x, y, cs, color, label) {
   ctx.fillText(label, x + 14 * k, y + 19 * k);
 }
 
-function noteBlockOf(inst, cell) {
-  return cell.note.block ?? inst.block;
+function noteBlockOf(inst: GridInstrument, cell: { note: GridNote | null }) {
+  return cell.note!.block ?? inst.block;
 }
 
 // Returns true when the cell is plain wire (drawn without a grid border so the
 // line reads as continuous).
-function drawAnchor(ctx, x, y, cs, inst, cell, isSub) {
+function drawAnchor(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  cs: number,
+  inst: GridInstrument,
+  cell: AnchorCell | undefined,
+  isSub: boolean
+) {
   if (!cell || cell.kind === "inactive") return false;
   if (cell.kind === "split-pass") {
-    const c = cell.connects ?? {};
+    const c: Partial<Connects> = cell.connects ?? {};
     if (!isSub && !c.left && !c.right && !c.up && !c.down) {
       drawDust(ctx, x, y, cs);
       return true;
@@ -171,16 +259,27 @@ function drawAnchor(ctx, x, y, cs, inst, cell, isSub) {
   return false;
 }
 
-function cellBorder(ctx, x, y, cs) {
+function cellBorder(ctx: Ctx, x: number, y: number, cs: number) {
   ctx.strokeStyle = GRID_LINE;
   ctx.lineWidth = 1;
   ctx.strokeRect(x + 0.5, y + 0.5, cs - 1, cs - 1);
 }
 
 // ── Main draw ────────────────────────────────────────────────────────────────
+export interface DrawParams {
+  grid: TickGrid;
+  layout: Layout;
+  scrollX: number;
+  scrollY: number;
+  width: number;
+  height: number;
+  dpr: number;
+  lastPressed: string | null;
+}
+
 export function drawSchematic(
-  ctx,
-  { grid, layout, scrollX, scrollY, width, height, dpr, lastPressed }
+  ctx: Ctx,
+  { grid, layout, scrollX, scrollY, width, height, dpr, lastPressed }: DrawParams
 ) {
   const { cs, rows, rowStarts, colStarts, colInfo, anchorX } = layout;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -330,7 +429,21 @@ export function drawSchematic(
 }
 
 // ── Hit testing (x,y are viewport-relative canvas coordinates) ───────────────
-export function hitTest({ grid, layout, scrollX, scrollY, x, y }) {
+export function hitTest({
+  grid,
+  layout,
+  scrollX,
+  scrollY,
+  x,
+  y
+}: {
+  grid: TickGrid;
+  layout: Layout;
+  scrollX: number;
+  scrollY: number;
+  x: number;
+  y: number;
+}): HitResult | null {
   const { cs } = layout;
   if (y < HEADER_H) {
     if (x < cs) return null;

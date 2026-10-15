@@ -1,8 +1,27 @@
-let audioContext;
-let noiseBuffer;
-let masterBus;
+interface TonalProfile {
+  partials: { ratio: number; gain: number; type: OscillatorType }[];
+  attack: number;
+  decay: number;
+  gain: number;
+  filter?: { type: BiquadFilterType; frequency: number; q?: number };
+}
 
-const tonalProfiles = {
+interface NoiseOptions {
+  filterType: BiquadFilterType;
+  frequency: number;
+  q?: number;
+  attack: number;
+  decay: number;
+  gain: number;
+}
+
+type SoundPlacement = { instrument: string; note: number; pitch?: string };
+
+let audioContext: AudioContext | undefined;
+let noiseBuffer: AudioBuffer | undefined;
+let masterBus: DynamicsCompressorNode | undefined;
+
+const tonalProfiles: Record<string, TonalProfile> = {
   harp: {
     partials: [
       { ratio: 1, gain: 1, type: 'triangle' },
@@ -164,7 +183,8 @@ const tonalProfiles = {
 
 function getAudioContext() {
   if (!audioContext) {
-    const Context = window.AudioContext || window.webkitAudioContext;
+    const Context = window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     audioContext = new Context();
   }
 
@@ -182,7 +202,7 @@ export async function prepareAudioPlayback() {
 }
 
 // All voices share one compressor so large chords and drum hits sum without clipping.
-function getMasterBus(context) {
+function getMasterBus(context: AudioContext) {
   if (!masterBus || masterBus.context !== context) {
     const compressor = context.createDynamicsCompressor();
     compressor.threshold.value = -18;
@@ -196,7 +216,7 @@ function getMasterBus(context) {
   return masterBus;
 }
 
-function getNoiseBuffer(context) {
+function getNoiseBuffer(context: AudioContext) {
   if (noiseBuffer) return noiseBuffer;
 
   const buffer = context.createBuffer(1, context.sampleRate * 0.5, context.sampleRate);
@@ -210,7 +230,14 @@ function getNoiseBuffer(context) {
   return buffer;
 }
 
-function createEnvelope(context, destination, attack, decay, gainAmount, when) {
+function createEnvelope(
+  context: AudioContext,
+  destination: AudioNode,
+  attack: number,
+  decay: number,
+  gainAmount: number,
+  when?: number
+) {
   const now = when ?? context.currentTime;
   const gainNode = context.createGain();
   gainNode.gain.setValueAtTime(0.0001, now);
@@ -220,7 +247,11 @@ function createEnvelope(context, destination, attack, decay, gainAmount, when) {
   return { gainNode, stopAt: now + attack + decay + 0.05 };
 }
 
-function createOptionalFilter(context, destination, filterConfig) {
+function createOptionalFilter(
+  context: AudioContext,
+  destination: AudioNode,
+  filterConfig: TonalProfile['filter']
+): AudioNode {
   if (!filterConfig) return destination;
 
   const filter = context.createBiquadFilter();
@@ -231,12 +262,12 @@ function createOptionalFilter(context, destination, filterConfig) {
   return filter;
 }
 
-function minecraftFrequency(note) {
+function minecraftFrequency(note: number) {
   const baseFrequency = 184.997;
   return baseFrequency * 2 ** (note / 12);
 }
 
-function playTonalSound(context, placement, when = context.currentTime) {
+function playTonalSound(context: AudioContext, placement: SoundPlacement, when = context.currentTime) {
   const profile = tonalProfiles[placement.instrument] || tonalProfiles.harp;
   const { gainNode, stopAt } = createEnvelope(
     context,
@@ -262,7 +293,7 @@ function playTonalSound(context, placement, when = context.currentTime) {
   });
 }
 
-function playBasedrum(context, when = context.currentTime) {
+function playBasedrum(context: AudioContext, when = context.currentTime) {
   const { gainNode, stopAt } = createEnvelope(context, getMasterBus(context), 0.001, 0.28, 0.26, when);
   const oscillator = context.createOscillator();
   oscillator.type = 'sine';
@@ -273,7 +304,7 @@ function playBasedrum(context, when = context.currentTime) {
   oscillator.stop(stopAt);
 }
 
-function playNoiseBurst(context, options, when = context.currentTime) {
+function playNoiseBurst(context: AudioContext, options: NoiseOptions, when = context.currentTime) {
   const source = context.createBufferSource();
   source.buffer = getNoiseBuffer(context);
   const filter = context.createBiquadFilter();
@@ -295,7 +326,7 @@ function playNoiseBurst(context, options, when = context.currentTime) {
   source.stop(stopAt);
 }
 
-function playSnare(context, when = context.currentTime) {
+function playSnare(context: AudioContext, when = context.currentTime) {
   playNoiseBurst(context, {
     filterType: 'highpass',
     frequency: 1200,
@@ -313,7 +344,7 @@ function playSnare(context, when = context.currentTime) {
   oscillator.stop(stopAt);
 }
 
-function playHat(context, when = context.currentTime) {
+function playHat(context: AudioContext, when = context.currentTime) {
   playNoiseBurst(context, {
     filterType: 'highpass',
     frequency: 5500,
@@ -324,7 +355,7 @@ function playHat(context, when = context.currentTime) {
   }, when);
 }
 
-function playCowBell(context, when = context.currentTime) {
+function playCowBell(context: AudioContext, when = context.currentTime) {
   const { gainNode, stopAt } = createEnvelope(context, getMasterBus(context), 0.001, 0.25, 0.09, when);
   [540, 800].forEach((frequency) => {
     const oscillator = context.createOscillator();
@@ -336,7 +367,7 @@ function playCowBell(context, when = context.currentTime) {
   });
 }
 
-function playPercussionSound(context, instrument, when = context.currentTime) {
+function playPercussionSound(context: AudioContext, instrument: string, when = context.currentTime) {
   switch (instrument) {
     case 'basedrum':
       playBasedrum(context, when);
@@ -355,7 +386,7 @@ function playPercussionSound(context, instrument, when = context.currentTime) {
   }
 }
 
-export async function playPlacementSound(placement) {
+export async function playPlacementSound(placement: (SoundPlacement & { pitch: string | undefined }) | null | undefined) {
   if (!placement) return;
 
   const context = await prepareAudioPlayback();
@@ -385,7 +416,10 @@ export async function playSuccessJingle() {
 
 // Synchronous version for the hot playback loop — skips async overhead.
 // Only fires if the AudioContext is already running (call prepareAudioPlayback once before loop).
-export function playPlacementSoundSync(placement, when) {
+export function playPlacementSoundSync(
+  placement: (SoundPlacement & { pitch: string | undefined }) | null | undefined,
+  when?: number
+) {
   if (!placement || !audioContext || audioContext.state !== 'running') return;
 
   // Never schedule in the past; that would just play late anyway.
@@ -400,6 +434,6 @@ export function playPlacementSoundSync(placement, when) {
 }
 
 // Current time of the audio hardware clock in seconds (or null if unavailable).
-export function getAudioClock() {
+export function getAudioClock(): number | null {
   return audioContext && audioContext.state === 'running' ? audioContext.currentTime : null;
 }

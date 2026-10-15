@@ -4,7 +4,7 @@ import { Midi } from "@tonejs/midi";
 
 export const TICK_S = 0.1;
 
-export function loadFixture(name) {
+export function loadFixture(name: string) {
   return new Midi(
     readFileSync(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)))
   );
@@ -33,7 +33,7 @@ export function buildSyntheticMidi() {
 }
 
 // Named MIDI inputs shared by all characterization tests.
-export const midiFixtures = [
+export const midiFixtures: [string, () => Midi][] = [
   ["example.mid", () => loadFixture("example.mid")],
   ["synthetic chords", buildSyntheticMidi],
 ];
