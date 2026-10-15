@@ -10,7 +10,7 @@ Code should be secure, easy to read and understand, expandable, accessible and t
 
 Converts MIDI files into Minecraft note block build data, entirely in the browser. It has a canvas track visualization with playback and a canvas top-down schematic.
 
-- `webapp/` — React 18 + Vite + TypeScript (strict). This is where almost all work happens.
+- `webapp/` — React 19 + Vite + TypeScript (strict). This is where almost all work happens.
 - `midi-convert/` — standalone TypeScript CLI converter.
 - `openspec/` — OpenSpec change proposals.
 - `.github/workflows/` — `ci.yml` (typecheck, tests, build, audit, outdated) and `deploy.yml` (GitHub Pages from `main`).
@@ -46,7 +46,7 @@ Domain facts: 1 redstone tick = 0.1 s (`redstoneTickDurationMs`). Chords stack f
 ## Rules
 
 - **Tests:** snapshots in `src/__tests__/__snapshots__/` are a refactor safety net. Never run `vitest -u` to make a failure go away; a snapshot change must be intentional and explained.
-- **Vitest stays on v2** because the project is on Vite 5. Don't bump Vitest, Vite or React major versions as a side effect.
+- **Vite and Vitest move together** (Vitest 5 needs a recent Vite); need Node 24 (CI uses 24; jsdom and Vitest reject Node 20). Don't bump one without the other.
 - **Licensing:** do not add MIDI files or other assets with unknown or restrictive licences. Test fixtures are `example.mid` plus synthetic MIDI built in the tests. Textures are generated SVGs.
 - **Accessibility (WCAG 2.2 AA) is a requirement:**
   - Keep text contrast at 4.5:1 or better, and keep the visible focus ring.
