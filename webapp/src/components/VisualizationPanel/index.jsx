@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { playPlacementSound, playPlacementSoundSync, prepareAudioPlayback } from '../../audio/noteblockAudio';
 import CollapsiblePanel from '../CollapsiblePanel';
-import DragScrollArea from '../DragScrollArea';
-import TrackRow from './TrackRow';
+import {
+  LANE_GAP,
+  computeLaneLayout,
+  createSpriteStore,
+  getNoteTooltipLines,
+  hitTest,
+  renderTracks,
+  tickToX,
+} from './canvasRenderer';
 import {
   playbackScopes,
   viewModes,
@@ -29,19 +36,25 @@ export default function VisualizationPanel({ trackEvents }) {
     typeof window !== 'undefined' && window.innerWidth <= 700 ? 30 : 34
   );
 
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [scrollContainerWidth, setScrollContainerWidth] = useState(Infinity);
-  const scrollRafRef = useRef(0);
+  const [canvasWidth, setCanvasWidth] = useState(0);
+  const [windowHeight, setWindowHeight] = useState(() =>
+    typeof window !== 'undefined' ? window.innerHeight : 800
+  );
+  const [tooltip, setTooltip] = useState(null);
 
-  const trackScrollRef = useRef(null);
-  const topScrollRef = useRef(null);
-  const isSyncingScrollRef = useRef(false);
+  const canvasWrapRef = useRef(null);
+  const canvasRef = useRef(null);
   const playheadRef = useRef(null);
+  const scrollLeftRef = useRef(0);
+  const drawFrameRef = useRef(0);
+  const renderParamsRef = useRef(null);
+  const spritesRef = useRef(null);
+  const canvasPanRef = useRef({ pointerId: null, startX: 0, startScroll: 0, moved: false });
+  const hoveredKeyRef = useRef(null);
   const playheadDragRef = useRef({
     active: false,
     pointerId: null,
-    startClientX: 0,
-    startTick: 0,
+    grabOffsetTicks: 0,
   });
   const playheadTickRef = useRef(0);
   const playbackNotesRef = useRef([]);
@@ -96,15 +109,102 @@ export default function VisualizationPanel({ trackEvents }) {
   const maxVisibleTick = useMemo(() => getMaxTrackTick(visibleTracks), [visibleTracks]);
   const playbackEndTick = useMemo(() => getMaxTrackTick(playbackTracks), [playbackTracks]);
 
-  const timelineUnitCount = useMemo(() => {
-    const visualUnits = visibleTracks.reduce(
-      (maxUnits, track) =>
-        Math.max(maxUnits, track.notes.reduce((total, note) => total + note.redstoneTickDelay + 1, 0)),
-      0
-    );
+  const timelineUnitCount = useMemo(() => Math.max(Math.ceil(maxVisibleTick) + 2, 1), [maxVisibleTick]);
 
-    return Math.max(visualUnits, Math.ceil(maxVisibleTick) + 2, 1);
-  }, [maxVisibleTick, visibleTracks]);
+  // Lanes are sized so every lane fits the window height; only the timeline pans.
+  const layout = useMemo(
+    () =>
+      computeLaneLayout({
+        laneCount: visibleTracks.length,
+        availableHeight: Math.max(300, windowHeight - 340),
+        baseUnit: trackUnitSize,
+      }),
+    [visibleTracks.length, windowHeight, trackUnitSize]
+  );
+
+  const dimmedTrackIds = useMemo(() => {
+    const ids = new Set(mutedTracks);
+    if (playbackScope === playbackScopes.single && selectedPlaybackTrackId) {
+      visibleTracks.forEach((track) => {
+        if (track.id !== selectedPlaybackTrackId) ids.add(track.id);
+      });
+    }
+    return ids;
+  }, [mutedTracks, playbackScope, selectedPlaybackTrackId, visibleTracks]);
+
+  const canvasLanes = useMemo(
+    () =>
+      visibleTracks.map((track) => ({
+        id: track.id,
+        notes: track.notes,
+        dimmed: dimmedTrackIds.has(track.id),
+      })),
+    [visibleTracks, dimmedTrackIds]
+  );
+
+  function getMaxScrollLeft() {
+    const { pitch } = renderParamsRef.current.layout;
+    return Math.max(0, tickToX(timelineUnitCount, pitch) - renderParamsRef.current.width);
+  }
+
+  function drawFrame() {
+    const canvas = canvasRef.current;
+    const params = renderParamsRef.current;
+    if (!canvas || !params || params.width === 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const { layout: laneLayout, width, lanes, showColor: color, showNumber: number, showSupport: support } = params;
+    const targetWidth = Math.round(width * dpr);
+    const targetHeight = Math.round(laneLayout.height * dpr);
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
+
+    if (!spritesRef.current) spritesRef.current = createSpriteStore(requestDraw);
+
+    const scrollLeft = scrollLeftRef.current;
+    renderTracks(canvas.getContext('2d'), {
+      lanes,
+      view: { ...laneLayout, width, scrollLeft },
+      opts: { showColor: color, showNumber: number, showSupport: support },
+      sprites: spritesRef.current,
+      dpr,
+    });
+
+    const playhead = playheadRef.current;
+    if (playhead) {
+      const x = tickToX(playheadTickRef.current, laneLayout.pitch) - scrollLeft;
+      const inView = x >= -10 && x <= width + 10;
+      playhead.style.visibility = inView ? 'visible' : 'hidden';
+      playhead.style.left = `${x}px`;
+    }
+  }
+
+  function requestDraw() {
+    if (drawFrameRef.current) return;
+    drawFrameRef.current = window.requestAnimationFrame(() => {
+      drawFrameRef.current = 0;
+      drawFrameLatestRef.current();
+    });
+  }
+
+  const drawFrameLatestRef = useRef(drawFrame);
+  drawFrameLatestRef.current = drawFrame;
+  const getMaxScrollLeftLatestRef = useRef(getMaxScrollLeft);
+  getMaxScrollLeftLatestRef.current = getMaxScrollLeft;
+  renderParamsRef.current = {
+    layout,
+    width: canvasWidth,
+    lanes: canvasLanes,
+    showColor,
+    showNumber,
+    showSupport,
+  };
+
+  useEffect(() => {
+    requestDraw();
+  }, [layout, canvasWidth, canvasLanes, showColor, showNumber, showSupport, tracksOpen]);
 
   useEffect(() => {
     playbackNotesRef.current = playbackNotes;
@@ -122,22 +222,30 @@ export default function VisualizationPanel({ trackEvents }) {
     }
   }
 
-  function syncViewportToTick(nextTick) {
-    const container = trackScrollRef.current;
-    const playhead = playheadRef.current;
-    if (!container || !playhead) return;
+  function syncViewportToTick(nextTick, { follow = 'anchor' } = {}) {
+    const params = renderParamsRef.current;
+    if (!params || params.width === 0) return;
 
-    const contentX = nextTick * trackUnitSize;
-    const anchorX = Math.max(trackUnitSize * 2, container.clientWidth * 0.3);
-    const targetScrollLeft = contentX - anchorX;
-    const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
-    const clampedScrollLeft = Math.min(maxScrollLeft, Math.max(0, targetScrollLeft));
-    container.scrollLeft = clampedScrollLeft;
+    const { pitch } = params.layout;
+    const contentX = tickToX(nextTick, pitch);
+    const maxScrollLeft = getMaxScrollLeft();
 
-    playhead.style.left = `${Math.max(0, contentX)}px`;
+    if (follow === 'anchor') {
+      const anchorX = Math.max(pitch * 2, params.width * 0.3);
+      scrollLeftRef.current = Math.min(maxScrollLeft, Math.max(0, contentX - anchorX));
+    } else {
+      // Only pan when the playhead leaves the visible area (e.g. while dragging).
+      const margin = pitch * 2;
+      const left = scrollLeftRef.current;
+      if (contentX < left + margin) {
+        scrollLeftRef.current = Math.min(maxScrollLeft, Math.max(0, contentX - margin));
+      } else if (contentX > left + params.width - margin) {
+        scrollLeftRef.current = Math.min(maxScrollLeft, Math.max(0, contentX - params.width + margin));
+      }
+    }
   }
 
-  function setPlayheadPosition(nextTick, { syncState = false, syncScroll = false } = {}) {
+  function setPlayheadPosition(nextTick, { syncState = false, syncScroll = false, follow, draw = true } = {}) {
     const clampedTick = Math.max(0, nextTick);
     playheadTickRef.current = clampedTick;
 
@@ -146,8 +254,10 @@ export default function VisualizationPanel({ trackEvents }) {
     }
 
     if (syncScroll) {
-      syncViewportToTick(clampedTick);
+      syncViewportToTick(clampedTick, { follow });
     }
+
+    if (draw) requestDraw();
   }
 
   function stopPlayback(nextTick) {
@@ -205,7 +315,9 @@ export default function VisualizationPanel({ trackEvents }) {
       setPlayheadPosition(nextTick, {
         syncState: shouldSyncState,
         syncScroll: true,
+        draw: false,
       });
+      drawFrameLatestRef.current();
 
       if (shouldSyncState) {
         playbackLastStateSyncMsRef.current = now;
@@ -226,10 +338,15 @@ export default function VisualizationPanel({ trackEvents }) {
     playheadDragRef.current = {
       active: false,
       pointerId: null,
-      startClientX: 0,
-      startTick: 0,
+      grabOffsetTicks: 0,
     };
     setPlayheadDragging(false);
+  }
+
+  function pointerToTick(clientX) {
+    const rect = canvasWrapRef.current.getBoundingClientRect();
+    const { pitch } = renderParamsRef.current.layout;
+    return (clientX - rect.left + scrollLeftRef.current - tickToX(0, pitch)) / pitch;
   }
 
   const onPlayheadPointerDown = (event) => {
@@ -241,8 +358,7 @@ export default function VisualizationPanel({ trackEvents }) {
     playheadDragRef.current = {
       active: true,
       pointerId: event.pointerId,
-      startClientX: event.clientX,
-      startTick: playheadTickRef.current,
+      grabOffsetTicks: playheadTickRef.current - pointerToTick(event.clientX),
     };
     setPlayheadDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -257,16 +373,97 @@ export default function VisualizationPanel({ trackEvents }) {
     }
 
     event.preventDefault();
-    const deltaTicks = (event.clientX - playheadDragRef.current.startClientX) / trackUnitSize;
-    setPlayheadPosition(playheadDragRef.current.startTick + deltaTicks, {
+    const nextTick = Math.min(
+      maxVisibleTick + 1,
+      pointerToTick(event.clientX) + playheadDragRef.current.grabOffsetTicks
+    );
+    setPlayheadPosition(nextTick, {
       syncState: true,
       syncScroll: true,
+      follow: 'visible',
     });
   };
 
   const onPlayheadPointerUp = (event) => {
     if (playheadDragRef.current.pointerId !== event.pointerId) return;
     finishPlayheadDrag();
+  };
+
+  function getCanvasPoint(event) {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  function hitTestAt(event) {
+    const params = renderParamsRef.current;
+    const { x, y } = getCanvasPoint(event);
+    return hitTest({
+      lanes: params.lanes,
+      view: { ...params.layout, width: params.width, scrollLeft: scrollLeftRef.current },
+      opts: { showSupport: params.showSupport },
+      x,
+      y,
+    });
+  }
+
+  function hideTooltip() {
+    if (hoveredKeyRef.current === null) return;
+    hoveredKeyRef.current = null;
+    setTooltip(null);
+  }
+
+  const onCanvasPointerDown = (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    canvasPanRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScroll: scrollLeftRef.current,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const onCanvasPointerMove = (event) => {
+    const pan = canvasPanRef.current;
+    if (pan.pointerId === event.pointerId) {
+      const deltaX = event.clientX - pan.startX;
+      if (!pan.moved && Math.abs(deltaX) < 4) return;
+      pan.moved = true;
+      hideTooltip();
+      scrollLeftRef.current = Math.min(getMaxScrollLeft(), Math.max(0, pan.startScroll - deltaX));
+      requestDraw();
+      return;
+    }
+
+    if (event.pointerType !== 'mouse') return;
+    const hit = hitTestAt(event);
+    if (!hit) {
+      hideTooltip();
+      return;
+    }
+    if (hit.key === hoveredKeyRef.current) return;
+    hoveredKeyRef.current = hit.key;
+    const wrapWidth = renderParamsRef.current.width;
+    const below = hit.y < 140;
+    setTooltip({
+      lines: getNoteTooltipLines(hit.placement),
+      left: Math.min(wrapWidth - 90, Math.max(90, hit.x + hit.width / 2)),
+      top: below ? hit.y + hit.height : hit.y,
+      below,
+    });
+  };
+
+  const onCanvasPointerUp = (event) => {
+    const pan = canvasPanRef.current;
+    if (pan.pointerId !== event.pointerId) return;
+    canvasPanRef.current = { pointerId: null, startX: 0, startScroll: 0, moved: false };
+    if (pan.moved) return;
+    const hit = hitTestAt(event);
+    if (hit) void playPlacementSound(hit.placement);
+  };
+
+  const onCanvasPointerCancel = () => {
+    canvasPanRef.current = { pointerId: null, startX: 0, startScroll: 0, moved: false };
   };
 
   useEffect(() => {
@@ -276,8 +473,7 @@ export default function VisualizationPanel({ trackEvents }) {
   useEffect(() => {
     const syncTrackUnitSize = () => {
       setTrackUnitSize(window.innerWidth <= 700 ? 30 : 34);
-      const container = trackScrollRef.current;
-      if (container) setScrollContainerWidth(container.clientWidth);
+      setWindowHeight(window.innerHeight);
     };
 
     syncTrackUnitSize();
@@ -286,7 +482,8 @@ export default function VisualizationPanel({ trackEvents }) {
     return () => {
       window.removeEventListener('resize', syncTrackUnitSize);
       clearPlaybackTimers();
-      if (scrollRafRef.current) window.cancelAnimationFrame(scrollRafRef.current);
+      if (drawFrameRef.current) window.cancelAnimationFrame(drawFrameRef.current);
+      drawFrameRef.current = 0;
     };
   }, []);
 
@@ -314,7 +511,7 @@ export default function VisualizationPanel({ trackEvents }) {
 
   useEffect(() => {
     setPlayheadPosition(playheadTickRef.current, { syncState: false, syncScroll: true });
-  }, [timelineUnitCount, trackUnitSize]);
+  }, [timelineUnitCount, trackUnitSize, canvasWidth]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -324,48 +521,31 @@ export default function VisualizationPanel({ trackEvents }) {
 
   useEffect(() => {
     if (!tracksOpen) return;
-    const main = trackScrollRef.current;
-    const proxy = topScrollRef.current;
-    if (!main || !proxy) return;
+    const wrap = canvasWrapRef.current;
+    if (!wrap) return;
 
-    // Initialise scroll info now that the container is mounted.
-    setScrollLeft(main.scrollLeft);
-    setScrollContainerWidth(main.clientWidth);
+    setCanvasWidth(Math.floor(wrap.clientWidth));
+    const observer = new ResizeObserver(([entry]) => {
+      setCanvasWidth(Math.floor(entry.contentRect.width));
+    });
+    observer.observe(wrap);
 
-    const syncScrollInfo = () => {
-      if (scrollRafRef.current) return;
-      scrollRafRef.current = window.requestAnimationFrame(() => {
-        scrollRafRef.current = 0;
-        const c = trackScrollRef.current;
-        if (c) {
-          setScrollLeft(c.scrollLeft);
-          setScrollContainerWidth(c.clientWidth);
-        }
-      });
+    // Horizontal wheel/trackpad gestures pan the timeline; vertical wheel still scrolls the page.
+    const onWheel = (event) => {
+      const horizontal = event.shiftKey ? event.deltaY : event.deltaX;
+      if (!event.shiftKey && Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+      event.preventDefault();
+      scrollLeftRef.current = Math.min(getMaxScrollLeftLatestRef.current(), Math.max(0, scrollLeftRef.current + horizontal));
+      requestDraw();
     };
+    wrap.addEventListener('wheel', onWheel, { passive: false });
 
-    const syncToProxy = () => {
-      if (isSyncingScrollRef.current) return;
-      isSyncingScrollRef.current = true;
-      proxy.scrollLeft = main.scrollLeft;
-      isSyncingScrollRef.current = false;
-      syncScrollInfo();
-    };
-    const syncToMain = () => {
-      if (isSyncingScrollRef.current) return;
-      isSyncingScrollRef.current = true;
-      main.scrollLeft = proxy.scrollLeft;
-      isSyncingScrollRef.current = false;
-      syncScrollInfo();
-    };
-
-    main.addEventListener('scroll', syncToProxy, { passive: true });
-    proxy.addEventListener('scroll', syncToMain, { passive: true });
     return () => {
-      main.removeEventListener('scroll', syncToProxy);
-      proxy.removeEventListener('scroll', syncToMain);
+      observer.disconnect();
+      wrap.removeEventListener('wheel', onWheel);
     };
   }, [tracksOpen]);
+
 
   return (
     <CollapsiblePanel
@@ -453,24 +633,15 @@ export default function VisualizationPanel({ trackEvents }) {
         <p className="hint output-summary">
           {visibleTracks.length === 0
             ? 'No tracks to visualize.'
-            : `${visibleTracks.length} ${viewMode === viewModes.track ? 'track' : 'instrument'} lane(s) ready. Scroll horizontally for long tracks.`}
+            : `${visibleTracks.length} ${viewMode === viewModes.track ? 'track' : 'instrument'} lane(s) ready. Drag or scroll horizontally for long tracks.`}
         </p>
-        <div className="track-area">
-            <div className="track-scroll-column">
-              <div className="track-scroll-proxy-top" ref={topScrollRef}>
-                <div className="track-scroll-spacer" style={{ width: `${timelineUnitCount * trackUnitSize}px` }} />
-              </div>
+        <div className="track-area" style={{ '--lane-gap': `${LANE_GAP}px` }}>
               <div className="track-headers">
                 {visibleTracks.map((track) => (
                   <div
                     key={track.id}
-                    className={
-                      playbackScope === playbackScopes.single &&
-                      selectedPlaybackTrackId &&
-                      track.id !== selectedPlaybackTrackId
-                        ? 'track-header track-row-dimmed'
-                        : 'track-header'
-                    }
+                    className={dimmedTrackIds.has(track.id) && !mutedTracks.has(track.id) ? 'track-header track-row-dimmed' : 'track-header'}
+                    style={{ height: `${layout.laneHeight}px` }}
                   >
                     <button
                       type="button"
@@ -491,12 +662,29 @@ export default function VisualizationPanel({ trackEvents }) {
                         )}
                       </svg>
                     </button>
-                    <span className="track-index">{track.title}</span>
-                    <span className="track-count">{track.subtitle}</span>
+                    <span className="track-header-text">
+                      <span className="track-index">{track.title}</span>
+                      <span className="track-count">{track.subtitle}</span>
+                    </span>
                   </div>
                 ))}
               </div>
-              <DragScrollArea className="track-scroll-wrap" containerRef={trackScrollRef}>
+              <div
+                className="track-canvas-wrap"
+                ref={canvasWrapRef}
+                style={{ height: `${layout.height}px` }}
+              >
+                <canvas
+                  ref={canvasRef}
+                  className="track-canvas"
+                  role="img"
+                  aria-label={`Track visualization with ${visibleTracks.length} lane(s). Drag to pan, click a note to hear it.`}
+                  onPointerDown={onCanvasPointerDown}
+                  onPointerMove={onCanvasPointerMove}
+                  onPointerUp={onCanvasPointerUp}
+                  onPointerCancel={onCanvasPointerCancel}
+                  onPointerLeave={hideTooltip}
+                />
                 <button
                   ref={playheadRef}
                   type="button"
@@ -511,30 +699,18 @@ export default function VisualizationPanel({ trackEvents }) {
                   <span className="playhead-line" aria-hidden="true" />
                   <span className="playhead-head" aria-hidden="true" />
                 </button>
-                <div className="track-stage" style={{ '--timeline-unit-count': timelineUnitCount }}>
-                  <div className="track-wrap">
-                    {visibleTracks.reduce((acc, track) => {
-                      if (mutedTracks.has(track.id)) return acc;
-                      const renderedIndex = acc.length;
-                      acc.push(
-                        <TrackRow
-                          key={track.id}
-                          notes={track.notes}
-                          showColor={showColor}
-                          showNumber={showNumber}
-                          showSupport={showSupport}
-                          noteTooltipDirection={renderedIndex === 0 ? 'bottom' : 'top'}
-                          unitSize={trackUnitSize}
-                          scrollLeft={scrollLeft}
-                          containerWidth={scrollContainerWidth}
-                        />
-                      );
-                      return acc;
-                    }, [])}
+                {tooltip ? (
+                  <div
+                    className={tooltip.below ? 'canvas-tooltip canvas-tooltip-below' : 'canvas-tooltip'}
+                    style={{ left: `${tooltip.left}px`, top: `${tooltip.top}px` }}
+                    role="tooltip"
+                  >
+                    {tooltip.lines.map((line) => (
+                      <div key={line}>{line}</div>
+                    ))}
                   </div>
-                </div>
-              </DragScrollArea>
-            </div>
+                ) : null}
+              </div>
           </div>
     </CollapsiblePanel>
   );

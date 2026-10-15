@@ -234,21 +234,6 @@ export default function SchematicPanel({ trackEvents }) {
         )}
       </div>
 
-      {/* Legend */}
-      <div className="schematic-legend">
-        {Object.entries(blockColor).map(([blockId, color]) => (
-          <div key={blockId} className="schematic-legend-item">
-            <span
-              className="schematic-legend-swatch"
-              style={{ background: color }}
-            />
-            <span className="schematic-legend-label">
-              {blockLabel(blockId)}
-            </span>
-          </div>
-        ))}
-      </div>
-
       {/* Block totals and raw resource summary */}
       {grid.instruments.length > 0 &&
         (() => {
@@ -342,6 +327,21 @@ export default function SchematicPanel({ trackEvents }) {
             </div>
           );
         })()}
+
+      {/* Legend */}
+      <div className="schematic-legend">
+        {Object.entries(blockColor).map(([blockId, color]) => (
+          <div key={blockId} className="schematic-legend-item">
+            <span
+              className="schematic-legend-swatch"
+              style={{ background: color }}
+            />
+            <span className="schematic-legend-label">
+              {blockLabel(blockId)}
+            </span>
+          </div>
+        ))}
+      </div>
 
       <DragScrollArea className="schematic-scroll">
         <div ref={contentRef} className="schematic-content">
