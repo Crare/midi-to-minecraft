@@ -214,10 +214,16 @@ export default function VisualizationPanel({ trackEvents }: { trackEvents: Track
             </button>
           </div>
           <div className="playback-meta">
-            Position: {playheadTick.toFixed(1)} ticks ({formatDuration(playheadTick * redstoneTickDurationMs / 1000)})
+            Position:{' '}
+            <span className="mono-value">
+              {playheadTick.toFixed(1)} ticks ({formatDuration(playheadTick * redstoneTickDurationMs / 1000)})
+            </span>
           </div>
           <div className="playback-meta">
-            Track length: {Math.ceil(maxVisibleTick)} ticks ({formatDuration(maxVisibleTick * redstoneTickDurationMs / 1000)})
+            Track length:{' '}
+            <span className="mono-value">
+              {Math.ceil(maxVisibleTick)} ticks ({formatDuration(maxVisibleTick * redstoneTickDurationMs / 1000)})
+            </span>
           </div>
         </div>
         <div className="viz-toggles">
