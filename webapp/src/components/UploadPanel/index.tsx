@@ -21,7 +21,7 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
 
   return (
-    <CollapsiblePanel title="1) Upload MIDI" className="controls" defaultOpen={true}>
+    <CollapsiblePanel title="1) Upload MIDI" className="controls" collapsible={false}>
       <div className="control-row">
         <input
           type="file"

@@ -7,6 +7,7 @@ interface CollapsiblePanelProps {
   onOpenChange?: (open: boolean) => void;
   defaultOpen?: boolean;
   disabled?: boolean;
+  collapsible?: boolean;
   className?: string;
   children?: ReactNode;
 }
@@ -18,6 +19,7 @@ export default function CollapsiblePanel({
   onOpenChange,
   defaultOpen = false,
   disabled = false,
+  collapsible = true,
   className,
   children,
 }: CollapsiblePanelProps) {
@@ -34,6 +36,20 @@ export default function CollapsiblePanel({
       setUncontrolledOpen((o) => !o);
     }
   };
+
+  if (!collapsible) {
+    return (
+      <section className={`panel${className ? ` ${className}` : ''}`}>
+        <h2 className="panel-heading">
+          <span className="panel-header panel-header-toggle panel-header-static">
+            <span className="panel-title">{title}</span>
+            {meta !== undefined ? <span className="panel-header-meta">{meta}</span> : null}
+          </span>
+        </h2>
+        <div className="panel-body">{children}</div>
+      </section>
+    );
+  }
 
   return (
     <section className={`panel${className ? ` ${className}` : ''}`}>
