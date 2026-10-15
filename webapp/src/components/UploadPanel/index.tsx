@@ -16,7 +16,6 @@ interface UploadPanelProps {
 }
 
 export default function UploadPanel({ busy, status, onFileSelected, onConvertRequest }: UploadPanelProps) {
-  const [file, setFile] = useState<File | null>(null);
   const [outputName, setOutputName] = useState('output.json');
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
 
@@ -27,10 +26,13 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
           type="file"
           aria-label="MIDI file"
           accept=".mid,.midi,audio/midi,audio/x-midi"
+          disabled={busy}
           onChange={(event) => {
             const nextFile = event.target.files?.[0] || null;
-            setFile(nextFile);
-            if (nextFile) onFileSelected(nextFile.name);
+            if (nextFile) {
+              onFileSelected(nextFile.name);
+              onConvertRequest({ file: nextFile, outputName, trimLeadingSilence });
+            }
           }}
         />
         <input
@@ -39,22 +41,6 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
           placeholder="output.json"
           aria-label="output filename"
         />
-        <button
-          onClick={() => {
-            if (!file || busy) return;
-            onConvertRequest({ file, outputName, trimLeadingSilence });
-          }}
-          disabled={!file || busy}
-        >
-          {busy ? (
-            <>
-              <span className="spinner spinner-inline" aria-hidden="true" />
-              Converting...
-            </>
-          ) : (
-            'Convert'
-          )}
-        </button>
       </div>
       <label className="option-row">
         <input
