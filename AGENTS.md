@@ -46,7 +46,7 @@ Domain facts: 1 redstone tick = 0.1 s (`redstoneTickDurationMs`). Chords stack f
 ## Rules
 
 - **Tests:** snapshots in `src/__tests__/__snapshots__/` are a refactor safety net. Never run `vitest -u` to make a failure go away; a snapshot change must be intentional and explained.
-- **Vite and Vitest move together** (Vitest 5 needs a recent Vite); needs Node >= 20.19. Don't bump one without the other.
+- **Vite and Vitest move together** (Vitest 5 needs a recent Vite); need Node 24 (CI uses 24; jsdom and Vitest reject Node 20). Don't bump one without the other.
 - **Licensing:** do not add MIDI files or other assets with unknown or restrictive licences. Test fixtures are `example.mid` plus synthetic MIDI built in the tests. Textures are generated SVGs.
 - **Accessibility (WCAG 2.2 AA) is a requirement:**
   - Keep text contrast at 4.5:1 or better, and keep the visible focus ring.
