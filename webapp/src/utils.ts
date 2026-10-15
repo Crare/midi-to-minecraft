@@ -56,7 +56,12 @@ export function splitOutputTarget(
 
 export function getZipFilename(outputName: string | undefined, inputName: string): string {
   const target = splitOutputTarget(inputName, outputName);
-  return `${target.stem}.zip`;
+  return `${target.stem}-json.zip`;
+}
+
+export function getOutputPrefix(outputName: string | undefined, inputName = "output.mid"): string {
+  const target = splitOutputTarget(inputName, outputName);
+  return sanitizeFilename(target.stem) || "output";
 }
 
 export function getSongStartTime(midi: Midi): number {

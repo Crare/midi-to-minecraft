@@ -290,8 +290,7 @@ input[type='file'] {
   min-width: 220px;
 }
 
-input[type='text'],
-input[aria-label='output filename'] {
+input[type='text'] {
   min-width: 180px;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -1013,8 +1012,7 @@ canvas:focus-visible {
 button,
 .button-link,
 select,
-input[type='text'],
-input[aria-label='output filename'] {
+input[type='text'] {
   min-height: 2.75rem;
   font-size: 1rem;
 }
@@ -1191,7 +1189,6 @@ button:active:not(:disabled),
 }
 
 input[type='text'],
-input[aria-label='output filename'],
 select,
 input[type='file'] {
   border: 2px solid #000;

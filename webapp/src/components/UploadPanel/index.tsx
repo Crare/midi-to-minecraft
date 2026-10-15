@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import CollapsiblePanel from '../CollapsiblePanel';
+import { getOutputPrefix } from '../../utils';
 
 export interface ConvertRequest {
   file: File;
@@ -11,12 +12,16 @@ export interface ConvertRequest {
 interface UploadPanelProps {
   busy: boolean;
   status: string;
-  onFileSelected: (filename: string) => void;
+  onFileSelected: (filename: string) => string;
   onConvertRequest: (request: ConvertRequest) => unknown;
 }
 
-export default function UploadPanel({ busy, status, onFileSelected, onConvertRequest }: UploadPanelProps) {
-  const [outputName, setOutputName] = useState('output.json');
+export default function UploadPanel({
+  busy,
+  status,
+  onFileSelected,
+  onConvertRequest
+}: UploadPanelProps) {
   const [trimLeadingSilence, setTrimLeadingSilence] = useState(true);
 
   return (
@@ -30,16 +35,10 @@ export default function UploadPanel({ busy, status, onFileSelected, onConvertReq
           onChange={(event) => {
             const nextFile = event.target.files?.[0] || null;
             if (nextFile) {
-              onFileSelected(nextFile.name);
+              const outputName = onFileSelected(nextFile.name) || getOutputPrefix(undefined, nextFile.name);
               onConvertRequest({ file: nextFile, outputName, trimLeadingSilence });
             }
           }}
-        />
-        <input
-          value={outputName}
-          onChange={(event) => setOutputName(event.target.value)}
-          placeholder="output.json"
-          aria-label="output filename"
         />
       </div>
       <label className="option-row">

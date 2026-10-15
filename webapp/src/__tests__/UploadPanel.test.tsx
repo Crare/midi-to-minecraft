@@ -7,7 +7,7 @@ afterEach(cleanup);
 
 describe("UploadPanel", () => {
   it("converts the selected file with the current options", () => {
-    const onFileSelected = vi.fn();
+    const onFileSelected = vi.fn(() => "song");
     const onConvertRequest = vi.fn();
     render(
       <UploadPanel
@@ -17,10 +17,6 @@ describe("UploadPanel", () => {
         onConvertRequest={onConvertRequest}
       />
     );
-
-    fireEvent.change(screen.getByLabelText("output filename"), {
-      target: { value: "song.json" },
-    });
     fireEvent.click(
       screen.getByLabelText("Remove empty space at the start of the song")
     );
@@ -32,7 +28,7 @@ describe("UploadPanel", () => {
     expect(onFileSelected).toHaveBeenCalledWith("song.mid");
     expect(onConvertRequest).toHaveBeenCalledWith({
       file,
-      outputName: "song.json",
+      outputName: "song",
       trimLeadingSilence: false,
     });
     expect(screen.queryByRole("button", { name: /convert/i })).toBeNull();

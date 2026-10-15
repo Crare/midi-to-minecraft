@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getOutputPrefix,
   getZipFilename,
   midiToMinecraftNote,
   midiToPitchClass,
@@ -45,8 +46,14 @@ describe("file names", () => {
   });
 
   it("builds the zip filename from the output stem", () => {
-    expect(getZipFilename("dir/name.json", "song.mid")).toBe("name.zip");
-    expect(getZipFilename("", "song.mid")).toBe("song.zip");
+    expect(getZipFilename("dir/name.json", "song.mid")).toBe("name-json.zip");
+    expect(getZipFilename("", "song.mid")).toBe("song-json.zip");
+  });
+
+  it("uses a safe filename stem as the shared export prefix", () => {
+    expect(getOutputPrefix("dir/my song.json")).toBe("my_song");
+    expect(getOutputPrefix("output")).toBe("output");
+    expect(getOutputPrefix("")).toBe("output");
   });
 });
 

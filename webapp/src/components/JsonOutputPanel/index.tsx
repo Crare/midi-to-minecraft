@@ -7,10 +7,14 @@ import { buildCompactGrid, buildTickGrid, toMinecraftBuildGrid } from '../Schema
 import { buildSchematicWorkbook } from '../SchematicPanel/exportExcel';
 import { buildSchematicCsv, buildSchematicOds } from '../SchematicPanel/exportSpreadsheet';
 import { buildMinecraftFunction, type MinecraftEdition } from '../SchematicPanel/exportMinecraft';
+import { buildBedrockMcpack } from '../SchematicPanel/exportMcpack';
+import { getOutputPrefix } from '../../utils';
 
 interface JsonOutputPanelProps {
   downloadFiles: DownloadFile[];
   zipFilename: string;
+  outputName: string;
+  onOutputNameChange: (outputName: string) => void;
   trackEvents: TrackEvents[];
 }
 
@@ -24,7 +28,14 @@ const spreadsheetFormats: { id: SpreadsheetFormat; label: string }[] = [
   { id: 'csv', label: 'CSV (.csv)' }
 ];
 
-export default function JsonOutputPanel({ downloadFiles, zipFilename, trackEvents }: JsonOutputPanelProps) {
+export default function JsonOutputPanel({
+  downloadFiles,
+  zipFilename,
+  outputName,
+  onOutputNameChange,
+  trackEvents
+}: JsonOutputPanelProps) {
+  const outputPrefix = getOutputPrefix(outputName);
   const fullGrid = useMemo(() => buildTickGrid(trackEvents), [trackEvents]);
   const compactGrid = useMemo(() => buildCompactGrid(trackEvents), [trackEvents]);
   const [spreadsheetBuildView, setSpreadsheetBuildView] = useState<SpreadsheetBuildView>('minecraft');
@@ -73,17 +84,17 @@ export default function JsonOutputPanel({ downloadFiles, zipFilename, trackEvent
       const zip = new JSZip();
       const exports = await Promise.all(
         spreadsheetFormatsSelected.map(async (format) => {
-          if (format === 'xlsx') return ['schematic.xlsx', await buildSchematicWorkbook(spreadsheetGrid)] as const;
-          if (format === 'ods') return ['schematic.ods', await buildSchematicOds(spreadsheetGrid)] as const;
+          if (format === 'xlsx') return [`${outputPrefix}-schematic.xlsx`, await buildSchematicWorkbook(spreadsheetGrid)] as const;
+          if (format === 'ods') return [`${outputPrefix}-schematic.ods`, await buildSchematicOds(spreadsheetGrid)] as const;
           return [
-            'schematic.csv',
+            `${outputPrefix}-schematic.csv`,
             new Blob([buildSchematicCsv(spreadsheetGrid)], { type: 'text/csv;charset=utf-8' })
           ] as const;
         })
       );
       exports.forEach(([filename, blob]) => zip.file(filename, blob));
       const blob = await zip.generateAsync({ type: 'blob' });
-      if (await exportAs('schematic-spreadsheets.zip', () => blob)) setSpreadsheetModalOpen(false);
+      if (await exportAs(`${outputPrefix}-spreadsheet.zip`, () => blob)) setSpreadsheetModalOpen(false);
     } catch (error) {
       setExportError(error instanceof Error ? error.message : 'Spreadsheet export failed.');
     }
@@ -154,6 +165,17 @@ export default function JsonOutputPanel({ downloadFiles, zipFilename, trackEvent
       collapsible={false}
       className="outputs"
     >
+      <label className="option-row option-row-stacked output-name-field">
+        <span>Output filename prefix</span>
+        <input
+          type="text"
+          value={outputName}
+          onChange={(event) => onOutputNameChange(event.target.value)}
+          placeholder="output"
+          aria-label="output filename prefix"
+        />
+      </label>
+      <p className="hint">Used at the start of downloaded filenames, such as {outputPrefix}-json.zip and {outputPrefix}-spreadsheet.zip.</p>
       <p className="hint output-summary">
         {downloadFiles.length === 0
           ? 'No output yet.'
@@ -184,7 +206,7 @@ export default function JsonOutputPanel({ downloadFiles, zipFilename, trackEvent
           ) : null}
         </section>
         <section className="output-export-box" aria-labelledby="minecraft-export-title">
-          <h3 id="minecraft-export-title">Minecraft function export</h3>
+          <h3 id="minecraft-export-title">Minecraft function / .mcpack export</h3>
           <div className="output-export-row">
             <button
               type="button"
@@ -281,7 +303,7 @@ export default function JsonOutputPanel({ downloadFiles, zipFilename, trackEvent
           >
             <header className="function-preview__header">
               <h2 id="function-preview-title">
-                {`schematic-${minecraftEdition}-${minecraftBuildView}.mcfunction`}
+                {`${outputPrefix}-function-${minecraftEdition}-${minecraftBuildView}.mcfunction`}
               </h2>
               <button
                 ref={closeButtonRef}
@@ -327,13 +349,29 @@ export default function JsonOutputPanel({ downloadFiles, zipFilename, trackEvent
                 type="button"
                 onClick={() =>
                   void exportAs(
-                    `schematic-${minecraftEdition}-${minecraftBuildView}.txt`,
+                    `${outputPrefix}-function-${minecraftEdition}-${minecraftBuildView}.mcfunction`,
                     () => new Blob([minecraftFunction], { type: 'text/plain;charset=utf-8' })
                   )
                 }
               >
                 Export as .txt file
               </button>
+              {minecraftEdition === 'bedrock' ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void exportAs(
+                      `${outputPrefix}-schematic-bedrock-${minecraftBuildView}.mcpack`,
+                      () =>
+                        buildBedrockMcpack(
+                          minecraftBuildView === 'full' ? fullGrid : compactGrid
+                        )
+                    )
+                  }
+                >
+                  Export as .mcpack behavior pack
+                </button>
+              ) : null}
               <button ref={copyButtonRef} type="button" onClick={() => void copyPreview()}>
                 Copy to clipboard
               </button>
