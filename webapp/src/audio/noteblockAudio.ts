@@ -20,6 +20,8 @@ type SoundPlacement = { instrument: string; note: number; pitch?: string };
 let audioContext: AudioContext | undefined;
 let noiseBuffer: AudioBuffer | undefined;
 let masterBus: DynamicsCompressorNode | undefined;
+let masterVolume: GainNode | undefined;
+let playbackVolume = 1;
 
 const tonalProfiles: Record<string, TonalProfile> = {
   harp: {
@@ -201,17 +203,28 @@ export async function prepareAudioPlayback() {
   return context;
 }
 
+export function setPlaybackVolume(volume: number) {
+  playbackVolume = Math.min(1, Math.max(0, volume));
+  if (masterVolume && audioContext) {
+    masterVolume.gain.setTargetAtTime(playbackVolume, audioContext.currentTime, 0.01);
+  }
+}
+
 // All voices share one compressor so large chords and drum hits sum without clipping.
 function getMasterBus(context: AudioContext) {
   if (!masterBus || masterBus.context !== context) {
     const compressor = context.createDynamicsCompressor();
+    const volume = context.createGain();
     compressor.threshold.value = -18;
     compressor.knee.value = 12;
     compressor.ratio.value = 6;
     compressor.attack.value = 0.003;
     compressor.release.value = 0.15;
-    compressor.connect(context.destination);
+    volume.gain.value = playbackVolume;
+    compressor.connect(volume);
+    volume.connect(context.destination);
     masterBus = compressor;
+    masterVolume = volume;
   }
   return masterBus;
 }

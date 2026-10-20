@@ -7,6 +7,7 @@ import { buildSyntheticMidi } from "./helpers";
 const audio = vi.hoisted(() => ({
   clock: 100,
   playSync: vi.fn(),
+  setPlaybackVolume: vi.fn(),
 }));
 
 vi.mock("../audio/noteblockAudio", () => ({
@@ -14,6 +15,7 @@ vi.mock("../audio/noteblockAudio", () => ({
   prepareAudioPlayback: () => Promise.resolve(),
   playPlacementSound: () => Promise.resolve(),
   playPlacementSoundSync: audio.playSync,
+  setPlaybackVolume: audio.setPlaybackVolume,
 }));
 
 import VisualizationPanel from "../components/VisualizationPanel";
@@ -36,6 +38,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "requestAnimationFrame", "cancelAnimationFrame", "performance"] });
   audio.clock = 100;
   audio.playSync.mockClear();
+  audio.setPlaybackVolume.mockClear();
   HTMLCanvasElement.prototype.getContext = (() => noopContext) as never;
   Object.defineProperty(HTMLElement.prototype, "clientWidth", {
     configurable: true,
@@ -60,7 +63,7 @@ function renderPanel() {
   return render(<VisualizationPanel trackEvents={trackEvents} />);
 }
 
-const slider = () => screen.getByRole("slider", { hidden: true });
+const slider = () => document.querySelector(".playhead") as HTMLElement;
 const sliderValue = () => Number(slider().getAttribute("aria-valuenow"));
 const sliderMax = () => Number(slider().getAttribute("aria-valuemax"));
 const playhead = () => slider() as HTMLElement;
@@ -93,6 +96,15 @@ describe("VisualizationPanel", () => {
     const canvas = screen.getByRole("img", { name: /Track visualization with 4 lane/ });
     expect(canvas.getAttribute("tabindex")).toBe("0");
     expect(screen.getAllByRole("button", { name: /^Mute / }).length).toBe(4);
+  });
+
+  it("sets playback volume from the volume slider", () => {
+    renderPanel();
+    const volume = screen.getByRole("slider", { name: "Playback volume" });
+    expect((volume as HTMLInputElement).value).toBe("100");
+    fireEvent.change(volume, { target: { value: "35" } });
+    expect(audio.setPlaybackVolume).toHaveBeenCalledWith(0.35);
+    expect(screen.getByText("35%")).toBeTruthy();
   });
 
   it("slider keys move the play position", () => {
