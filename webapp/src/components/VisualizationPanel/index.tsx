@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
+import { setPlaybackVolume } from '../../audio/noteblockAudio';
 import type { TrackEvents } from '../../types';
 import CollapsiblePanel from '../CollapsiblePanel';
 import { LANE_GAP, computeLaneLayout } from './canvasRenderer';
@@ -30,6 +31,7 @@ export default function VisualizationPanel({ trackEvents }: { trackEvents: Track
   const [viewMode, setViewMode] = useState(viewModes.instrument);
   const [playbackScope, setPlaybackScope] = useState(playbackScopes.all);
   const [selectedPlaybackTrackId, setSelectedPlaybackTrackId] = useState('');
+  const [playbackVolume, setPlaybackVolumeValue] = useState(100);
   const [mutedTracks, setMutedTracks] = useState<Set<string>>(new Set());
   const { trackUnitSize, windowHeight } = useViewportMetrics();
 
@@ -213,6 +215,22 @@ export default function VisualizationPanel({ trackEvents }: { trackEvents: Track
               <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1" ry="1" /></svg>
             </button>
           </div>
+          <label className="playback-volume">
+            <span>Volume</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={playbackVolume}
+              onChange={(event) => {
+                const volume = Number(event.target.value);
+                setPlaybackVolumeValue(volume);
+                setPlaybackVolume(volume / 100);
+              }}
+              aria-label="Playback volume"
+            />
+            <span className="playback-volume-value" aria-hidden="true">{playbackVolume}%</span>
+          </label>
           <div className="playback-meta">
             Position:{' '}
             <span className="mono-value">

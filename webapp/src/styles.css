@@ -274,6 +274,28 @@ main {
   gap: 0.45rem;
 }
 
+.playback-volume {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  color: var(--ink);
+}
+
+.playback-volume input[type='range'] {
+  width: 7rem;
+  height: 2.75rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.playback-volume-value {
+  min-width: 2.5rem;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
