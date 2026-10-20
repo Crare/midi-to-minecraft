@@ -10,6 +10,7 @@ import VisualizationPanel from "./components/VisualizationPanel";
 
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
+import UpdateNotification from "./components/UpdateNotification";
 import {
   buildTrackEvents,
   eventsToPlacements,
@@ -133,6 +134,7 @@ export default function App() {
     <>
       <a className="skip-link" href="#main">Skip to main content</a>
       <Header />
+      <UpdateNotification />
 
       <main id="main" tabIndex={-1}>
         <div className="top-row">

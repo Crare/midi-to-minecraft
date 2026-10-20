@@ -47,6 +47,8 @@ jobs:
         run: yarn test
 
       - name: Build
+        env:
+          VITE_APP_VERSION: ${{ github.sha }}
         run: yarn build
 
       - name: Upload artifact
