@@ -61,6 +61,7 @@ Domain facts: 1 redstone tick = 0.1 s (`redstoneTickDurationMs`). Chords stack f
 
 - Never stage, commit, push or open a PR unless the user explicitly asks.
 - Work on a feature branch; PRs target `main`. Include a ticket number in branch and commit text only when one is known.
+- Never push directly to `main`, including as an administrator. Merge changes through a PR with the required GitHub Actions `test` check passing against the current `main`; it runs lint, TypeScript validation, tests, and the production build.
 - Add this trailer to commits:
   `Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>`
 - This repo lives under `~/git/personal/`, so use Crare's GitHub account.
