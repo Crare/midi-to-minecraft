@@ -52,6 +52,19 @@ yarn build
 
 Static files are output to `webapp/dist/`. The site is automatically deployed to GitHub Pages on every push to `main`.
 
+## Contributing
+
+All changes to `main` must go through a pull request; direct pushes, force pushes,
+and branch deletion are blocked, including for administrators. The branch must be
+up to date with `main`, and the required GitHub Actions `test` check must pass
+before merging. This check runs TypeScript validation (`yarn typecheck`), lint
+(`yarn lint`), tests (`yarn test`), and the production build (`yarn build`) against
+the pull request's merge result. CI runs automatically for pull requests targeting
+`main`; merging a PR triggers the GitHub Pages deployment.
+
+These merge requirements are enforced by the repository's GitHub branch protection
+settings, not by the workflow file alone.
+
 ## CLI Converter (Optional)
 
 ```bash
